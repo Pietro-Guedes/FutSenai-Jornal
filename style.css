@@ -53,9 +53,9 @@
     }
     .news-card:hover { box-shadow: 0 16px 34px rgba(20, 32, 55, .10); transform: translateY(-3px); }
     .news-card, .news-card img { transition: transform .2s ease, box-shadow .2s ease; }
-    .news-card:hover .cover-image { transform: scale(1.035); }
-    .cover-wrap { overflow: hidden; background: #fce8e9; }
-    .cover-image { width: 100%; height: 100%; object-fit: cover; }
+    .cover-wrap { overflow: hidden; background: #f8fafc; }
+    .cover-image { width: 100%; height: 100%; object-fit: contain; }
+    #article-image { object-fit: contain; }
     .category-badge { letter-spacing: .08em; }
     .dialog-backdrop { background: rgba(8, 17, 33, .68); backdrop-filter: blur(4px); }
     .like-button.is-liked {
