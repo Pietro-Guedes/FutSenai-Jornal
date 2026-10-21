@@ -30,7 +30,7 @@
   function safeImageUrl(value) {
     if (typeof value !== "string" || !value.trim()) return FALLBACK_IMAGE;
     try {
-      const url = new URL(value);
+      const url = new URL(value, window.location.href);
       return url.protocol === "https:" || url.protocol === "http:" ? url.href : FALLBACK_IMAGE;
     } catch {
       return FALLBACK_IMAGE;
