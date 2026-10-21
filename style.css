@@ -55,7 +55,15 @@
     .news-card, .news-card img { transition: transform .2s ease, box-shadow .2s ease; }
     .cover-wrap { overflow: hidden; background: #f8fafc; }
     .cover-image { width: 100%; height: 100%; object-fit: contain; }
-    #article-image { object-fit: contain; }
+    #article-image {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      max-height: 70vh;
+      height: auto;
+      margin-inline: auto;
+      object-fit: contain;
+    }
     .category-badge { letter-spacing: .08em; }
     .dialog-backdrop { background: rgba(8, 17, 33, .68); backdrop-filter: blur(4px); }
     .like-button.is-liked {
