@@ -1,0 +1,20 @@
+[
+  {
+    "id": "demo-bomba",
+    "category": "BOMBA",
+    "title": "Craque da Mecânica manda a bola para outra dimensão",
+    "player": "Camisa 10 da Mecânica — 2º ano",
+    "content": "Em cobrança de falta que prometia entrar para a história, o craque pegou tão embaixo da bola que ela foi parar em órbita. A turma já abriu votação para descobrir se foi chute ou lançamento de satélite.",
+    "image": "",
+    "createdAt": "2026-10-20T12:30:00.000Z"
+  },
+  {
+    "id": "demo-var",
+    "category": "VAR",
+    "title": "VAR do intervalo analisa lance por 40 minutos e pede o sinal",
+    "player": "Bonde da Eletrônica — 1º ano",
+    "content": "O gol saiu no último segundo do recreio, mas ninguém sabe se a bola cruzou a linha. A comissão do VAR segue analisando o lance com uma régua, dois celulares e a opinião de quem estava na fila da cantina.",
+    "image": "",
+    "createdAt": "2026-10-19T12:30:00.000Z"
+  }
+]

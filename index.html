@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#c92332">
+  <meta name="description" content="As notícias mais quentes do futebol de intervalo do Senai.">
+  <title>Jornal FutSenai — O futebol acontece aqui</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="masthead relative overflow-hidden text-slate-900">
+    <div class="hero-ball" aria-hidden="true"></div>
+    <div class="hero-panel absolute inset-x-0 bottom-0 top-[94px]" aria-hidden="true"></div>
+    <div class="relative z-10 mx-auto max-w-[1180px] px-5 sm:px-8">
+      <div class="flex min-h-[94px] items-center justify-between gap-4 border-b border-slate-100">
+        <a href="#" class="flex items-center gap-3 no-underline" aria-label="Jornal FutSenai, página inicial">
+          <span class="brand-mark grid h-12 w-12 place-items-center rounded-2xl text-white">
+            <svg aria-hidden="true" class="h-7 w-7 drop-shadow" viewBox="0 0 24 24" fill="none">
+              <path d="m12 2 2.7 5.1 5.7.8-4.1 4 .97 5.7L12 14.9l-5.1 2.7.97-5.7-4.1-4 5.7-.8L12 2Z" fill="currentColor"/>
+              <path d="M5 20h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span>
+            <span class="block text-xl font-black leading-tight tracking-tight sm:text-2xl">Jornal <span class="text-red-600">FutSenai</span></span>
+            <span class="hidden text-[10px] font-bold uppercase tracking-[.2em] text-slate-500 sm:block">A resenha começa aqui</span>
+          </span>
+        </a>
+        <span class="rounded-full bg-red-50 px-3 py-2 text-xs font-extrabold text-red-700">Acesso dos alunos</span>
+      </div>
+      <div class="relative max-w-2xl pb-10 pt-10 text-white sm:pb-14 sm:pt-14">
+        <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.18em] text-white">
+          <span class="h-2 w-2 animate-pulse rounded-full bg-white"></span> Plantão do intervalo
+        </div>
+        <h1 class="max-w-xl text-4xl font-black leading-[1.08] tracking-tight sm:text-6xl">O futebol acontece <span class="text-red-100">aqui.</span></h1>
+        <p class="mt-4 max-w-lg text-sm leading-6 text-red-50 sm:text-base">O Portal Oficial da Zoeira e do Futebol no Senai. Lances duvidosos, craques improváveis e notícias direto do intervalo.</p>
+        <div class="mt-7 flex items-center gap-3 text-xs font-bold text-red-50">
+          <span class="flex -space-x-2" aria-hidden="true">
+            <span class="grid h-7 w-7 place-items-center rounded-full border-2 border-red-700 bg-white text-[10px]">⚽</span>
+            <span class="grid h-7 w-7 place-items-center rounded-full border-2 border-red-700 bg-red-100 text-[10px]">🏆</span>
+            <span class="grid h-7 w-7 place-items-center rounded-full border-2 border-red-700 bg-red-300 text-[10px]">📣</span>
+          </span>
+          <span>As notícias mais quentes do recreio</span>
+        </div>
+      </div>
+    </div>
+    <div class="absolute bottom-0 h-1 w-full bg-white"></div>
+  </header>
+
+  <main class="mx-auto min-h-[55vh] max-w-[1180px] px-5 py-9 sm:px-8 sm:py-12">
+    <div class="mb-7 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Dentro de campo</p>
+        <h2 class="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Últimas notícias</h2>
+      </div>
+      <div class="flex items-center gap-2 rounded-lg border border-red-100 bg-white px-3 py-2 text-xs font-semibold text-slate-500 shadow-sm">
+        <svg aria-hidden="true" class="h-4 w-4 text-red-600" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M7 12h10m-7 5h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span id="news-count">0 publicações</span>
+      </div>
+    </div>
+    <div id="feed-message" class="mb-5 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" role="status"></div>
+    <section id="news-feed" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Feed de notícias"></section>
+    <p class="mt-5 text-center text-xs text-slate-500">Suas curtidas ficam salvas somente neste navegador; elas não são compartilhadas com outros alunos.</p>
+  </main>
+
+  <footer class="border-t border-slate-200 bg-white">
+    <div class="mx-auto flex max-w-[1180px] flex-col items-center justify-between gap-2 px-5 py-6 text-center text-xs text-slate-500 sm:flex-row sm:px-8 sm:text-left">
+      <p><span class="font-black text-slate-800">Jornal FutSenai</span> <span class="mx-1 text-slate-300">·</span> A resenha oficial do intervalo.</p>
+      <p>Feito na arquibancada, com fair play e bom humor ⚽</p>
+    </div>
+  </footer>
+
+  <div id="article-layer" class="dialog-backdrop fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto p-4" aria-hidden="true">
+    <article id="article-dialog" role="dialog" aria-modal="true" aria-labelledby="article-title" class="my-auto w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div class="flex items-center justify-between border-b border-red-100 px-5 py-4 sm:px-7">
+        <span class="text-xs font-black uppercase tracking-[.16em] text-red-700">Jornal FutSenai <span class="text-slate-300">/</span> Matéria</span>
+        <button id="close-article" type="button" class="grid h-9 w-9 place-items-center rounded-lg text-xl text-slate-400 transition hover:bg-red-50 hover:text-red-700" aria-label="Fechar matéria">×</button>
+      </div>
+      <img id="article-image" class="max-h-[380px] min-h-[190px] w-full bg-red-50 object-cover" alt="">
+      <div class="px-5 py-6 sm:px-9 sm:py-8">
+        <span id="article-category" class="category-badge inline-block rounded-md bg-red-100 px-2.5 py-1.5 text-[10px] font-black text-red-800"></span>
+        <h2 id="article-title" class="mt-4 text-2xl font-black leading-tight tracking-tight text-slate-900 sm:text-4xl"></h2>
+        <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-slate-100 pb-5 text-xs font-semibold text-slate-500">
+          <span id="article-player" class="font-bold text-red-700"></span>
+          <time id="article-date"></time>
+        </div>
+        <p id="article-content" class="article-body mt-6 text-base leading-8 text-slate-700"></p>
+        <div class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5">
+          <button id="back-to-news" type="button" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700">← Voltar às notícias</button>
+          <button id="article-like" type="button" class="like-button rounded-lg border border-red-200 px-4 py-2.5 text-sm font-extrabold text-red-700 transition hover:bg-red-50" aria-pressed="false">♡ Curtir</button>
+        </div>
+      </div>
+    </article>
+  </div>
+  <div id="toast" class="toast fixed bottom-5 left-1/2 z-[60] hidden max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-xl bg-slate-900 px-5 py-3 text-center text-sm font-bold text-white shadow-xl" role="status" aria-live="polite"></div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
