@@ -7,8 +7,18 @@
   const pollContent = document.querySelector("#poll-content");
   const awardsContent = document.querySelector("#awards-content");
   const predictionContent = document.querySelector("#prediction-content");
+  const scoreAdminContent = document.querySelector("#score-admin-content");
+  const authForms = document.querySelector("#auth-forms");
+  const signupForm = document.querySelector("#signup-form");
+  const signinForm = document.querySelector("#signin-form");
+  const signoutButton = document.querySelector("#signout-button");
+  const accountStatus = document.querySelector("#account-status");
   const voterKey = "jornal-futsenai-voter-id";
+  const sessionKey = "jornal-futsenai-auth-session";
   let votingRefreshTimer = null;
+  let session = null;
+  let profile = null;
+  let isScoreAdmin = false;
   const headers = config && config.url && config.anonKey
     ? { apikey: config.anonKey, Authorization: "Bearer " + config.anonKey }
     : null;
@@ -41,16 +51,136 @@
   }
 
   async function request(path, options) {
-    const response = await fetch(config.url.replace(/\/$/, "") + "/rest/v1/" + path, {
+    const send = () => fetch(config.url.replace(/\/$/, "") + "/rest/v1/" + path, {
       ...options,
-      headers: { ...headers, ...(options && options.headers) }
+      headers: {
+        ...headers,
+        Authorization: "Bearer " + (session ? session.access_token : config.anonKey),
+        ...(options && options.headers)
+      }
     });
+    let response = await send();
+    if (response.status === 401 && session && await refreshSession()) response = await send();
     if (!response.ok) {
       const detail = await response.text();
       throw new Error("Supabase respondeu " + response.status + (detail ? ": " + detail : ""));
     }
     if (response.status === 204) return null;
     return response.json();
+  }
+
+  async function authRequest(path, body, accessToken) {
+    const response = await fetch(config.url.replace(/\/$/, "") + "/auth/v1/" + path, {
+      method: "POST",
+      headers: {
+        apikey: config.anonKey,
+        "Content-Type": "application/json",
+        ...(accessToken ? { Authorization: "Bearer " + accessToken } : {})
+      },
+      body: JSON.stringify(body || {})
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.msg || result.message || result.error_description || result.error || "Resposta HTTP " + response.status);
+    }
+    return result;
+  }
+
+  async function completeAuthRedirect() {
+    if (!window.location.hash) return false;
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+    if (!accessToken || !refreshToken || params.get("type") !== "signup") return false;
+
+    const response = await fetch(config.url.replace(/\/$/, "") + "/auth/v1/user", {
+      headers: { apikey: config.anonKey, Authorization: "Bearer " + accessToken }
+    });
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error("Não foi possível confirmar sua conta: " + detail);
+    }
+    const user = await response.json();
+    const expiresIn = Number(params.get("expires_in")) || 3600;
+    saveSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      token_type: params.get("token_type") || "bearer",
+      expires_in: expiresIn,
+      expires_at: Math.floor(Date.now() / 1000) + expiresIn,
+      user
+    });
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    await setAccount(session);
+    showMessage("E-mail confirmado. Sua conta está conectada; já pode enviar palpites.", false);
+    return true;
+  }
+
+  function saveSession(nextSession) {
+    session = nextSession;
+    if (session && session.expires_in && !session.expires_at) {
+      session.expires_at = Math.floor(Date.now() / 1000) + session.expires_in;
+    }
+    if (session) localStorage.setItem(sessionKey, JSON.stringify(session));
+    else localStorage.removeItem(sessionKey);
+  }
+
+  async function refreshSession() {
+    if (!session || !session.refresh_token) return false;
+    try {
+      saveSession(await authRequest("token?grant_type=refresh_token", { refresh_token: session.refresh_token }));
+      return true;
+    } catch (error) {
+      saveSession(null);
+      throw error;
+    }
+  }
+
+  async function restoreSession() {
+    if (await completeAuthRedirect()) return;
+    const saved = localStorage.getItem(sessionKey);
+    if (!saved) return;
+    try {
+      session = JSON.parse(saved);
+      if (!session || typeof session.access_token !== "string") {
+        saveSession(null);
+        return;
+      }
+      if (session.expires_at && session.expires_at <= Math.floor(Date.now() / 1000) + 30) {
+        await refreshSession();
+      }
+    } catch (error) {
+      saveSession(null);
+      showMessage("Sua sessão expirou. Entre novamente para fazer palpites.", true);
+    }
+  }
+
+  async function setAccount(sessionData) {
+    saveSession(sessionData);
+    profile = null;
+    isScoreAdmin = false;
+    if (session) {
+      const profiles = await request("profiles?select=nickname&user_id=eq." + encodeURIComponent(session.user.id));
+      profile = profiles[0] || null;
+      if (!profile) throw new Error("Não foi encontrado o apelido desta conta.");
+      isScoreAdmin = await request("rpc/is_score_admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}"
+      });
+    }
+    updateAccountUI();
+  }
+
+  function updateAccountUI() {
+    const signedIn = Boolean(session && profile);
+    authForms.classList.toggle("hidden", signedIn);
+    signoutButton.classList.toggle("hidden", !signedIn);
+    accountStatus.classList.toggle("hidden", !signedIn);
+    accountStatus.textContent = signedIn ? "Conectado como " + profile.nickname : "";
+    document.querySelector("#account-heading").textContent = signedIn
+      ? "Palpites salvos na sua conta"
+      : "Entre para salvar seus palpites e pontos";
   }
 
   function getVoterId() {
@@ -72,10 +202,17 @@
     return Date.now() >= votingDeadline(value);
   }
 
-  function scheduleVotingRefresh(polls, awards) {
+  function predictionDeadline(value) {
+    return new Date(value + "T11:00:00-03:00").getTime();
+  }
+
+  function scheduleVotingRefresh(polls, awards, matches) {
     if (votingRefreshTimer !== null) window.clearTimeout(votingRefreshTimer);
     const upcomingDeadlines = [...polls, ...awards]
       .map(item => votingDeadline(item.week_start))
+      .concat(matches
+        .filter(match => match.home_score === null && match.away_score === null)
+        .map(match => predictionDeadline(match.match_date)))
       .filter(deadline => deadline > Date.now());
     votingRefreshTimer = null;
     if (!upcomingDeadlines.length) return;
@@ -117,11 +254,13 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
-    try {
-      onSuccess();
-    } catch (error) {
-      showMessage("Voto registrado no Supabase, mas não foi possível salvar a escolha neste navegador: " + error.message, true);
-      return;
+    if (onSuccess) {
+      try {
+        onSuccess();
+      } catch (error) {
+        showMessage("Voto registrado no Supabase, mas não foi possível salvar a escolha neste navegador: " + error.message, true);
+        return;
+      }
     }
     showMessage(successText, false);
     try {
@@ -194,7 +333,7 @@
     awardsContent.replaceChildren(fragment);
   }
 
-  function renderPrediction(match, leaderboard) {
+  function renderPrediction(match, leaderboard, myPrediction, matches) {
     const fragment = document.createDocumentFragment();
     const game = createElement("div", "rounded-xl bg-red-50 p-3 text-center");
     game.append(createElement("p", "text-[10px] font-black uppercase tracking-wider text-red-700", "Próximo jogo"));
@@ -202,25 +341,21 @@
     const matchDate = new Date(match.match_date + "T12:00:00");
     game.append(createElement("p", "mt-1 text-xs text-slate-600",
       new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long" }).format(matchDate)));
+    game.append(createElement("p", "mt-1 text-xs font-semibold text-red-700",
+      "Palpites até as 11h (horário de Brasília), no dia do jogo."));
     fragment.append(game);
 
     if (match.home_score !== null && match.away_score !== null) {
       fragment.append(createElement("p", "text-center text-sm font-bold text-slate-700",
         "Placar final: " + match.home_score + " × " + match.away_score));
       fragment.append(createElement("p", "text-center text-xs text-slate-500", "Palpites encerrados. Veja o ranking abaixo."));
-    } else if (new Date(match.match_date + "T23:59:59") < new Date()) {
+    } else if (Date.now() >= predictionDeadline(match.match_date)) {
       fragment.append(createElement("p", "text-center text-sm font-bold text-slate-600", "Palpites encerrados para este jogo."));
+    } else if (!session || !profile) {
+      fragment.append(createElement("p", "text-center text-sm leading-6 text-slate-600",
+        "Entre ou crie uma conta abaixo para enviar um palpite e somar pontos na liga."));
     } else {
       const form = createElement("form", "space-y-3");
-      const nicknameLabel = createElement("label", "block text-xs font-bold text-slate-700", "Seu apelido (aparece no ranking)");
-      const nickname = createElement("input", "field w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm");
-      nickname.maxLength = 24;
-      nickname.required = true;
-      nickname.autocomplete = "nickname";
-      nickname.value = localStorage.getItem("jornal-futsenai-nickname") || "";
-      nicknameLabel.append(nickname);
-      form.append(nicknameLabel);
-
       const scores = createElement("div", "grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-2");
       const homeLabel = createElement("label", "block min-w-0 text-center text-xs font-bold text-slate-600", match.home_team);
       const awayLabel = createElement("label", "block min-w-0 text-center text-xs font-bold text-slate-600", match.away_team);
@@ -233,6 +368,10 @@
         input.required = true;
         input.setAttribute("aria-label", "Gols previstos para " + (index === 0 ? match.home_team : match.away_team));
       });
+      if (myPrediction) {
+        homeScore.value = myPrediction.home_score;
+        awayScore.value = myPrediction.away_score;
+      }
       homeLabel.append(homeScore);
       awayLabel.append(awayScore);
       scores.append(homeLabel, createElement("span", "mb-3 font-black text-slate-400", "×"), awayLabel);
@@ -245,16 +384,11 @@
         event.preventDefault();
         submit.disabled = true;
         try {
-          const cleanNickname = nickname.value.trim();
           await vote("submit_prediction", {
             p_match_id: match.id,
-            p_voter_id: getVoterId(),
-            p_nickname: cleanNickname,
             p_home_score: Number(homeScore.value),
             p_away_score: Number(awayScore.value)
-          }, "Palpite registrado! Você pode alterá-lo neste navegador até o jogo.", () => {
-            localStorage.setItem("jornal-futsenai-nickname", cleanNickname);
-          });
+            }, "Palpite registrado na sua conta! Você pode alterá-lo até as 11h do dia do jogo.");
         } catch (error) {
           showMessage("Não foi possível registrar o palpite: " + error.message, true);
         } finally {
@@ -264,6 +398,7 @@
       fragment.append(form);
     }
 
+    renderScoreAdmin(match, matches);
     fragment.append(createElement("h4", "border-t border-red-50 pt-3 font-extrabold text-slate-800", "Ranking dos palpites"));
     if (!leaderboard.length) {
       fragment.append(createElement("p", "text-xs text-slate-500", "O ranking aparece depois que o primeiro jogo tiver placar final."));
@@ -278,6 +413,156 @@
     predictionContent.replaceChildren(fragment);
   }
 
+  function renderScoreAdmin(match, matches) {
+    if (!isScoreAdmin) {
+      scoreAdminContent.classList.add("hidden");
+      scoreAdminContent.replaceChildren();
+      return;
+    }
+    scoreAdminContent.classList.remove("hidden");
+    const form = createElement("form", "space-y-3");
+    form.append(createElement("h4", "font-extrabold text-slate-900", "⚙ Registrar placar final"));
+    form.append(createElement("p", "text-xs leading-5 text-slate-500", "Área restrita à conta administradora."));
+
+    const matchSelect = createElement("select", "field w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm");
+    matchSelect.setAttribute("aria-label", "Jogo para registrar o placar");
+    matches.forEach(item => {
+      const option = createElement("option", "", item.home_team + " × " + item.away_team + " — " + item.match_date);
+      option.value = item.id;
+      option.selected = item.id === match.id;
+      matchSelect.append(option);
+    });
+    form.append(matchSelect);
+
+    const scores = createElement("div", "grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-2");
+    const homeLabel = createElement("label", "block min-w-0 text-center text-xs font-bold text-slate-600", match.home_team);
+    const awayLabel = createElement("label", "block min-w-0 text-center text-xs font-bold text-slate-600", match.away_team);
+    const homeScore = createElement("input", "interaction-score-field field mt-1 w-full rounded-lg border border-slate-200 px-2 py-2.5 text-center text-lg font-black");
+    const awayScore = createElement("input", "interaction-score-field field mt-1 w-full rounded-lg border border-slate-200 px-2 py-2.5 text-center text-lg font-black");
+    [homeScore, awayScore].forEach((input, index) => {
+      input.type = "number";
+      input.min = "0";
+      input.max = "99";
+      input.required = true;
+      input.setAttribute("aria-label", "Placar final de " + (index === 0 ? match.home_team : match.away_team));
+      input.value = (index === 0 ? match.home_score : match.away_score) ?? "";
+    });
+    homeLabel.append(homeScore);
+    awayLabel.append(awayScore);
+    scores.append(homeLabel, createElement("span", "mb-3 font-black text-slate-400", "×"), awayLabel);
+    form.append(scores);
+
+    matchSelect.addEventListener("change", () => {
+      const selectedMatch = matches.find(item => item.id === matchSelect.value);
+      if (!selectedMatch) return;
+      homeLabel.firstChild.textContent = selectedMatch.home_team;
+      awayLabel.firstChild.textContent = selectedMatch.away_team;
+      homeScore.setAttribute("aria-label", "Placar final de " + selectedMatch.home_team);
+      awayScore.setAttribute("aria-label", "Placar final de " + selectedMatch.away_team);
+      homeScore.value = selectedMatch.home_score ?? "";
+      awayScore.value = selectedMatch.away_score ?? "";
+    });
+
+    const submit = createElement("button", "w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-extrabold text-white transition hover:bg-slate-700", "Salvar placar final");
+    submit.type = "submit";
+    form.append(submit);
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      submit.disabled = true;
+      try {
+        await request("rpc/set_match_result", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            p_match_id: matchSelect.value,
+            p_home_score: Number(homeScore.value),
+            p_away_score: Number(awayScore.value)
+          })
+        });
+        showMessage("Placar final salvo. A liga foi atualizada.", false);
+        await loadInteractions();
+      } catch (error) {
+        showMessage("Não foi possível salvar o placar: " + error.message, true);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+    scoreAdminContent.replaceChildren(form);
+  }
+
+  function bindAccountForms() {
+    signupForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const submit = signupForm.querySelector('button[type="submit"]');
+      const data = new FormData(signupForm);
+      const nickname = String(data.get("nickname")).trim();
+      const password = String(data.get("password"));
+      submit.disabled = true;
+      try {
+        if (password.toLocaleLowerCase() === nickname.toLocaleLowerCase()) {
+          throw new Error("A senha precisa ser diferente do apelido público.");
+        }
+        const result = await authRequest("signup", {
+          email: String(data.get("email")).trim(),
+          password,
+          data: { nickname }
+        });
+        signupForm.reset();
+        if (result.access_token) {
+          await setAccount(result);
+          showMessage("Conta criada e conectada. Já pode enviar seu palpite.", false);
+          await loadInteractions();
+        } else {
+          showMessage("Conta criada. Confira seu e-mail para confirmar o cadastro e depois entre aqui.", false);
+        }
+      } catch (error) {
+        showMessage("Não foi possível criar a conta: " + error.message, true);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    signinForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const submit = signinForm.querySelector('button[type="submit"]');
+      const data = new FormData(signinForm);
+      submit.disabled = true;
+      try {
+        const result = await authRequest("token?grant_type=password", {
+          email: String(data.get("email")).trim(),
+          password: String(data.get("password"))
+        });
+        await setAccount(result);
+        signinForm.reset();
+        showMessage("Login efetuado. Seus palpites e pontos estão ligados a esta conta.", false);
+        await loadInteractions();
+      } catch (error) {
+        saveSession(null);
+        profile = null;
+        isScoreAdmin = false;
+        updateAccountUI();
+        showMessage("Não foi possível entrar: " + error.message, true);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    signoutButton.addEventListener("click", async () => {
+      try {
+        if (session) await authRequest("logout", {}, session.access_token);
+      } catch (error) {
+        showMessage("Não foi possível encerrar a sessão no Supabase: " + error.message, true);
+        return;
+      }
+      saveSession(null);
+      profile = null;
+      isScoreAdmin = false;
+      updateAccountUI();
+      showMessage("Você saiu da conta. A enquete e os prêmios continuam disponíveis sem login.", false);
+      await loadInteractions();
+    });
+  }
+
   async function loadInteractions() {
     const [polls, awards, matches, results] = await Promise.all([
       request("polls?select=id,question,week_start,options&active=eq.true&order=week_start.desc"),
@@ -285,19 +570,49 @@
       request("matches?select=id,home_team,away_team,match_date,home_score,away_score&active=eq.true&order=match_date.asc"),
       request("rpc/get_interaction_results", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
     ]);
-    scheduleVotingRefresh(polls, awards);
+    scheduleVotingRefresh(polls, awards, matches);
     const pollResults = results.polls || [];
     const awardResults = results.awards || [];
     if (polls.length) renderPoll(polls[0], pollResults.find(item => item.id === polls[0].id));
     else setLoading(pollContent, "Nenhuma enquete cadastrada nesta semana.");
     renderAwards(awards, awardResults);
     const nextMatch = matches.find(item => item.home_score === null && item.away_score === null) || matches[0];
-    if (nextMatch) renderPrediction(nextMatch, results.leaderboard || []);
+    if (session && profile) {
+      isScoreAdmin = await request("rpc/is_score_admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}"
+      });
+    } else {
+      isScoreAdmin = false;
+    }
+    if (nextMatch) {
+      const ownPredictions = session
+        ? await request("predictions?select=home_score,away_score&match_id=eq." + encodeURIComponent(nextMatch.id) +
+          "&account_id=eq." + encodeURIComponent(session.user.id))
+        : [];
+      renderPrediction(nextMatch, results.leaderboard || [], ownPredictions[0] || null, matches);
+    }
     else setLoading(predictionContent, "Nenhum jogo cadastrado. Cadastre o próximo jogo no Supabase.");
   }
 
+  bindAccountForms();
+  updateAccountUI();
   if (requireConfigured()) {
-    loadInteractions().catch(error => {
+    restoreSession().then(async () => {
+      if (session) {
+        try {
+          await setAccount(session);
+        } catch (error) {
+          saveSession(null);
+          profile = null;
+          isScoreAdmin = false;
+          updateAccountUI();
+          showMessage("Não foi possível recuperar sua conta: " + error.message, true);
+        }
+      }
+      await loadInteractions();
+    }).catch(error => {
       showMessage("Não foi possível carregar as interações: " + error.message, true);
       setLoading(pollContent, "Falha ao carregar.");
       setLoading(awardsContent, "Falha ao carregar.");

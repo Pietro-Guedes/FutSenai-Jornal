@@ -107,6 +107,8 @@
     }
     .interaction-option.is-leading:not(.is-selected) .interaction-option-indicator { border-color: #d99a16; }
     .interaction-score-field { min-width: 0; }
+    .interaction-card form button:disabled,
+    #auth-forms button:disabled { cursor: wait; opacity: .65; }
     .cover-wrap { overflow: hidden; background: #f8fafc; }
     .cover-image { width: 100%; height: 100%; object-fit: contain; }
     #article-image {

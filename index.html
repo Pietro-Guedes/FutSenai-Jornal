@@ -72,9 +72,44 @@
           <p class="mb-2 text-[10px] font-black uppercase tracking-[.18em] text-red-600">🔮 Previsões</p>
           <h3 id="prediction-heading" class="text-lg font-black text-slate-900">Adivinhe o placar</h3>
           <div id="prediction-content" class="mt-4 space-y-3 text-sm text-slate-500">Carregando próximo jogo…</div>
+          <section class="mt-5 border-t border-red-50 pt-4" aria-labelledby="account-heading">
+            <div class="mb-3">
+              <p class="mb-1 text-[10px] font-black uppercase tracking-[.18em] text-red-600">Conta da liga</p>
+              <h4 id="account-heading" class="text-base font-black text-slate-900">Entre para salvar seus palpites e pontos</h4>
+              <p class="mt-1 text-xs leading-5 text-slate-500">Enquete e prêmios não precisam de login. Para palpitar, use sempre a mesma conta; seu apelido aparece no ranking, mas e-mail e senha ficam privados.</p>
+            </div>
+            <p id="account-status" class="hidden mb-3 text-sm font-bold text-green-700" role="status"></p>
+            <div id="auth-forms" class="space-y-4">
+              <form id="signup-form" class="space-y-3">
+                <h5 class="text-sm font-extrabold text-slate-800">Criar conta</h5>
+                <label class="block text-xs font-bold text-slate-700">Apelido público
+                  <input name="nickname" required minlength="2" maxlength="24" autocomplete="nickname" class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm" placeholder="Ex.: CraqueDaTurma">
+                </label>
+                <label class="block text-xs font-bold text-slate-700">E-mail
+                  <input name="email" type="email" required autocomplete="email" class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm" placeholder="voce@exemplo.com">
+                </label>
+                <label class="block text-xs font-bold text-slate-700">Senha (privada e diferente do apelido)
+                  <input name="password" type="password" required minlength="8" autocomplete="new-password" class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
+                </label>
+                <button type="submit" class="w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-extrabold text-white transition hover:bg-red-700">Criar conta</button>
+              </form>
+              <form id="signin-form" class="space-y-3 border-t border-red-50 pt-4">
+                <h5 class="text-sm font-extrabold text-slate-800">Já tenho conta</h5>
+                <label class="block text-xs font-bold text-slate-700">E-mail
+                  <input name="email" type="email" required autocomplete="email" class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
+                </label>
+                <label class="block text-xs font-bold text-slate-700">Senha
+                  <input name="password" type="password" required autocomplete="current-password" class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
+                </label>
+                <button type="submit" class="w-full rounded-lg border border-red-200 px-4 py-2.5 text-sm font-extrabold text-red-700 transition hover:bg-red-50">Entrar</button>
+              </form>
+            </div>
+            <button id="signout-button" type="button" class="hidden rounded-lg border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50">Sair da conta</button>
+          </section>
+          <div id="score-admin-content" class="mt-4 hidden border-t border-red-100 pt-4"></div>
         </section>
       </div>
-      <p class="mt-4 text-center text-xs leading-5 text-slate-500">Votos e palpites usam um identificador deste navegador; não é uma verificação de identidade. O apelido enviado para o ranking fica visível para todos.</p>
+      <p class="mt-4 text-center text-xs leading-5 text-slate-500">A enquete e os prêmios são abertos. Só os palpites para a liga precisam de conta; use uma senha privada e diferente do apelido.</p>
     </section>
 
     <div class="mb-7 flex flex-wrap items-end justify-between gap-4">
