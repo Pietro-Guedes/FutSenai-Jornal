@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#c92332">
   <meta name="description" content="As notícias mais quentes do futebol de intervalo do Senai.">
   <title>Jornal FutSenai — O futebol acontece aqui</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -49,6 +50,33 @@
   </header>
 
   <main class="mx-auto min-h-[55vh] max-w-[1180px] px-5 py-9 sm:px-8 sm:py-12">
+    <section class="mb-12" aria-labelledby="round-title">
+      <div class="mb-6">
+        <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Participe da resenha</p>
+        <h2 id="round-title" class="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">A rodada da semana</h2>
+        <p class="mt-2 text-sm leading-6 text-slate-600">Vote, escolha os destaques e dê seu palpite. Os resultados ficam compartilhados com todo mundo.</p>
+      </div>
+      <div id="interaction-message" class="mb-5 hidden rounded-xl border px-4 py-3 text-sm font-medium" role="status" aria-live="polite"></div>
+      <div class="grid gap-5 lg:grid-cols-3">
+        <section class="interaction-card rounded-2xl border border-red-100 bg-white p-5 shadow-sm" aria-labelledby="poll-heading">
+          <p class="mb-2 text-[10px] font-black uppercase tracking-[.18em] text-red-600">📣 Enquete</p>
+          <h3 id="poll-heading" class="text-lg font-black text-slate-900">Voto da torcida</h3>
+          <div id="poll-content" class="mt-4 space-y-3 text-sm text-slate-500">Carregando enquete…</div>
+        </section>
+        <section class="interaction-card rounded-2xl border border-red-100 bg-white p-5 shadow-sm" aria-labelledby="awards-heading">
+          <p class="mb-2 text-[10px] font-black uppercase tracking-[.18em] text-red-600">🏆 Prêmios semanais</p>
+          <h3 id="awards-heading" class="text-lg font-black text-slate-900">Quem merece o troféu?</h3>
+          <div id="awards-content" class="mt-4 space-y-5 text-sm text-slate-500">Carregando indicações…</div>
+        </section>
+        <section class="interaction-card rounded-2xl border border-red-100 bg-white p-5 shadow-sm" aria-labelledby="prediction-heading">
+          <p class="mb-2 text-[10px] font-black uppercase tracking-[.18em] text-red-600">🔮 Previsões</p>
+          <h3 id="prediction-heading" class="text-lg font-black text-slate-900">Adivinhe o placar</h3>
+          <div id="prediction-content" class="mt-4 space-y-3 text-sm text-slate-500">Carregando próximo jogo…</div>
+        </section>
+      </div>
+      <p class="mt-4 text-center text-xs leading-5 text-slate-500">Votos e palpites usam um identificador deste navegador; não é uma verificação de identidade. O apelido enviado para o ranking fica visível para todos.</p>
+    </section>
+
     <div class="mb-7 flex flex-wrap items-end justify-between gap-4">
       <div>
         <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Dentro de campo</p>
@@ -62,6 +90,9 @@
     <div id="feed-message" class="mb-5 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" role="status"></div>
     <section id="news-feed" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Feed de notícias"></section>
     <p class="mt-5 text-center text-xs text-slate-500">Suas curtidas ficam salvas somente neste navegador; elas não são compartilhadas com outros alunos.</p>
+    <section class="hidden mt-10 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900" aria-label="Configuração de interações">
+      <p id="interaction-setup-note">As interações compartilhadas aguardam a configuração do Supabase pelo responsável pelo site.</p>
+    </section>
   </main>
 
   <footer class="border-t border-slate-200 bg-white">
@@ -96,5 +127,7 @@
   <div id="toast" class="toast fixed bottom-5 left-1/2 z-[60] hidden max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-xl bg-slate-900 px-5 py-3 text-center text-sm font-bold text-white shadow-xl" role="status" aria-live="polite"></div>
 
   <script src="script.js" defer></script>
+  <script src="supabase-config.js" defer></script>
+  <script src="interactions.js" defer></script>
 </body>
 </html>
