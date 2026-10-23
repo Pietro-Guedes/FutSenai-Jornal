@@ -58,17 +58,55 @@
       display: flex;
       width: 100%;
       align-items: center;
-      gap: .65rem;
-      border: 1px solid #e7eaf0;
-      border-radius: .7rem;
-      padding: .7rem .8rem;
+      gap: .75rem;
+      min-height: 3rem;
+      border: 1px solid #d9dee8;
+      border-radius: .75rem;
+      background: #fff;
+      padding: .65rem .8rem;
       color: #344054;
       text-align: left;
-      transition: border-color .2s ease, background-color .2s ease;
+      transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
     }
-    .interaction-option:hover { border-color: #fda4af; background: #fff1f2; }
+    .interaction-option:hover:not(:disabled) { border-color: #fda4af; background: #fff8f8; }
     .interaction-option:disabled { cursor: default; opacity: .75; }
-    .interaction-option.is-selected { border-color: #c92332; background: #fff1f2; color: #9f1239; font-weight: 800; }
+    .interaction-option-indicator {
+      display: grid;
+      width: 1.2rem;
+      height: 1.2rem;
+      flex: 0 0 1.2rem;
+      place-items: center;
+      border: 1.5px solid #98a2b3;
+      border-radius: 50%;
+      color: #fff;
+      font-size: .7rem;
+      line-height: 1;
+    }
+    .interaction-option-label { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+    .interaction-option-stats {
+      flex: 0 0 auto;
+      color: #667085;
+      font-size: .75rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .interaction-option.is-selected {
+      border-color: #c92332;
+      background: #fff1f2;
+      color: #9f1239;
+      font-weight: 800;
+      box-shadow: 0 0 0 1px rgba(201, 35, 50, .08);
+    }
+    .interaction-option.is-selected .interaction-option-indicator {
+      border-color: #c92332;
+      background: #c92332;
+    }
+    .interaction-option.is-leading:not(.is-selected) {
+      border-color: #f4c75e;
+      background: #fffbeb;
+    }
+    .interaction-option.is-leading:not(.is-selected) .interaction-option-indicator { border-color: #d99a16; }
+    .interaction-score-field { min-width: 0; }
     .cover-wrap { overflow: hidden; background: #f8fafc; }
     .cover-image { width: 100%; height: 100%; object-fit: contain; }
     #article-image {

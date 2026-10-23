@@ -8,6 +8,7 @@
   const awardsContent = document.querySelector("#awards-content");
   const predictionContent = document.querySelector("#prediction-content");
   const voterKey = "jornal-futsenai-voter-id";
+  let votingRefreshTimer = null;
   const headers = config && config.url && config.anonKey
     ? { apikey: config.anonKey, Authorization: "Bearer " + config.anonKey }
     : null;
@@ -61,26 +62,50 @@
     return voterId;
   }
 
+  function votingDeadline(value) {
+    const friday = new Date(value + "T00:00:00Z");
+    friday.setUTCDate(friday.getUTCDate() + 4);
+    return new Date(friday.toISOString().slice(0, 10) + "T15:30:00-03:00").getTime();
+  }
+
   function weekIsOver(value) {
-    const start = new Date(value + "T00:00:00Z");
-    return Date.now() >= start.getTime() + 7 * 24 * 60 * 60 * 1000;
+    return Date.now() >= votingDeadline(value);
+  }
+
+  function scheduleVotingRefresh(polls, awards) {
+    if (votingRefreshTimer !== null) window.clearTimeout(votingRefreshTimer);
+    const upcomingDeadlines = [...polls, ...awards]
+      .map(item => votingDeadline(item.week_start))
+      .filter(deadline => deadline > Date.now());
+    votingRefreshTimer = null;
+    if (!upcomingDeadlines.length) return;
+
+    const delay = Math.min(...upcomingDeadlines) - Date.now();
+    votingRefreshTimer = window.setTimeout(() => {
+      votingRefreshTimer = null;
+      loadInteractions().catch(error => {
+        showMessage("Não foi possível atualizar o encerramento das votações: " + error.message, true);
+      });
+    }, delay);
   }
 
   function renderOptions(container, options, selected, counts, onChoose, isClosed) {
     const maxVotes = Math.max(0, ...options.map(option => Number(counts[option]) || 0));
     const total = options.reduce((sum, option) => sum + (Number(counts[option]) || 0), 0);
     options.forEach(option => {
-      const button = createElement("button", "interaction-option" + (selected === option ? " is-selected" : ""));
+      const votes = Number(counts[option]) || 0;
+      const percentage = total ? Math.round(votes / total * 100) : 0;
+      const button = createElement("button", "interaction-option");
       button.type = "button";
-      button.textContent = option;
       button.setAttribute("aria-pressed", String(selected === option));
       button.disabled = isClosed;
       if (!isClosed) button.addEventListener("click", () => onChoose(option));
+      if (selected === option) button.classList.add("is-selected");
+      else if (maxVotes > 0 && votes === maxVotes) button.classList.add("is-leading");
+      button.append(createElement("span", "interaction-option-indicator", selected === option ? "✓" : ""));
+      button.append(createElement("span", "interaction-option-label", option));
       if (selected !== null || total > 0) {
-        const votes = Number(counts[option]) || 0;
-        const percentage = total ? Math.round(votes / total * 100) : 0;
-        button.append(createElement("span", "ml-auto text-xs text-slate-500", votes + " · " + percentage + "%"));
-        if (maxVotes > 0 && votes === maxVotes) button.classList.add("is-selected");
+        button.append(createElement("span", "interaction-option-stats", votes + " · " + percentage + "%"));
       }
       container.append(button);
     });
@@ -152,11 +177,11 @@
             p_nominee: nominee
           }, "Voto no prêmio registrado! Você pode alterá-lo neste navegador.", () => {
             localStorage.setItem("jornal-futsenai-award-" + award.id, nominee);
-          }, isClosed);
+          });
         } catch (error) {
           showMessage("Não foi possível registrar o voto: " + error.message, true);
         }
-      });
+      }, isClosed);
       const votes = award.nominees.map(nominee => [nominee, Number(counts[nominee]) || 0]);
       const highest = Math.max(0, ...votes.map(item => item[1]));
       const leaders = votes.filter(item => item[1] === highest && highest > 0).map(item => item[0]);
@@ -196,9 +221,11 @@
       nicknameLabel.append(nickname);
       form.append(nicknameLabel);
 
-      const scores = createElement("div", "grid grid-cols-[1fr_auto_1fr] items-center gap-2");
-      const homeScore = createElement("input", "field w-full rounded-lg border border-slate-200 px-3 py-2.5 text-center text-lg font-black");
-      const awayScore = createElement("input", "field w-full rounded-lg border border-slate-200 px-3 py-2.5 text-center text-lg font-black");
+      const scores = createElement("div", "grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-2");
+      const homeLabel = createElement("label", "block min-w-0 text-center text-xs font-bold text-slate-600", match.home_team);
+      const awayLabel = createElement("label", "block min-w-0 text-center text-xs font-bold text-slate-600", match.away_team);
+      const homeScore = createElement("input", "interaction-score-field field mt-1 w-full rounded-lg border border-slate-200 px-2 py-2.5 text-center text-lg font-black");
+      const awayScore = createElement("input", "interaction-score-field field mt-1 w-full rounded-lg border border-slate-200 px-2 py-2.5 text-center text-lg font-black");
       [homeScore, awayScore].forEach((input, index) => {
         input.type = "number";
         input.min = "0";
@@ -206,7 +233,9 @@
         input.required = true;
         input.setAttribute("aria-label", "Gols previstos para " + (index === 0 ? match.home_team : match.away_team));
       });
-      scores.append(homeScore, createElement("span", "font-black text-slate-400", "×"), awayScore);
+      homeLabel.append(homeScore);
+      awayLabel.append(awayScore);
+      scores.append(homeLabel, createElement("span", "mb-3 font-black text-slate-400", "×"), awayLabel);
       form.append(scores);
 
       const submit = createElement("button", "w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-extrabold text-white transition hover:bg-red-700", "Enviar palpite");
@@ -256,6 +285,7 @@
       request("matches?select=id,home_team,away_team,match_date,home_score,away_score&active=eq.true&order=match_date.asc"),
       request("rpc/get_interaction_results", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
     ]);
+    scheduleVotingRefresh(polls, awards);
     const pollResults = results.polls || [];
     const awardResults = results.awards || [];
     if (polls.length) renderPoll(polls[0], pollResults.find(item => item.id === polls[0].id));
