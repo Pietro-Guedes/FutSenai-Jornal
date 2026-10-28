@@ -247,6 +247,48 @@
       return;
     }
 
+    const config = window.FUTSENAI_SUPABASE;
+    let remoteError = null;
+    if (config && config.url && config.anonKey) {
+      try {
+        const response = await fetch(config.url.replace(/\/$/, "") +
+          "/rest/v1/news?select=id,title,category,player,image,content,created_at&order=created_at.desc", {
+          headers: { apikey: config.anonKey, Authorization: "Bearer " + config.anonKey },
+          cache: "no-store"
+        });
+        if (!response.ok) throw new Error("Supabase respondeu HTTP " + response.status);
+        const rows = await response.json();
+        if (!Array.isArray(rows) || rows.some(item =>
+          !item || typeof item.id !== "string" ||
+          typeof item.title !== "string" ||
+          typeof item.category !== "string" ||
+          typeof item.player !== "string" ||
+          typeof item.content !== "string" ||
+          typeof item.created_at !== "string" ||
+          Number.isNaN(new Date(item.created_at).getTime()) ||
+          (item.image !== undefined && typeof item.image !== "string")
+        )) {
+          throw new Error("O banco retornou notícias fora do formato esperado.");
+        }
+        news = rows.map(item => ({
+          id: item.id,
+          title: item.title,
+          category: item.category,
+          player: item.player,
+          image: item.image || "",
+          content: item.content,
+          createdAt: item.created_at
+        }));
+        if (news.length) {
+          renderNews();
+          return;
+        }
+        remoteError = new Error("Ainda não há notícias no banco de dados.");
+      } catch (error) {
+        remoteError = error;
+      }
+    }
+
     try {
       const response = await fetch("noticias.json", { cache: "no-store" });
       if (!response.ok) throw new Error("Resposta HTTP " + response.status);
@@ -265,10 +307,16 @@
       }
       news = parsed;
       renderNews();
+      if (remoteError) {
+        showMessage("Exibindo noticias.json porque as notícias online não puderam ser carregadas. " +
+          remoteError.message + " Importe o arquivo no painel administrativo para sincronizar o banco.", true);
+      }
     } catch (error) {
       news = [];
       renderNews();
-      showMessage("Não foi possível carregar as notícias publicadas. Confira se noticias.json está na mesma pasta do site e se ele foi enviado à hospedagem. Detalhe: " + error.message, true);
+      showMessage("Não foi possível carregar as notícias publicadas. " +
+        (remoteError ? "Banco: " + remoteError.message + ". " : "") +
+        "Confira se o Supabase e noticias.json estão configurados. Detalhe: " + error.message, true);
     }
   }
 

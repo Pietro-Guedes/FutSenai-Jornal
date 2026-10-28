@@ -1,0 +1,465 @@
+create table if not exists public.polls (
+  id text primary key,
+  question text not null,
+  week_start date not null,
+  options text[] not null check (cardinality(options) >= 2),
+  active boolean not null default true
+);
+
+create table if not exists public.poll_votes (
+  poll_id text not null references public.polls(id) on delete cascade,
+  voter_id uuid not null,
+  option text not null,
+  created_at timestamptz not null default now(),
+  primary key (poll_id, voter_id)
+);
+
+create table if not exists public.weekly_awards (
+  id text primary key,
+  title text not null,
+  week_start date not null,
+  nominees text[] not null check (cardinality(nominees) >= 2),
+  active boolean not null default true
+);
+
+alter table public.weekly_awards
+  drop constraint if exists weekly_awards_nominees_check;
+alter table public.weekly_awards
+  drop constraint if exists weekly_awards_nominees_count;
+alter table public.weekly_awards
+  add constraint weekly_awards_nominees_count
+  check (cardinality(nominees) between 2 and 3);
+
+create table if not exists public.award_votes (
+  award_id text not null references public.weekly_awards(id) on delete cascade,
+  voter_id uuid not null,
+  nominee text not null,
+  created_at timestamptz not null default now(),
+  primary key (award_id, voter_id)
+);
+
+create table if not exists public.matches (
+  id text primary key,
+  home_team text not null,
+  away_team text not null,
+  match_date date not null,
+  home_score integer check (home_score between 0 and 99),
+  away_score integer check (away_score between 0 and 99),
+  active boolean not null default true,
+  check ((home_score is null) = (away_score is null))
+);
+
+create table if not exists public.predictions (
+  match_id text not null references public.matches(id) on delete cascade,
+  voter_id uuid not null,
+  account_id uuid references auth.users(id) on delete cascade,
+  nickname text not null check (char_length(nickname) between 1 and 24),
+  home_score integer not null check (home_score between 0 and 99),
+  away_score integer not null check (away_score between 0 and 99),
+  updated_at timestamptz not null default now(),
+  primary key (match_id, voter_id)
+);
+
+alter table public.predictions
+  add column if not exists account_id uuid references auth.users(id) on delete cascade;
+create unique index if not exists predictions_match_account_unique
+  on public.predictions (match_id, account_id) where account_id is not null;
+
+create table if not exists public.profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  nickname text not null check (char_length(btrim(nickname)) between 2 and 24),
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists profiles_nickname_unique
+  on public.profiles (lower(nickname));
+
+create table if not exists public.score_admins (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.news_admins (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.news (
+  id text primary key,
+  title text not null,
+  category text not null,
+  player text not null,
+  image text not null default '',
+  content text not null,
+  created_at timestamptz not null default now()
+);
+
+create or replace function public.is_news_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select auth.uid() is not null and exists (
+    select 1 from public.news_admins where user_id = auth.uid()
+  );
+$$;
+
+create or replace function public.create_profile_for_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  requested_nickname text := btrim(new.raw_user_meta_data ->> 'nickname');
+begin
+  if requested_nickname is null or char_length(requested_nickname) not between 2 and 24 then
+    raise exception 'O apelido precisa ter entre 2 e 24 caracteres.';
+  end if;
+
+  insert into public.profiles (user_id, nickname)
+  values (new.id, requested_nickname);
+  return new;
+end;
+$$;
+revoke all on function public.create_profile_for_new_user() from public;
+
+drop trigger if exists on_auth_user_created_profile on auth.users;
+create trigger on_auth_user_created_profile
+  after insert on auth.users
+  for each row execute function public.create_profile_for_new_user();
+
+alter table public.polls enable row level security;
+alter table public.weekly_awards enable row level security;
+alter table public.matches enable row level security;
+alter table public.poll_votes enable row level security;
+alter table public.award_votes enable row level security;
+alter table public.predictions enable row level security;
+alter table public.profiles enable row level security;
+alter table public.score_admins enable row level security;
+alter table public.news_admins enable row level security;
+alter table public.news enable row level security;
+
+drop policy if exists "Public can read active polls" on public.polls;
+create policy "Public can read active polls" on public.polls
+  for select to anon, authenticated using (active);
+drop policy if exists "Public can read active awards" on public.weekly_awards;
+create policy "Public can read active awards" on public.weekly_awards
+  for select to anon, authenticated using (active);
+drop policy if exists "Public can read active matches" on public.matches;
+create policy "Public can read active matches" on public.matches
+  for select to anon, authenticated using (active);
+
+drop policy if exists "Public can read news" on public.news;
+create policy "Public can read news" on public.news
+  for select to anon, authenticated using (true);
+drop policy if exists "News admins can manage news" on public.news;
+create policy "News admins can manage news" on public.news
+  for all to authenticated
+  using (public.is_news_admin())
+  with check (public.is_news_admin());
+
+revoke all on public.polls, public.weekly_awards, public.matches, public.news from anon, authenticated;
+grant select on public.polls, public.weekly_awards, public.matches, public.news to anon, authenticated;
+grant insert, update, delete on public.news to authenticated;
+revoke all on public.poll_votes, public.award_votes, public.predictions, public.profiles, public.score_admins, public.news_admins from anon, authenticated;
+grant select on public.profiles to anon, authenticated;
+
+insert into storage.buckets (id, name, public)
+values ('news-images', 'news-images', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "Public can read news images" on storage.objects;
+create policy "Public can read news images" on storage.objects
+  for select to public using (bucket_id = 'news-images');
+drop policy if exists "News admins can upload news images" on storage.objects;
+create policy "News admins can upload news images" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'news-images' and public.is_news_admin());
+drop policy if exists "News admins can update news images" on storage.objects;
+create policy "News admins can update news images" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'news-images' and public.is_news_admin())
+  with check (bucket_id = 'news-images' and public.is_news_admin());
+drop policy if exists "News admins can delete news images" on storage.objects;
+create policy "News admins can delete news images" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'news-images' and public.is_news_admin());
+
+drop policy if exists "Public can read profile nicknames" on public.profiles;
+create policy "Public can read profile nicknames" on public.profiles
+  for select to anon, authenticated using (true);
+
+drop policy if exists "Users can read own predictions" on public.predictions;
+create policy "Users can read own predictions" on public.predictions
+  for select to authenticated using (account_id = auth.uid());
+grant select on public.predictions to authenticated;
+
+create or replace function public.weekly_voting_deadline(p_week_start date)
+returns timestamptz
+language sql
+immutable
+strict
+set search_path = pg_catalog
+as $$
+  select ((p_week_start + 4) + time '15:30') at time zone 'America/Sao_Paulo';
+$$;
+
+create or replace function public.prediction_deadline(p_match_date date)
+returns timestamptz
+language sql
+immutable
+strict
+set search_path = pg_catalog
+as $$
+  select (p_match_date + time '11:00') at time zone 'America/Sao_Paulo';
+$$;
+
+drop function if exists public.submit_poll_vote(text, uuid, text);
+drop function if exists public.submit_poll_vote(text, text);
+create or replace function public.submit_poll_vote(p_poll_id text, p_voter_id uuid, p_option text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from public.polls
+    where id = p_poll_id and active
+      and now() < public.weekly_voting_deadline(week_start)
+      and p_option = any(options)
+  ) then
+    raise exception 'Enquete ou opção indisponível.';
+  end if;
+
+  insert into public.poll_votes (poll_id, voter_id, option)
+  values (p_poll_id, p_voter_id, p_option)
+  on conflict (poll_id, voter_id) do update
+    set option = excluded.option, created_at = now();
+end;
+$$;
+
+drop function if exists public.submit_award_vote(text, uuid, text);
+drop function if exists public.submit_award_vote(text, text);
+create or replace function public.submit_award_vote(p_award_id text, p_voter_id uuid, p_nominee text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from public.weekly_awards
+    where id = p_award_id and active
+      and now() < public.weekly_voting_deadline(week_start)
+      and p_nominee = any(nominees)
+  ) then
+    raise exception 'Prêmio ou indicado indisponível.';
+  end if;
+
+  insert into public.award_votes (award_id, voter_id, nominee)
+  values (p_award_id, p_voter_id, p_nominee)
+  on conflict (award_id, voter_id) do update
+    set nominee = excluded.nominee, created_at = now();
+end;
+$$;
+
+drop function if exists public.submit_prediction(text, uuid, text, integer, integer);
+create or replace function public.submit_prediction(
+  p_match_id text,
+  p_home_score integer,
+  p_away_score integer
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  account_nickname text;
+begin
+  if current_user_id is null then
+    raise exception 'Entre na sua conta para enviar palpites.';
+  end if;
+  if p_home_score not between 0 and 99 or p_away_score not between 0 and 99 then
+    raise exception 'O placar precisa estar entre 0 e 99.';
+  end if;
+  if not exists (
+    select 1 from public.matches
+    where id = p_match_id and active and home_score is null
+      and now() < public.prediction_deadline(match_date)
+  ) then
+    raise exception 'Este jogo não está aceitando palpites. O prazo termina às 11h do dia do jogo.';
+  end if;
+
+  select nickname into account_nickname
+  from public.profiles where user_id = current_user_id;
+  if account_nickname is null then
+    raise exception 'Não foi encontrado um apelido para sua conta.';
+  end if;
+
+  insert into public.predictions (match_id, voter_id, account_id, nickname, home_score, away_score)
+  values (p_match_id, current_user_id, current_user_id, account_nickname, p_home_score, p_away_score)
+  on conflict (match_id, account_id) where account_id is not null do update
+    set nickname = excluded.nickname,
+        home_score = excluded.home_score,
+        away_score = excluded.away_score,
+        updated_at = now();
+end;
+$$;
+
+create or replace function public.is_score_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select auth.uid() is not null and exists (
+    select 1 from public.score_admins where user_id = auth.uid()
+  );
+$$;
+
+revoke all on function public.is_news_admin() from public, anon;
+grant execute on function public.is_news_admin() to authenticated;
+
+create or replace function public.set_match_result(
+  p_match_id text,
+  p_home_score integer,
+  p_away_score integer
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_score_admin() then
+    raise exception 'Somente a conta administradora pode registrar o placar.';
+  end if;
+  if p_home_score not between 0 and 99 or p_away_score not between 0 and 99 then
+    raise exception 'O placar precisa estar entre 0 e 99.';
+  end if;
+
+  update public.matches
+  set home_score = p_home_score, away_score = p_away_score
+  where id = p_match_id and active;
+  if not found then
+    raise exception 'Jogo não encontrado ou inativo.';
+  end if;
+end;
+$$;
+
+create or replace function public.get_interaction_results()
+returns jsonb
+language sql
+security definer
+set search_path = public
+as $$
+  select jsonb_build_object(
+    'polls', coalesce((
+      select jsonb_agg(jsonb_build_object('id', totals.poll_id, 'counts', totals.counts))
+      from (
+        select v.poll_id, jsonb_object_agg(v.option, v.total) as counts
+        from (
+          select pv.poll_id, pv.option, count(*) as total
+          from public.poll_votes pv
+          join public.polls p on p.id = pv.poll_id and p.active
+          group by pv.poll_id, pv.option
+        ) v
+        group by v.poll_id
+      ) totals
+    ), '[]'::jsonb),
+    'awards', coalesce((
+      select jsonb_agg(jsonb_build_object('id', totals.award_id, 'counts', totals.counts))
+      from (
+        select v.award_id, jsonb_object_agg(v.nominee, v.total) as counts
+        from (
+          select av.award_id, av.nominee, count(*) as total
+          from public.award_votes av
+          join public.weekly_awards a on a.id = av.award_id and a.active
+          group by av.award_id, av.nominee
+        ) v
+        group by v.award_id
+      ) totals
+    ), '[]'::jsonb),
+    'leaderboard', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'nickname', ranked.nickname,
+        'points', ranked.points,
+        'predictions', ranked.predictions
+      ) order by ranked.points desc, ranked.predictions desc, ranked.nickname)
+      from (
+        select pr.nickname,
+          sum(case
+            when p.home_score = m.home_score and p.away_score = m.away_score then 3
+            when sign(p.home_score - p.away_score) = sign(m.home_score - m.away_score) then 1
+            else 0
+          end)::integer as points,
+          count(*)::integer as predictions
+        from public.predictions p
+        join public.matches m on m.id = p.match_id
+        join public.profiles pr on pr.user_id = p.account_id
+        where m.home_score is not null and p.account_id is not null
+        group by pr.user_id, pr.nickname
+        order by points desc, predictions desc, pr.nickname
+        limit 10
+      ) ranked
+    ), '[]'::jsonb)
+  );
+$$;
+
+revoke all on function public.submit_poll_vote(text, uuid, text) from public;
+revoke all on function public.submit_award_vote(text, uuid, text) from public;
+revoke all on function public.submit_prediction(text, integer, integer) from public;
+revoke all on function public.get_interaction_results() from public;
+revoke all on function public.weekly_voting_deadline(date) from public;
+revoke all on function public.prediction_deadline(date) from public;
+revoke all on function public.is_score_admin() from public;
+revoke all on function public.is_news_admin() from public, anon;
+revoke all on function public.set_match_result(text, integer, integer) from public;
+revoke all on function public.submit_poll_vote(text, uuid, text) from anon, authenticated;
+revoke all on function public.submit_award_vote(text, uuid, text) from anon, authenticated;
+revoke all on function public.submit_prediction(text, integer, integer) from anon, authenticated;
+revoke all on function public.get_interaction_results() from anon, authenticated;
+revoke all on function public.is_score_admin() from anon, authenticated;
+revoke all on function public.is_news_admin() from anon, authenticated;
+revoke all on function public.set_match_result(text, integer, integer) from anon, authenticated;
+grant execute on function public.submit_poll_vote(text, uuid, text) to anon, authenticated;
+grant execute on function public.submit_award_vote(text, uuid, text) to anon, authenticated;
+grant execute on function public.submit_prediction(text, integer, integer) to authenticated;
+grant execute on function public.get_interaction_results() to anon, authenticated;
+grant execute on function public.is_score_admin() to authenticated;
+grant execute on function public.is_news_admin() to authenticated;
+grant execute on function public.set_match_result(text, integer, integer) to authenticated;
+
+insert into public.polls (id, question, week_start, options, active)
+values (
+  'lance-da-semana',
+  'Qual foi o lance mais marcante da semana?',
+  date_trunc('week', current_date)::date,
+  array['Golaço', 'Defesaça', 'Drible desconcertante', 'Lance de VAR'],
+  true
+)
+on conflict (id) do nothing;
+
+insert into public.weekly_awards (id, title, week_start, nominees, active)
+values
+  ('craque-da-semana', 'Craque da semana', date_trunc('week', current_date)::date,
+    array['Indicação do 3º Ano', 'Indicação do 2º Ano', 'Indicação do 1º Ano'], true),
+  ('var-da-semana', 'VAR da semana', date_trunc('week', current_date)::date,
+    array['Lance do 3º Ano', 'Lance do 2º Ano'], true)
+on conflict (id) do nothing;
+
+update public.weekly_awards
+set nominees = array['Indicação do 3º Ano', 'Indicação do 2º Ano', 'Indicação do 1º Ano']
+where id = 'craque-da-semana'
+  and nominees = array['Indicação do 3º Ano', 'Indicação do 2º Ano'];
+
+insert into public.matches (id, home_team, away_team, match_date, active)
+values ('proximo-jogo', 'Turma A', 'Turma B', current_date + 7, true)
+on conflict (id) do nothing;

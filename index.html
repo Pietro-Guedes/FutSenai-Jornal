@@ -28,7 +28,10 @@
             <span class="hidden text-[10px] font-bold uppercase tracking-[.2em] text-slate-500 sm:block">A resenha começa aqui</span>
           </span>
         </a>
-        <span class="rounded-full bg-red-50 px-3 py-2 text-xs font-extrabold text-red-700">Acesso dos alunos</span>
+        <div class="flex items-center gap-2">
+          <a href="admin.html" class="hidden rounded-lg border border-red-100 px-3 py-2 text-xs font-extrabold text-red-700 transition hover:bg-red-50 sm:inline-flex">Editar notícias</a>
+          <span class="rounded-full bg-red-50 px-3 py-2 text-xs font-extrabold text-red-700">Acesso dos alunos</span>
+        </div>
       </div>
       <div class="relative max-w-2xl pb-10 pt-10 text-white sm:pb-14 sm:pt-14">
         <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.18em] text-white">
@@ -133,7 +136,7 @@
   <footer class="border-t border-slate-200 bg-white">
     <div class="mx-auto flex max-w-[1180px] flex-col items-center justify-between gap-2 px-5 py-6 text-center text-xs text-slate-500 sm:flex-row sm:px-8 sm:text-left">
       <p><span class="font-black text-slate-800">Jornal FutSenai</span> <span class="mx-1 text-slate-300">·</span> A resenha oficial do intervalo.</p>
-      <p>Feito na arquibancada, com fair play e bom humor ⚽</p>
+      <p>Feito na arquibancada, com fair play e bom humor ⚽ <span class="mx-1 text-slate-300">·</span> <a href="admin.html" class="font-bold text-red-700 hover:text-red-900">Área administrativa</a></p>
     </div>
   </footer>
 
@@ -161,8 +164,8 @@
   </div>
   <div id="toast" class="toast fixed bottom-5 left-1/2 z-[60] hidden max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-xl bg-slate-900 px-5 py-3 text-center text-sm font-bold text-white shadow-xl" role="status" aria-live="polite"></div>
 
-  <script src="script.js" defer></script>
   <script src="supabase-config.js" defer></script>
+  <script src="script.js" defer></script>
   <script src="interactions.js" defer></script>
 </body>
 </html>
