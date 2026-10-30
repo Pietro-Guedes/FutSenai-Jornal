@@ -10,7 +10,7 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 4. Cole esses dois valores em `supabase-config.js`, nos campos `url` e `anonKey`.
 5. Em **Authentication → URL Configuration**, configure a URL do site publicado como **Site URL** e inclua-a em **Redirect URLs** para a confirmação de e-mail voltar ao site.
 6. Para oferecer login Google, em **Authentication → Sign In / Providers → Google**, ative o provedor e informe o OAuth Client ID e Client Secret criados no Google Cloud. No cliente OAuth do Google, cadastre como URI de redirecionamento autorizado o callback exibido pelo Supabase (normalmente `https://<project-ref>.supabase.co/auth/v1/callback`). Mantenha a URL do site em **Redirect URLs** no Supabase.
-7. Em **Table Editor**, edite os exemplos em `polls`, `weekly_awards` e `matches` (pergunta/opções, até 3 indicados para cada prêmio e próximo jogo). Deixe apenas os itens atuais com `active = true`.
+7. Cadastre uma conta de editor em `news_admins` conforme as instruções abaixo; ela também poderá gerenciar enquetes, prêmios e jogos pelo painel.
 8. Publique `index.html`, `admin.html`, `style.css`, `script.js`, `admin.js`, `interactions.js`, `supabase-config.js` e `noticias.json` junto às imagens do site.
 9. Abra o site em `https://` ou em `http://localhost`; `file://` não funciona para as chamadas ao Supabase.
 
@@ -29,6 +29,8 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 - Na primeira visita ao painel, escolha **Importar noticias.json** e selecione o arquivo atual do site. Isso copia as matérias existentes para o banco sem apagar outras matérias já cadastradas. Depois, novas matérias, edições e exclusões são publicadas diretamente no site.
 - Imagens escolhidas no computador são reduzidas e enviadas ao bucket público `news-images`. O bucket permite leitura pública das imagens, mas somente editores autorizados podem enviar ou alterar arquivos.
 - A chave `anon` no site não concede permissão para editar notícias. Nunca coloque uma chave `service_role` no navegador nem compartilhe sua senha.
+- O mesmo painel permite criar, editar e ativar/desativar enquetes, prêmios e jogos. Execute novamente `supabase-setup.sql` para aplicar as permissões. Somente editores cadastrados em `news_admins` podem alterar esses itens; os visitantes continuam podendo ler apenas os registros ativos. Desativar um item mantém seus votos e palpites. O placar final não é editável nessa seção: continua restrito ao fluxo de administrador de placares.
+- Na seção de participação, **Zerar votos ativos** apaga permanentemente os votos da enquete e dos prêmios ativos, sem apagar votos de itens inativos ou palpites de placar. A ação exige confirmação e retorna a quantidade apagada. Execute novamente `supabase-setup.sql` para instalar a função protegida do banco.
 
 ## Contas da liga e placares
 

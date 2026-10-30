@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#c92332">
   <meta name="robots" content="noindex, nofollow">
-  <title>Editar notícias — Jornal FutSenai</title>
+  <title>Painel administrativo — Jornal FutSenai</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="style.css">
@@ -21,8 +21,8 @@
   <main class="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-12">
     <div class="mb-8">
       <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Área administrativa</p>
-      <h1 class="text-3xl font-black tracking-tight text-slate-900">Editar notícias</h1>
-      <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Entre com sua conta autorizada para criar, editar e remover notícias publicadas no site.</p>
+      <h1 class="text-3xl font-black tracking-tight text-slate-900">Painel administrativo</h1>
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Gerencie notícias, enquetes, prêmios semanais e jogos do site.</p>
     </div>
 
     <div id="admin-message" class="mb-6 hidden rounded-xl border px-4 py-3 text-sm font-semibold" role="status" aria-live="polite"></div>
@@ -110,6 +110,108 @@
           <div id="admin-news-list" class="space-y-3"></div>
         </section>
       </div>
+
+      <section class="mt-12 border-t border-slate-200 pt-10" aria-labelledby="interactions-admin-title">
+        <div class="mb-6">
+          <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Participação dos alunos</p>
+          <h2 id="interactions-admin-title" class="text-2xl font-black tracking-tight text-slate-900">Enquetes, prêmios e jogos</h2>
+          <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Crie itens novos ou edite os existentes. Desativar um item o oculta do site sem apagar os votos ou palpites. Alterar opções não apaga votos já registrados.</p>
+          <div class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+            <button id="reset-active-votes" type="button" class="rounded-lg border border-red-300 bg-white px-4 py-2.5 text-sm font-extrabold text-red-700 hover:bg-red-100">Zerar votos ativos</button>
+            <p class="max-w-2xl text-xs leading-5 text-red-800">Apaga permanentemente os votos da enquete e dos prêmios ativos. Não apaga votos de itens inativos nem palpites de placar.</p>
+          </div>
+        </div>
+
+        <div class="space-y-8">
+          <section class="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6 lg:grid-cols-2" aria-labelledby="poll-admin-title">
+            <div>
+              <h3 id="poll-admin-title" class="text-lg font-black text-slate-900">Enquete</h3>
+              <form id="poll-admin-form" class="mt-4 space-y-3">
+                <input name="id" type="hidden">
+                <label class="block text-xs font-bold text-slate-700">Pergunta
+                  <input name="question" maxlength="240" required class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
+                </label>
+                <label class="block text-xs font-bold text-slate-700">Opções (uma por linha; pelo menos 2)
+                  <textarea name="options" rows="4" required class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm"></textarea>
+                </label>
+                <label class="block text-xs font-bold text-slate-700">Segunda-feira da semana
+                  <input name="week_start" type="date" required class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
+                </label>
+                <label class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <input name="active" type="checkbox" checked class="h-4 w-4 accent-red-600"> Ativa no site
+                </label>
+                <div class="flex gap-2">
+                  <button type="submit" class="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-extrabold text-white hover:bg-red-700">Salvar enquete</button>
+                  <button type="reset" class="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-600">Nova enquete</button>
+                </div>
+              </form>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-800">Enquetes cadastradas</h4>
+              <div id="poll-admin-list" class="mt-3 space-y-2 text-sm"></div>
+            </div>
+          </section>
+
+          <section class="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6 lg:grid-cols-2" aria-labelledby="award-admin-title">
+            <div>
+              <h3 id="award-admin-title" class="text-lg font-black text-slate-900">Prêmio semanal</h3>
+              <form id="award-admin-form" class="mt-4 space-y-3">
+                <input name="id" type="hidden">
+                <label class="block text-xs font-bold text-slate-700">Nome do prêmio
+                  <input name="title" maxlength="120" required class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
+                </label>
+                <label class="block text-xs font-bold text-slate-700">Indicados (um por linha; de 2 a 3)
+                  <textarea name="nominees" rows="3" required class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm"></textarea>
+                </label>
+                <label class="block text-xs font-bold text-slate-700">Segunda-feira da semana
+                  <input name="week_start" type="date" required class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
+                </label>
+                <label class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <input name="active" type="checkbox" checked class="h-4 w-4 accent-red-600"> Ativo no site
+                </label>
+                <div class="flex gap-2">
+                  <button type="submit" class="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-extrabold text-white hover:bg-red-700">Salvar prêmio</button>
+                  <button type="reset" class="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-600">Novo prêmio</button>
+                </div>
+              </form>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-800">Prêmios cadastrados</h4>
+              <div id="award-admin-list" class="mt-3 space-y-2 text-sm"></div>
+            </div>
+          </section>
+
+          <section class="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6 lg:grid-cols-2" aria-labelledby="match-admin-title">
+            <div>
+              <h3 id="match-admin-title" class="text-lg font-black text-slate-900">Jogo</h3>
+              <form id="match-admin-form" class="mt-4 space-y-3">
+                <input name="id" type="hidden">
+                <label class="block text-xs font-bold text-slate-700">Time da casa
+                  <input name="home_team" maxlength="100" required class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
+                </label>
+                <label class="block text-xs font-bold text-slate-700">Time visitante
+                  <input name="away_team" maxlength="100" required class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
+                </label>
+                <label class="block text-xs font-bold text-slate-700">Data do jogo
+                  <input name="match_date" type="date" required class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
+                </label>
+                <label class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <input name="active" type="checkbox" checked class="h-4 w-4 accent-red-600"> Ativo no site
+                </label>
+                <p class="text-xs leading-5 text-slate-500">O placar final continua sendo registrado na área de palpites pelo administrador de placares.</p>
+                <div class="flex gap-2">
+                  <button type="submit" class="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-extrabold text-white hover:bg-red-700">Salvar jogo</button>
+                  <button type="reset" class="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-600">Novo jogo</button>
+                </div>
+              </form>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-800">Jogos cadastrados</h4>
+              <div id="match-admin-list" class="mt-3 space-y-2 text-sm"></div>
+            </div>
+          </section>
+        </div>
+      </section>
     </section>
   </main>
   <script src="supabase-config.js" defer></script>

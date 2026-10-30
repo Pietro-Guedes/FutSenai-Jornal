@@ -4,6 +4,11 @@
   const config = window.FUTSENAI_SUPABASE;
   const SESSION_KEY = "jornal-futsenai-auth-session";
   const NEWS_ENDPOINT = "/rest/v1/news";
+  const INTERACTION_RESOURCES = {
+    polls: { endpoint: "/rest/v1/polls", form: "#poll-admin-form", list: "#poll-admin-list" },
+    awards: { endpoint: "/rest/v1/weekly_awards", form: "#award-admin-form", list: "#award-admin-list" },
+    matches: { endpoint: "/rest/v1/matches", form: "#match-admin-form", list: "#match-admin-list" }
+  };
   const STORAGE_BUCKET = "news-images";
   const loginPanel = document.querySelector("#login-panel");
   const editorPanel = document.querySelector("#editor-panel");
@@ -18,6 +23,7 @@
   const imageStatus = document.querySelector("#news-image-status");
   let session = null;
   let news = [];
+  let interactionRecords = { polls: [], awards: [], matches: [] };
   let selectedImageBlob = null;
 
   function showMessage(text, isError) {
@@ -122,6 +128,7 @@
     document.querySelector("#account-status").textContent =
       "Conectado como " + (session.user.email || "editor autorizado");
     await loadNews();
+    await loadInteractionRecords();
   }
 
   function validateNews(value) {
@@ -153,6 +160,223 @@
       createdAt: item.created_at
     }));
     renderNews();
+  }
+
+  async function loadInteractionRecords() {
+    const [polls, awards, matches] = await Promise.all([
+      request(INTERACTION_RESOURCES.polls.endpoint +
+        "?select=id,question,week_start,options,active&order=week_start.desc"),
+      request(INTERACTION_RESOURCES.awards.endpoint +
+        "?select=id,title,week_start,nominees,active&order=week_start.desc"),
+      request(INTERACTION_RESOURCES.matches.endpoint +
+        "?select=id,home_team,away_team,match_date,active,home_score,away_score&order=match_date.desc")
+    ]);
+    if (![polls, awards, matches].every(Array.isArray)) {
+      throw new Error("O Supabase retornou dados inválidos para enquetes, prêmios ou jogos.");
+    }
+    interactionRecords = { polls, awards, matches };
+    renderInteractionRecords();
+  }
+
+  async function resetActiveVotes() {
+    const confirmed = window.confirm(
+      "Apagar permanentemente os votos da enquete e dos prêmios ativos? " +
+      "Os votos não poderão ser recuperados. Palpites de placar não serão alterados."
+    );
+    if (!confirmed) return;
+
+    const button = document.querySelector("#reset-active-votes");
+    button.disabled = true;
+    try {
+      const result = await request("/rest/v1/rpc/reset_active_votes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}"
+      });
+      if (!result || !Number.isInteger(result.poll_votes_deleted) ||
+          !Number.isInteger(result.award_votes_deleted)) {
+        throw new Error("O Supabase retornou um resultado inesperado ao zerar os votos.");
+      }
+      showMessage(
+        "Votos removidos: " + result.poll_votes_deleted + " da enquete e " +
+        result.award_votes_deleted + " dos prêmios ativos.",
+        false
+      );
+    } catch (error) {
+      showMessage("Não foi possível zerar os votos: " + error.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  function renderInteractionRecords() {
+    const recordConfig = {
+      polls: {
+        title: item => item.question,
+        detail: item => item.options.join(" · ") + " | Semana de " + item.week_start
+      },
+      awards: {
+        title: item => item.title,
+        detail: item => item.nominees.join(" · ") + " | Semana de " + item.week_start
+      },
+      matches: {
+        title: item => item.home_team + " × " + item.away_team,
+        detail: item => "Jogo em " + item.match_date +
+          (item.home_score !== null && item.away_score !== null
+            ? " | Placar: " + item.home_score + " × " + item.away_score
+            : "")
+      }
+    };
+
+    Object.keys(INTERACTION_RESOURCES).forEach(key => {
+      const container = document.querySelector(INTERACTION_RESOURCES[key].list);
+      container.replaceChildren();
+      const records = interactionRecords[key];
+      if (!records.length) {
+        const empty = document.createElement("p");
+        empty.className = "rounded-lg border border-dashed border-slate-300 bg-white p-4 text-slate-500";
+        empty.textContent = "Nenhum item cadastrado.";
+        container.append(empty);
+        return;
+      }
+
+      records.forEach(item => {
+        const card = document.createElement("article");
+        card.className = "rounded-lg border border-slate-200 bg-white p-3";
+        const title = document.createElement("p");
+        title.className = "font-bold text-slate-800";
+        title.textContent = recordConfig[key].title(item);
+        const detail = document.createElement("p");
+        detail.className = "mt-1 text-xs leading-5 text-slate-500";
+        detail.textContent = recordConfig[key].detail(item);
+        const status = document.createElement("p");
+        status.className = "mt-1 text-xs font-bold " + (item.active ? "text-green-700" : "text-slate-500");
+        status.textContent = item.active ? "Ativo no site" : "Inativo";
+        const actions = document.createElement("div");
+        actions.className = "mt-2 flex gap-4";
+        actions.append(
+          createAction("Editar", () => editInteractionRecord(key, item), "text-red-700"),
+          createAction(item.active ? "Desativar" : "Ativar",
+            () => setInteractionActive(key, item), "text-slate-600")
+        );
+        card.append(title, detail, status, actions);
+        container.append(card);
+      });
+    });
+  }
+
+  function editInteractionRecord(type, item) {
+    const formElement = document.querySelector(INTERACTION_RESOURCES[type].form);
+    const values = {
+      ...item,
+      options: item.options ? item.options.join("\n") : undefined,
+      nominees: item.nominees ? item.nominees.join("\n") : undefined
+    };
+    Object.entries(values).forEach(([name, value]) => {
+      const field = formElement.elements.namedItem(name);
+      if (!field || value === undefined || value === null) return;
+      if (field.type === "checkbox") field.checked = Boolean(value);
+      else field.value = value;
+    });
+    formElement.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  async function setInteractionActive(type, item) {
+    const resource = INTERACTION_RESOURCES[type];
+    try {
+      await request(resource.endpoint + "?id=eq." + encodeURIComponent(item.id), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ active: !item.active })
+      });
+      await loadInteractionRecords();
+      showMessage(item.active
+        ? "Item desativado; os votos ou palpites foram preservados."
+        : "Item ativado no site.", false);
+    } catch (error) {
+      showMessage("Não foi possível alterar o status: " + error.message, true);
+    }
+  }
+
+  function parseLineItems(value, label, min, max) {
+    const items = value.split(/\r?\n/).map(item => item.trim()).filter(Boolean);
+    if (items.length < min || items.length > max) {
+      throw new Error(label + (max === min ? " precisa ter " + min : " precisa ter entre " + min + " e " + max) +
+        (min === 1 && max === 1 ? " item." : " itens, um por linha."));
+    }
+    if (new Set(items.map(item => item.toLocaleLowerCase())).size !== items.length) {
+      throw new Error(label + " não pode ter itens repetidos.");
+    }
+    return items;
+  }
+
+  function bindInteractionForms() {
+    const forms = [
+      {
+        type: "polls",
+        form: document.querySelector(INTERACTION_RESOURCES.polls.form),
+        build: data => ({
+          id: String(data.get("id")) || crypto.randomUUID(),
+          question: String(data.get("question")).trim(),
+          options: parseLineItems(String(data.get("options")), "A enquete", 2, 20),
+          week_start: String(data.get("week_start")),
+          active: data.get("active") === "on"
+        })
+      },
+      {
+        type: "awards",
+        form: document.querySelector(INTERACTION_RESOURCES.awards.form),
+        build: data => ({
+          id: String(data.get("id")) || crypto.randomUUID(),
+          title: String(data.get("title")).trim(),
+          nominees: parseLineItems(String(data.get("nominees")), "O prêmio", 2, 3),
+          week_start: String(data.get("week_start")),
+          active: data.get("active") === "on"
+        })
+      },
+      {
+        type: "matches",
+        form: document.querySelector(INTERACTION_RESOURCES.matches.form),
+        build: data => ({
+          id: String(data.get("id")) || crypto.randomUUID(),
+          home_team: String(data.get("home_team")).trim(),
+          away_team: String(data.get("away_team")).trim(),
+          match_date: String(data.get("match_date")),
+          active: data.get("active") === "on"
+        })
+      }
+    ];
+
+    forms.forEach(({ type, form: formElement, build }) => {
+      formElement.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (!formElement.reportValidity()) return;
+        const submit = formElement.querySelector('button[type="submit"]');
+        submit.disabled = true;
+        try {
+          const record = build(new FormData(formElement));
+          if (Object.entries(record).some(([key, value]) =>
+            key !== "active" && (typeof value === "string" ? !value : Array.isArray(value) && value.some(item => !item)))) {
+            throw new Error("Preencha todos os campos obrigatórios.");
+          }
+          await request(INTERACTION_RESOURCES[type].endpoint + "?on_conflict=id", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Prefer: "resolution=merge-duplicates,return=minimal"
+            },
+            body: JSON.stringify(record)
+          });
+          formElement.reset();
+          await loadInteractionRecords();
+          showMessage("Item salvo. Alterações publicadas no site.", false);
+        } catch (error) {
+          showMessage("Não foi possível salvar: " + error.message, true);
+        } finally {
+          submit.disabled = false;
+        }
+      });
+    });
   }
 
   function resetForm() {
@@ -458,6 +682,9 @@
     showLogin();
     showMessage("Você saiu da área administrativa.", false);
   });
+
+  bindInteractionForms();
+  document.querySelector("#reset-active-votes").addEventListener("click", resetActiveVotes);
 
   async function initialize() {
     try {

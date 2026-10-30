@@ -297,7 +297,16 @@
     const container = createElement("div", "space-y-3");
     container.append(createElement("p", "font-bold leading-6 text-slate-800", poll.question));
     const counts = result && result.counts ? result.counts : {};
-    const chosen = localStorage.getItem("jornal-futsenai-poll-" + poll.id);
+    const voteKey = "jornal-futsenai-poll-" + poll.id;
+    const hasVotes = Object.values(counts).some(total => Number(total) > 0);
+    let chosen = hasVotes ? localStorage.getItem(voteKey) : null;
+    if (!hasVotes) {
+      try {
+        localStorage.removeItem(voteKey);
+      } catch (error) {
+        showMessage("Os votos foram zerados, mas não foi possível limpar a escolha salva neste navegador: " + error.message, true);
+      }
+    }
     const isClosed = weekIsOver(poll.week_start);
     renderOptions(container, poll.options, chosen, counts, async option => {
       try {
@@ -306,7 +315,7 @@
           p_voter_id: getVoterId(),
           p_option: option
         }, "Voto registrado! Você pode alterá-lo neste navegador.", () => {
-          localStorage.setItem("jornal-futsenai-poll-" + poll.id, option);
+          localStorage.setItem(voteKey, option);
         });
       } catch (error) {
         showMessage("Não foi possível registrar o voto: " + error.message, true);
@@ -329,7 +338,16 @@
       group.append(createElement("h4", "mb-3 font-extrabold text-slate-800", award.title));
       const stats = results.find(item => item.id === award.id);
       const counts = stats && stats.counts ? stats.counts : {};
-      const chosen = localStorage.getItem("jornal-futsenai-award-" + award.id);
+      const voteKey = "jornal-futsenai-award-" + award.id;
+      const hasVotes = Object.values(counts).some(total => Number(total) > 0);
+      const chosen = hasVotes ? localStorage.getItem(voteKey) : null;
+      if (!hasVotes) {
+        try {
+          localStorage.removeItem(voteKey);
+        } catch (error) {
+          showMessage("Os votos foram zerados, mas não foi possível limpar a escolha salva neste navegador: " + error.message, true);
+        }
+      }
       const isClosed = weekIsOver(award.week_start);
       renderOptions(group, award.nominees, chosen, counts, async nominee => {
         try {
@@ -338,7 +356,7 @@
             p_voter_id: getVoterId(),
             p_nominee: nominee
           }, "Voto no prêmio registrado! Você pode alterá-lo neste navegador.", () => {
-            localStorage.setItem("jornal-futsenai-award-" + award.id, nominee);
+            localStorage.setItem(voteKey, nominee);
           });
         } catch (error) {
           showMessage("Não foi possível registrar o voto: " + error.message, true);

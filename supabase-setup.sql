@@ -106,6 +106,38 @@ as $$
   );
 $$;
 
+create or replace function public.reset_active_votes()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  poll_votes_deleted integer;
+  award_votes_deleted integer;
+begin
+  if not public.is_news_admin() then
+    raise exception 'Somente editores autorizados podem zerar os votos.';
+  end if;
+
+  delete from public.poll_votes v
+  using public.polls p
+  where v.poll_id = p.id and p.active;
+  get diagnostics poll_votes_deleted = row_count;
+
+  delete from public.award_votes v
+  using public.weekly_awards a
+  where v.award_id = a.id and a.active;
+  get diagnostics award_votes_deleted = row_count;
+
+  return jsonb_build_object(
+    'poll_votes_deleted', poll_votes_deleted,
+    'award_votes_deleted', award_votes_deleted
+  );
+end;
+$$;
+revoke all on function public.reset_active_votes() from public, anon;
+
 create or replace function public.create_profile_for_new_user()
 returns trigger
 language plpgsql
@@ -181,6 +213,22 @@ drop policy if exists "Public can read active matches" on public.matches;
 create policy "Public can read active matches" on public.matches
   for select to anon, authenticated using (active);
 
+drop policy if exists "News admins can manage polls" on public.polls;
+create policy "News admins can manage polls" on public.polls
+  for all to authenticated
+  using (public.is_news_admin())
+  with check (public.is_news_admin());
+drop policy if exists "News admins can manage weekly awards" on public.weekly_awards;
+create policy "News admins can manage weekly awards" on public.weekly_awards
+  for all to authenticated
+  using (public.is_news_admin())
+  with check (public.is_news_admin());
+drop policy if exists "News admins can manage matches" on public.matches;
+create policy "News admins can manage matches" on public.matches
+  for all to authenticated
+  using (public.is_news_admin())
+  with check (public.is_news_admin());
+
 drop policy if exists "Public can read news" on public.news;
 create policy "Public can read news" on public.news
   for select to anon, authenticated using (true);
@@ -192,6 +240,11 @@ create policy "News admins can manage news" on public.news
 
 revoke all on public.polls, public.weekly_awards, public.matches, public.news from anon, authenticated;
 grant select on public.polls, public.weekly_awards, public.matches, public.news to anon, authenticated;
+grant insert, update on public.polls, public.weekly_awards to authenticated;
+grant insert (id, home_team, away_team, match_date, active)
+  on public.matches to authenticated;
+grant update (home_team, away_team, match_date, active)
+  on public.matches to authenticated;
 grant insert, update, delete on public.news to authenticated;
 revoke all on public.poll_votes, public.award_votes, public.predictions, public.profiles, public.score_admins, public.news_admins from anon, authenticated;
 grant select on public.profiles to anon, authenticated;
@@ -459,6 +512,7 @@ revoke all on function public.is_score_admin() from anon, authenticated;
 revoke all on function public.is_news_admin() from anon, authenticated;
 revoke all on function public.set_my_nickname(text) from anon, authenticated;
 revoke all on function public.set_match_result(text, integer, integer) from anon, authenticated;
+revoke all on function public.reset_active_votes() from anon, authenticated;
 grant execute on function public.submit_poll_vote(text, uuid, text) to anon, authenticated;
 grant execute on function public.submit_award_vote(text, uuid, text) to anon, authenticated;
 grant execute on function public.submit_prediction(text, integer, integer) to authenticated;
@@ -467,6 +521,7 @@ grant execute on function public.is_score_admin() to authenticated;
 grant execute on function public.is_news_admin() to authenticated;
 grant execute on function public.set_my_nickname(text) to authenticated;
 grant execute on function public.set_match_result(text, integer, integer) to authenticated;
+grant execute on function public.reset_active_votes() to authenticated;
 
 insert into public.polls (id, question, week_start, options, active)
 values (
