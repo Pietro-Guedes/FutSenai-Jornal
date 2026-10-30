@@ -123,7 +123,7 @@
     </div>
     <div id="feed-message" class="mb-5 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" role="status"></div>
     <section id="news-feed" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Feed de notícias"></section>
-    <p class="mt-5 text-center text-xs text-slate-500">Suas curtidas ficam salvas somente neste navegador; elas não são compartilhadas com outros alunos.</p>
+    <p class="mt-5 text-center text-xs text-slate-500">Entre com sua conta e escolha um apelido para curtir notícias. Os apelidos de quem curtiu ficam visíveis publicamente.</p>
     <section class="hidden mt-10 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900" aria-label="Configuração de interações">
       <p id="interaction-setup-note">As interações compartilhadas aguardam a configuração do Supabase pelo responsável pelo site.</p>
     </section>
@@ -155,6 +155,7 @@
           <button id="back-to-news" type="button" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700">← Voltar às notícias</button>
           <button id="article-like" type="button" class="like-button rounded-lg border border-red-200 px-4 py-2.5 text-sm font-extrabold text-red-700 transition hover:bg-red-50" aria-pressed="false">♡ Curtir</button>
         </div>
+        <p id="article-like-names" class="mt-3 text-xs leading-5 text-slate-500"></p>
       </div>
     </article>
   </div>

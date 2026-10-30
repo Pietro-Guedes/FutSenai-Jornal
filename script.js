@@ -1,23 +1,80 @@
 (() => {
   "use strict";
 
-  const LIKE_KEY = "jornal-futsenai-curtidas";
+  const SESSION_KEY = "jornal-futsenai-auth-session";
   const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 450'%3E%3Cdefs%3E%3ClinearGradient id='g' x2='1' y2='1'%3E%3Cstop stop-color='%237f1420'/%3E%3Cstop offset='1' stop-color='%23e64855'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='800' height='450' fill='url(%23g)'/%3E%3Crect x='120' y='70' width='560' height='260' rx='10' fill='none' stroke='white' stroke-opacity='.25' stroke-width='4'/%3E%3Cpath d='M400 70v260' stroke='white' stroke-opacity='.25' stroke-width='4'/%3E%3Ccircle cx='400' cy='200' r='58' fill='none' stroke='white' stroke-opacity='.25' stroke-width='4'/%3E%3Cpath d='m400 162 28 20-11 34h-34l-11-34z' fill='white' fill-opacity='.95'/%3E%3Ctext x='400' y='390' text-anchor='middle' font-family='Arial,sans-serif' font-size='25' font-weight='700' fill='white' fill-opacity='.95'%3EFUTSENAI%20%7C%20PLANT%C3%83O%20DO%20INTERVALO%3C/text%3E%3C/svg%3E";
   const feed = document.querySelector("#news-feed");
   const count = document.querySelector("#news-count");
   const message = document.querySelector("#feed-message");
   const articleLayer = document.querySelector("#article-layer");
-  const likes = loadLikes();
+  const likeRecords = new Map();
+  let likedNewsIds = new Set();
+  let authSession = null;
   let news = [];
 
-  function loadLikes() {
+  function readAuthSession() {
     try {
-      const stored = JSON.parse(localStorage.getItem(LIKE_KEY) || "[]");
-      return new Set(Array.isArray(stored) ? stored.filter(id => typeof id === "string") : []);
+      const stored = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+      return stored && typeof stored.access_token === "string" &&
+        typeof stored.refresh_token === "string" && stored.user &&
+        typeof stored.user.id === "string" ? stored : null;
     } catch (error) {
-      showMessage("Não foi possível carregar suas curtidas deste navegador: " + error.message, true);
-      return new Set();
+      showMessage("Não foi possível ler sua sessão para as curtidas: " + error.message, true);
+      return null;
     }
+  }
+
+  async function likeRequest(path, options) {
+    const config = window.FUTSENAI_SUPABASE;
+    if (!config || !config.url || !config.anonKey) {
+      throw new Error("O Supabase não está configurado.");
+    }
+
+    const send = () => fetch(config.url.replace(/\/$/, "") + path, {
+      ...options,
+      headers: {
+        apikey: config.anonKey,
+        Authorization: "Bearer " + (authSession ? authSession.access_token : config.anonKey),
+        ...(options && options.headers)
+      }
+    });
+    let response = await send();
+    if (response.status === 401 && authSession) {
+      const refreshResponse = await fetch(config.url.replace(/\/$/, "") +
+        "/auth/v1/token?grant_type=refresh_token", {
+        method: "POST",
+        headers: { apikey: config.anonKey, "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: authSession.refresh_token })
+      });
+      const refreshed = await refreshResponse.json().catch(() => ({}));
+      if (!refreshResponse.ok || typeof refreshed.access_token !== "string") {
+        throw new Error("Sua sessão expirou. Entre novamente para curtir notícias.");
+      }
+      authSession = refreshed;
+      try {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(authSession));
+      } catch (error) {
+        throw new Error("Não foi possível atualizar sua sessão: " + error.message);
+      }
+      window.dispatchEvent(new CustomEvent("futsenai-auth-session-updated", { detail: authSession }));
+      response = await send();
+    }
+    const text = await response.text();
+    if (!response.ok) {
+      let detail = text;
+      try {
+        const body = text ? JSON.parse(text) : {};
+        detail = body.message || body.msg || body.error_description || text;
+      } catch {
+        detail = text;
+      }
+      throw new Error("Supabase respondeu " + response.status + (detail ? ": " + detail : ""));
+    }
+    return text ? JSON.parse(text) : null;
+  }
+
+  function getLikeRecord(id) {
+    return likeRecords.get(id) || [];
   }
 
   function showMessage(text, isError) {
@@ -72,15 +129,32 @@
   }
 
   function makeLikeButton(id, className) {
-    const liked = likes.has(id);
+    const liked = likedNewsIds.has(id);
+    const names = getLikeRecord(id);
     const button = document.createElement("button");
     button.type = "button";
     button.dataset.likeId = id;
     button.className = className + (liked ? " is-liked" : "");
     button.setAttribute("aria-pressed", String(liked));
-    button.setAttribute("aria-label", liked ? "Remover curtida" : "Curtir esta notícia");
-    button.textContent = liked ? "♥ Curtido" : "♡ Curtir";
+    button.setAttribute("aria-label", liked ? "Remover sua curtida" : "Curtir esta notícia");
+    button.textContent = (liked ? "♥ Curtido" : authSession ? "♡ Curtir" : "♡ Entrar para curtir") +
+      " · " + names.length;
     return button;
+  }
+
+  function createLikeNames(id, className) {
+    const summary = document.createElement("p");
+    summary.dataset.likeNamesFor = id;
+    summary.className = className;
+    updateLikeNamesElement(summary, id);
+    return summary;
+  }
+
+  function updateLikeNamesElement(element, id) {
+    const names = getLikeRecord(id);
+    element.textContent = names.length
+      ? "Curtiram: " + names.join(", ")
+      : "Ainda ninguém curtiu.";
   }
 
   function createCard(item) {
@@ -135,6 +209,7 @@
     date.textContent = formatDate(item.createdAt);
     footer.append(date, makeLikeButton(item.id, "like-button text-xs font-extrabold text-red-700 transition hover:text-red-900"));
     content.append(heading, player, summary, readButton, footer);
+    content.append(createLikeNames(item.id, "mt-2 text-xs leading-5 text-slate-500"));
     article.append(imageWrap, content);
     return article;
   }
@@ -178,6 +253,8 @@
     likeButton.setAttribute("aria-pressed", currentLikeButton.getAttribute("aria-pressed"));
     likeButton.setAttribute("aria-label", currentLikeButton.getAttribute("aria-label"));
     likeButton.textContent = currentLikeButton.textContent;
+    const likeNames = document.querySelector("#article-like-names");
+    if (likeNames) updateLikeNamesElement(likeNames, item.id);
 
     articleLayer.classList.remove("hidden");
     articleLayer.classList.add("flex");
@@ -193,27 +270,81 @@
     document.body.classList.remove("overflow-hidden");
   }
 
-  function toggleLike(id) {
-    const nextLikes = new Set(likes);
-    if (nextLikes.has(id)) nextLikes.delete(id);
-    else nextLikes.add(id);
-    try {
-      localStorage.setItem(LIKE_KEY, JSON.stringify([...nextLikes]));
-    } catch (error) {
-      showMessage("Não foi possível salvar sua curtida neste navegador: " + error.message, true);
+  async function toggleLike(id) {
+    authSession = readAuthSession();
+    if (!authSession) {
+      showMessage("Entre com sua conta Google para curtir uma notícia.", false);
+      document.querySelector("#account-heading").scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-    likes.clear();
-    nextLikes.forEach(likeId => likes.add(likeId));
-    message.classList.add("hidden");
-    document.querySelectorAll("[data-like-id]").forEach(button => {
-      if (button.dataset.likeId !== id) return;
-      const liked = likes.has(id);
-      button.classList.toggle("is-liked", liked);
-      button.setAttribute("aria-pressed", String(liked));
-      button.setAttribute("aria-label", liked ? "Remover curtida" : "Curtir esta notícia");
-      button.textContent = liked ? "♥ Curtido" : "♡ Curtir";
+
+    try {
+      await loadLikeRecords();
+      const profileRows = await likeRequest("/rest/v1/profiles?select=user_id&user_id=eq." +
+        encodeURIComponent(authSession.user.id));
+      if (!Array.isArray(profileRows) || !profileRows.length) {
+        showMessage("Defina seu apelido público na área de palpites antes de curtir notícias.", false);
+        document.querySelector("#nickname-form").scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      const liked = likedNewsIds.has(id);
+      const query = "?news_id=eq." + encodeURIComponent(id) +
+        "&user_id=eq." + encodeURIComponent(authSession.user.id);
+      if (liked) {
+        await likeRequest("/rest/v1/news_likes" + query, { method: "DELETE" });
+      } else {
+        await likeRequest("/rest/v1/news_likes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+          body: JSON.stringify({ news_id: id, user_id: authSession.user.id })
+        });
+      }
+      await loadLikeRecords();
+      renderNews();
+      if (!articleLayer.classList.contains("hidden")) {
+        const currentArticleId = document.querySelector("#article-like").dataset.likeId;
+        if (currentArticleId) openArticle(currentArticleId);
+      }
+      message.classList.add("hidden");
+    } catch (error) {
+      showMessage("Não foi possível atualizar a curtida: " + error.message, true);
+    }
+  }
+
+  async function loadLikeRecords() {
+    authSession = readAuthSession();
+    const rows = await likeRequest("/rest/v1/rpc/get_news_likes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}"
     });
+    if (!Array.isArray(rows) || rows.some(row =>
+      !row || typeof row.news_id !== "string" || !Array.isArray(row.nicknames) ||
+      row.nicknames.some(name => typeof name !== "string"))) {
+      throw new Error("O banco retornou uma lista de curtidas inválida.");
+    }
+    likeRecords.clear();
+    rows.forEach(row => likeRecords.set(row.news_id, row.nicknames));
+    if (!authSession) {
+      likedNewsIds = new Set();
+      return;
+    }
+    const ownLikes = await likeRequest("/rest/v1/news_likes?select=news_id&user_id=eq." +
+      encodeURIComponent(authSession.user.id));
+    if (!Array.isArray(ownLikes) || ownLikes.some(row => !row || typeof row.news_id !== "string")) {
+      throw new Error("O banco retornou suas curtidas em um formato inválido.");
+    }
+    likedNewsIds = new Set(ownLikes.map(row => row.news_id));
+  }
+
+  async function refreshLikeRecords() {
+    try {
+      await loadLikeRecords();
+      renderNews();
+    } catch (error) {
+      showMessage("As notícias foram carregadas, mas não foi possível carregar as curtidas: " + error.message, true);
+    }
   }
 
   async function loadPublishedNews() {
@@ -281,6 +412,7 @@
         }));
         if (news.length) {
           renderNews();
+          await refreshLikeRecords();
           return;
         }
         remoteError = new Error("Ainda não há notícias no banco de dados.");
@@ -307,6 +439,7 @@
       }
       news = parsed;
       renderNews();
+      await refreshLikeRecords();
       if (remoteError) {
         showMessage("Exibindo noticias.json porque as notícias online não puderam ser carregadas. " +
           remoteError.message + " Importe o arquivo no painel administrativo para sincronizar o banco.", true);

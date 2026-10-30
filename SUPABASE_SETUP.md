@@ -5,7 +5,7 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 ## Ativar
 
 1. Crie um projeto em [supabase.com](https://supabase.com/).
-2. No painel do projeto, abra **SQL Editor**, cole o conteúdo atualizado de `supabase-setup.sql` e execute. Se já executou uma versão anterior, execute novamente para instalar também o banco e o armazenamento de imagens das notícias.
+2. No painel do projeto, abra **SQL Editor**, cole o conteúdo atualizado de `supabase-setup.sql` e execute. Se já executou uma versão anterior, execute novamente para instalar também o banco e o armazenamento de imagens das notícias, incluindo as curtidas compartilhadas.
 3. Em **Project Settings → API**, copie a **Project URL** e a chave **anon/public**.
 4. Cole esses dois valores em `supabase-config.js`, nos campos `url` e `anonKey`.
 5. Em **Authentication → URL Configuration**, configure a URL do site publicado como **Site URL** e inclua-a em **Redirect URLs** para a confirmação de e-mail voltar ao site.
@@ -35,6 +35,7 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 ## Contas da liga e placares
 
 - A enquete e os prêmios continuam abertos: qualquer visitante pode votar sem entrar. O site usa um identificador local do navegador para evitar votos repetidos por uso comum, mas isso não é uma verificação de identidade.
+- Para curtir notícias, é necessário entrar com uma conta que tenha apelido público. Cada conta pode curtir ou remover sua curtida; o total e os apelidos de quem curtiu são públicos. As curtidas antigas, que existiam apenas no armazenamento local de cada navegador, não podem ser identificadas nem migradas.
 - Só os palpites da liga exigem conta. Novas contas entram com Google e escolhem um apelido público único na primeira entrada; o e-mail Google não aparece no site. Isso evita o envio de e-mail de confirmação do Supabase, mas não remove outros limites de autenticação do Supabase nem os limites do Google.
 - O login por e-mail e senha permanece recolhido na página apenas para usuários que já têm uma conta antiga com palpites ou pontos. Não há mais criação de novas contas por e-mail no site.
 - O login Google não transfere automaticamente dados de uma conta antiga. Usuários antigos devem continuar usando temporariamente **Entrar com e-mail** para acessar os palpites vinculados à conta; não presuma que um endereço igual vai vincular identidades. Contas Supabase diferentes não compartilham palpites nem pontos.

@@ -97,6 +97,15 @@ create table if not exists public.news (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.news_likes (
+  news_id text not null references public.news(id) on delete cascade,
+  user_id uuid not null constraint news_likes_user_id_fkey references public.profiles(user_id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (news_id, user_id)
+);
+create index if not exists news_likes_user_id_idx
+  on public.news_likes (user_id, news_id);
+
 create or replace function public.is_news_admin()
 returns boolean
 language sql
@@ -205,6 +214,7 @@ alter table public.profiles enable row level security;
 alter table public.score_admins enable row level security;
 alter table public.news_admins enable row level security;
 alter table public.news enable row level security;
+alter table public.news_likes enable row level security;
 
 drop policy if exists "Public can read active polls" on public.polls;
 create policy "Public can read active polls" on public.polls
@@ -241,6 +251,16 @@ create policy "News admins can manage news" on public.news
   using (public.is_news_admin())
   with check (public.is_news_admin());
 
+drop policy if exists "Users can read own news likes" on public.news_likes;
+create policy "Users can read own news likes" on public.news_likes
+  for select to authenticated using (user_id = auth.uid());
+drop policy if exists "Users can like news as themselves" on public.news_likes;
+create policy "Users can like news as themselves" on public.news_likes
+  for insert to authenticated with check (user_id = auth.uid());
+drop policy if exists "Users can remove own news likes" on public.news_likes;
+create policy "Users can remove own news likes" on public.news_likes
+  for delete to authenticated using (user_id = auth.uid());
+
 revoke all on public.polls, public.weekly_awards, public.matches, public.news from anon, authenticated;
 grant select on public.polls, public.weekly_awards, public.matches, public.news to anon, authenticated;
 grant insert, update on public.polls, public.weekly_awards to authenticated;
@@ -251,6 +271,8 @@ grant update (home_team, away_team, match_date, active)
 grant insert, update, delete on public.news to authenticated;
 revoke all on public.poll_votes, public.award_votes, public.predictions, public.profiles, public.score_admins, public.news_admins from anon, authenticated;
 grant select on public.profiles to anon, authenticated;
+revoke all on public.news_likes from anon, authenticated;
+grant select, insert, delete on public.news_likes to authenticated;
 
 insert into storage.buckets (id, name, public)
 values ('news-images', 'news-images', true)
@@ -498,10 +520,31 @@ as $$
   );
 $$;
 
+create or replace function public.get_news_likes()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'news_id', grouped.news_id,
+    'nicknames', grouped.nicknames
+  ) order by grouped.news_id), '[]'::jsonb)
+  from (
+    select nl.news_id, jsonb_agg(p.nickname order by lower(p.nickname)) as nicknames
+    from public.news_likes nl
+    join public.profiles p on p.user_id = nl.user_id
+    join public.news n on n.id = nl.news_id
+    group by nl.news_id
+  ) grouped;
+$$;
+
 revoke all on function public.submit_poll_vote(text, uuid, text) from public;
 revoke all on function public.submit_award_vote(text, uuid, text) from public;
 revoke all on function public.submit_prediction(text, integer, integer) from public;
 revoke all on function public.get_interaction_results() from public;
+revoke all on function public.get_news_likes() from public;
 revoke all on function public.weekly_voting_deadline(date) from public;
 revoke all on function public.prediction_deadline(date) from public;
 revoke all on function public.is_score_admin() from public;
@@ -516,10 +559,12 @@ revoke all on function public.is_news_admin() from anon, authenticated;
 revoke all on function public.set_my_nickname(text) from anon, authenticated;
 revoke all on function public.set_match_result(text, integer, integer) from anon, authenticated;
 revoke all on function public.reset_active_votes() from anon, authenticated;
+revoke all on function public.get_news_likes() from anon, authenticated;
 grant execute on function public.submit_poll_vote(text, uuid, text) to anon, authenticated;
 grant execute on function public.submit_award_vote(text, uuid, text) to anon, authenticated;
 grant execute on function public.submit_prediction(text, integer, integer) to authenticated;
 grant execute on function public.get_interaction_results() to anon, authenticated;
+grant execute on function public.get_news_likes() to anon, authenticated;
 grant execute on function public.is_score_admin() to authenticated;
 grant execute on function public.is_news_admin() to authenticated;
 grant execute on function public.set_my_nickname(text) to authenticated;

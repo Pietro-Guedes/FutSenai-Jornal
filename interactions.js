@@ -143,6 +143,12 @@
     else localStorage.removeItem(sessionKey);
   }
 
+  window.addEventListener("futsenai-auth-session-updated", event => {
+    if (event.detail && typeof event.detail.access_token === "string") {
+      saveSession(event.detail);
+    }
+  });
+
   async function refreshSession() {
     if (!session || !session.refresh_token) return false;
     try {
