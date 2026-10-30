@@ -115,6 +115,11 @@ as $$
 declare
   requested_nickname text := btrim(new.raw_user_meta_data ->> 'nickname');
 begin
+  if requested_nickname is null
+      and new.raw_app_meta_data ->> 'provider' = 'google' then
+    return new;
+  end if;
+
   if requested_nickname is null or char_length(requested_nickname) not between 2 and 24 then
     raise exception 'O apelido precisa ter entre 2 e 24 caracteres.';
   end if;
@@ -125,6 +130,30 @@ begin
 end;
 $$;
 revoke all on function public.create_profile_for_new_user() from public;
+
+create or replace function public.set_my_nickname(p_nickname text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  cleaned_nickname text := btrim(p_nickname);
+begin
+  if current_user_id is null then
+    raise exception 'Entre na sua conta para salvar um apelido.';
+  end if;
+  if cleaned_nickname is null or char_length(cleaned_nickname) not between 2 and 24 then
+    raise exception 'O apelido precisa ter entre 2 e 24 caracteres.';
+  end if;
+
+  insert into public.profiles (user_id, nickname)
+  values (current_user_id, cleaned_nickname)
+  on conflict (user_id) do update set nickname = excluded.nickname;
+end;
+$$;
+revoke all on function public.set_my_nickname(text) from public, anon;
 
 drop trigger if exists on_auth_user_created_profile on auth.users;
 create trigger on_auth_user_created_profile
@@ -428,6 +457,7 @@ revoke all on function public.submit_prediction(text, integer, integer) from ano
 revoke all on function public.get_interaction_results() from anon, authenticated;
 revoke all on function public.is_score_admin() from anon, authenticated;
 revoke all on function public.is_news_admin() from anon, authenticated;
+revoke all on function public.set_my_nickname(text) from anon, authenticated;
 revoke all on function public.set_match_result(text, integer, integer) from anon, authenticated;
 grant execute on function public.submit_poll_vote(text, uuid, text) to anon, authenticated;
 grant execute on function public.submit_award_vote(text, uuid, text) to anon, authenticated;
@@ -435,6 +465,7 @@ grant execute on function public.submit_prediction(text, integer, integer) to au
 grant execute on function public.get_interaction_results() to anon, authenticated;
 grant execute on function public.is_score_admin() to authenticated;
 grant execute on function public.is_news_admin() to authenticated;
+grant execute on function public.set_my_nickname(text) to authenticated;
 grant execute on function public.set_match_result(text, integer, integer) to authenticated;
 
 insert into public.polls (id, question, week_start, options, active)

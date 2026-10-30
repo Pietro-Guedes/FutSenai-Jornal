@@ -11,6 +11,8 @@
   const authForms = document.querySelector("#auth-forms");
   const signupForm = document.querySelector("#signup-form");
   const signinForm = document.querySelector("#signin-form");
+  const nicknameForm = document.querySelector("#nickname-form");
+  const googleSigninButton = document.querySelector("#google-signin-button");
   const signoutButton = document.querySelector("#signout-button");
   const accountStatus = document.querySelector("#account-status");
   const voterKey = "jornal-futsenai-voter-id";
@@ -91,14 +93,15 @@
     const params = new URLSearchParams(window.location.hash.slice(1));
     const accessToken = params.get("access_token");
     const refreshToken = params.get("refresh_token");
-    if (!accessToken || !refreshToken || params.get("type") !== "signup") return false;
+    const authType = params.get("type");
+    if (!accessToken || !refreshToken || (authType && authType !== "signup" && authType !== "bearer")) return false;
 
     const response = await fetch(config.url.replace(/\/$/, "") + "/auth/v1/user", {
       headers: { apikey: config.anonKey, Authorization: "Bearer " + accessToken }
     });
     if (!response.ok) {
       const detail = await response.text();
-      throw new Error("Não foi possível confirmar sua conta: " + detail);
+      throw new Error("Não foi possível concluir a autenticação: " + detail);
     }
     const user = await response.json();
     const expiresIn = Number(params.get("expires_in")) || 3600;
@@ -112,8 +115,23 @@
     });
     window.history.replaceState(null, "", window.location.pathname + window.location.search);
     await setAccount(session);
-    showMessage("E-mail confirmado. Sua conta está conectada; já pode enviar palpites.", false);
+    showMessage(profile
+      ? (authType === "signup"
+        ? "E-mail confirmado. Sua conta está conectada; já pode enviar palpites."
+        : "Login com Google efetuado. Seus palpites e pontos estão ligados a esta conta.")
+      : "Login com Google efetuado. Escolha um apelido público para concluir a configuração da conta.", false);
     return true;
+  }
+
+  function signInWithGoogle() {
+    if (!config || !config.url || !config.anonKey) {
+      showMessage("O Supabase não está configurado.", true);
+      return;
+    }
+    const authorizeUrl = new URL(config.url.replace(/\/$/, "") + "/auth/v1/authorize");
+    authorizeUrl.searchParams.set("provider", "google");
+    authorizeUrl.searchParams.set("redirect_to", window.location.origin + window.location.pathname + window.location.search);
+    window.location.assign(authorizeUrl.href);
   }
 
   function saveSession(nextSession) {
@@ -162,25 +180,30 @@
     if (session) {
       const profiles = await request("profiles?select=nickname&user_id=eq." + encodeURIComponent(session.user.id));
       profile = profiles[0] || null;
-      if (!profile) throw new Error("Não foi encontrado o apelido desta conta.");
-      isScoreAdmin = await request("rpc/is_score_admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: "{}"
-      });
+      if (profile) {
+        isScoreAdmin = await request("rpc/is_score_admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}"
+        });
+      }
     }
     updateAccountUI();
   }
 
   function updateAccountUI() {
     const signedIn = Boolean(session && profile);
-    authForms.classList.toggle("hidden", signedIn);
-    signoutButton.classList.toggle("hidden", !signedIn);
+    const needsNickname = Boolean(session && !profile);
+    authForms.classList.toggle("hidden", signedIn || needsNickname);
+    nicknameForm.classList.toggle("hidden", !needsNickname);
+    signoutButton.classList.toggle("hidden", !session);
     accountStatus.classList.toggle("hidden", !signedIn);
     accountStatus.textContent = signedIn ? "Conectado como " + profile.nickname : "";
     document.querySelector("#account-heading").textContent = signedIn
       ? "Palpites salvos na sua conta"
-      : "Entre para salvar seus palpites e pontos";
+      : needsNickname
+        ? "Defina seu apelido público"
+        : "Entre para salvar seus palpites e pontos";
   }
 
   function getVoterId() {
@@ -491,6 +514,30 @@
   }
 
   function bindAccountForms() {
+    googleSigninButton.addEventListener("click", signInWithGoogle);
+
+    nicknameForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const submit = nicknameForm.querySelector('button[type="submit"]');
+      const nickname = String(new FormData(nicknameForm).get("nickname")).trim();
+      submit.disabled = true;
+      try {
+        await request("rpc/set_my_nickname", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ p_nickname: nickname })
+        });
+        await setAccount(session);
+        nicknameForm.reset();
+        showMessage("Apelido salvo. Sua conta está pronta para enviar palpites.", false);
+        await loadInteractions();
+      } catch (error) {
+        showMessage("Não foi possível salvar o apelido: " + error.message, true);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
     signupForm.addEventListener("submit", async event => {
       event.preventDefault();
       const submit = signupForm.querySelector('button[type="submit"]');

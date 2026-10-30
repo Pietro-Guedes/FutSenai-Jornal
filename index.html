@@ -106,7 +106,18 @@
                 </label>
                 <button type="submit" class="w-full rounded-lg border border-red-200 px-4 py-2.5 text-sm font-extrabold text-red-700 transition hover:bg-red-50">Entrar</button>
               </form>
+              <div class="border-t border-red-50 pt-4">
+                <p class="mb-3 text-center text-xs text-slate-500">Ou entre sem receber e-mail de confirmação</p>
+                <button id="google-signin-button" type="button" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-extrabold text-slate-700 transition hover:bg-slate-50">Continuar com Google</button>
+              </div>
             </div>
+            <form id="nickname-form" class="hidden space-y-3" autocomplete="off">
+              <p class="text-sm leading-6 text-slate-600">Conta Google conectada. Escolha um apelido público para aparecer no ranking; seu e-mail não será exibido.</p>
+              <label class="block text-xs font-bold text-slate-700">Apelido público
+                <input name="nickname" required minlength="2" maxlength="24" autocomplete="nickname" class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm" placeholder="Ex.: CraqueDaTurma">
+              </label>
+              <button type="submit" class="w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-extrabold text-white transition hover:bg-red-700">Salvar apelido</button>
+            </form>
             <button id="signout-button" type="button" class="hidden rounded-lg border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50">Sair da conta</button>
           </section>
           <div id="score-admin-content" class="mt-4 hidden border-t border-red-100 pt-4"></div>

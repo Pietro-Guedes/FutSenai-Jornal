@@ -9,9 +9,10 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 3. Em **Project Settings → API**, copie a **Project URL** e a chave **anon/public**.
 4. Cole esses dois valores em `supabase-config.js`, nos campos `url` e `anonKey`.
 5. Em **Authentication → URL Configuration**, configure a URL do site publicado como **Site URL** e inclua-a em **Redirect URLs** para a confirmação de e-mail voltar ao site.
-6. Em **Table Editor**, edite os exemplos em `polls`, `weekly_awards` e `matches` (pergunta/opções, até 3 indicados para cada prêmio e próximo jogo). Deixe apenas os itens atuais com `active = true`.
-7. Publique `index.html`, `admin.html`, `style.css`, `script.js`, `admin.js`, `interactions.js`, `supabase-config.js` e `noticias.json` junto às imagens do site.
-8. Abra o site em `https://` ou em `http://localhost`; `file://` não funciona para as chamadas ao Supabase.
+6. Para oferecer login Google, em **Authentication → Sign In / Providers → Google**, ative o provedor e informe o OAuth Client ID e Client Secret criados no Google Cloud. No cliente OAuth do Google, cadastre como URI de redirecionamento autorizado o callback exibido pelo Supabase (normalmente `https://<project-ref>.supabase.co/auth/v1/callback`). Mantenha a URL do site em **Redirect URLs** no Supabase.
+7. Em **Table Editor**, edite os exemplos em `polls`, `weekly_awards` e `matches` (pergunta/opções, até 3 indicados para cada prêmio e próximo jogo). Deixe apenas os itens atuais com `active = true`.
+8. Publique `index.html`, `admin.html`, `style.css`, `script.js`, `admin.js`, `interactions.js`, `supabase-config.js` e `noticias.json` junto às imagens do site.
+9. Abra o site em `https://` ou em `http://localhost`; `file://` não funciona para as chamadas ao Supabase.
 
 ## Editar notícias
 
@@ -34,6 +35,8 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 - A enquete e os prêmios continuam abertos: qualquer visitante pode votar sem entrar. O site usa um identificador local do navegador para evitar votos repetidos por uso comum, mas isso não é uma verificação de identidade.
 - Só os palpites da liga exigem conta. Cada pessoa cria a conta com e-mail, senha privada e apelido público único; o site rejeita senha igual ao apelido. O e-mail não aparece no site.
 - Se a confirmação de e-mail estiver habilitada no Supabase, confirme o cadastro pelo e-mail antes de entrar.
+- Como alternativa, visitantes podem entrar com Google sem receber e-mail de confirmação do Supabase. Na primeira entrada Google, cada pessoa escolhe o apelido público; não é necessário compartilhar o nome ou e-mail Google no ranking. O provedor Google precisa estar ativado e configurado como descrito acima. Isso evita o limite de envio de e-mails de confirmação, mas não remove outros limites de autenticação do Supabase nem os limites do Google.
+- O login Google é apenas uma alternativa e não altera as contas de e-mail e senha existentes. Não presuma que usar o mesmo endereço de e-mail vai vincular automaticamente as identidades: confira em **Authentication → Users** se o Google aparece na mesma conta antes de migrar o acesso. Contas Supabase diferentes não compartilham palpites nem pontos.
 - Para tornar **uma conta** administradora dos placares, primeiro crie a conta pelo site e confirme o e-mail. Em **Authentication → Users**, copie o UUID dessa conta. No SQL Editor, execute o comando abaixo substituindo o UUID pelo valor copiado:
 
   ```sql
