@@ -33,10 +33,9 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 ## Contas da liga e placares
 
 - A enquete e os prêmios continuam abertos: qualquer visitante pode votar sem entrar. O site usa um identificador local do navegador para evitar votos repetidos por uso comum, mas isso não é uma verificação de identidade.
-- Só os palpites da liga exigem conta. Cada pessoa cria a conta com e-mail, senha privada e apelido público único; o site rejeita senha igual ao apelido. O e-mail não aparece no site.
-- Se a confirmação de e-mail estiver habilitada no Supabase, confirme o cadastro pelo e-mail antes de entrar.
-- Como alternativa, visitantes podem entrar com Google sem receber e-mail de confirmação do Supabase. Na primeira entrada Google, cada pessoa escolhe o apelido público; não é necessário compartilhar o nome ou e-mail Google no ranking. O provedor Google precisa estar ativado e configurado como descrito acima. Isso evita o limite de envio de e-mails de confirmação, mas não remove outros limites de autenticação do Supabase nem os limites do Google.
-- O login Google é apenas uma alternativa e não altera as contas de e-mail e senha existentes. Não presuma que usar o mesmo endereço de e-mail vai vincular automaticamente as identidades: confira em **Authentication → Users** se o Google aparece na mesma conta antes de migrar o acesso. Contas Supabase diferentes não compartilham palpites nem pontos.
+- Só os palpites da liga exigem conta. Novas contas entram com Google e escolhem um apelido público único na primeira entrada; o e-mail Google não aparece no site. Isso evita o envio de e-mail de confirmação do Supabase, mas não remove outros limites de autenticação do Supabase nem os limites do Google.
+- O login por e-mail e senha permanece recolhido na página apenas para usuários que já têm uma conta antiga com palpites ou pontos. Não há mais criação de novas contas por e-mail no site.
+- O login Google não transfere automaticamente dados de uma conta antiga. Usuários antigos devem continuar usando temporariamente **Entrar com e-mail** para acessar os palpites vinculados à conta; não presuma que um endereço igual vai vincular identidades. Contas Supabase diferentes não compartilham palpites nem pontos.
 - Para tornar **uma conta** administradora dos placares, primeiro crie a conta pelo site e confirme o e-mail. Em **Authentication → Users**, copie o UUID dessa conta. No SQL Editor, execute o comando abaixo substituindo o UUID pelo valor copiado:
 
   ```sql

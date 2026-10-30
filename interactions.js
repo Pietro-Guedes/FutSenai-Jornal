@@ -9,8 +9,8 @@
   const predictionContent = document.querySelector("#prediction-content");
   const scoreAdminContent = document.querySelector("#score-admin-content");
   const authForms = document.querySelector("#auth-forms");
-  const signupForm = document.querySelector("#signup-form");
   const signinForm = document.querySelector("#signin-form");
+  const legacyAuthToggle = document.querySelector("#legacy-auth-toggle");
   const nicknameForm = document.querySelector("#nickname-form");
   const googleSigninButton = document.querySelector("#google-signin-button");
   const signoutButton = document.querySelector("#signout-button");
@@ -514,6 +514,15 @@
   }
 
   function bindAccountForms() {
+    legacyAuthToggle.addEventListener("click", () => {
+      const isExpanded = legacyAuthToggle.getAttribute("aria-expanded") === "true";
+      legacyAuthToggle.setAttribute("aria-expanded", String(!isExpanded));
+      signinForm.classList.toggle("hidden", isExpanded);
+      legacyAuthToggle.textContent = isExpanded
+        ? "Já tem conta antiga? Entrar com e-mail"
+        : "Ocultar acesso com e-mail";
+    });
+
     googleSigninButton.addEventListener("click", signInWithGoogle);
 
     nicknameForm.addEventListener("submit", async event => {
@@ -533,37 +542,6 @@
         await loadInteractions();
       } catch (error) {
         showMessage("Não foi possível salvar o apelido: " + error.message, true);
-      } finally {
-        submit.disabled = false;
-      }
-    });
-
-    signupForm.addEventListener("submit", async event => {
-      event.preventDefault();
-      const submit = signupForm.querySelector('button[type="submit"]');
-      const data = new FormData(signupForm);
-      const nickname = String(data.get("nickname")).trim();
-      const password = String(data.get("password"));
-      submit.disabled = true;
-      try {
-        if (password.toLocaleLowerCase() === nickname.toLocaleLowerCase()) {
-          throw new Error("A senha precisa ser diferente do apelido público.");
-        }
-        const result = await authRequest("signup", {
-          email: String(data.get("email")).trim(),
-          password,
-          data: { nickname }
-        });
-        signupForm.reset();
-        if (result.access_token) {
-          await setAccount(result);
-          showMessage("Conta criada e conectada. Já pode enviar seu palpite.", false);
-          await loadInteractions();
-        } else {
-          showMessage("Conta criada. Confira seu e-mail para confirmar o cadastro e depois entre aqui.", false);
-        }
-      } catch (error) {
-        showMessage("Não foi possível criar a conta: " + error.message, true);
       } finally {
         submit.disabled = false;
       }

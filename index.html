@@ -83,20 +83,9 @@
             </div>
             <p id="account-status" class="hidden mb-3 text-sm font-bold text-green-700" role="status"></p>
             <div id="auth-forms" class="space-y-4">
-              <form id="signup-form" class="space-y-3">
-                <h5 class="text-sm font-extrabold text-slate-800">Criar conta</h5>
-                <label class="block text-xs font-bold text-slate-700">Apelido público
-                  <input name="nickname" required minlength="2" maxlength="24" autocomplete="nickname" class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm" placeholder="Ex.: CraqueDaTurma">
-                </label>
-                <label class="block text-xs font-bold text-slate-700">E-mail
-                  <input name="email" type="email" required autocomplete="email" class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm" placeholder="voce@exemplo.com">
-                </label>
-                <label class="block text-xs font-bold text-slate-700">Senha (privada e diferente do apelido)
-                  <input name="password" type="password" required minlength="8" autocomplete="new-password" class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
-                </label>
-                <button type="submit" class="w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-extrabold text-white transition hover:bg-red-700">Criar conta</button>
-              </form>
-              <form id="signin-form" class="space-y-3 border-t border-red-50 pt-4">
+              <button id="google-signin-button" type="button" class="w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-extrabold text-white transition hover:bg-red-700">Continuar com Google</button>
+              <button id="legacy-auth-toggle" type="button" aria-expanded="false" aria-controls="signin-form" class="w-full text-center text-xs font-semibold text-slate-500 underline hover:text-slate-700">Já tem conta antiga? Entrar com e-mail</button>
+              <form id="signin-form" class="hidden space-y-3 border-t border-red-50 pt-4">
                 <h5 class="text-sm font-extrabold text-slate-800">Já tenho conta</h5>
                 <label class="block text-xs font-bold text-slate-700">E-mail
                   <input name="email" type="email" required autocomplete="email" class="field mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
@@ -106,10 +95,6 @@
                 </label>
                 <button type="submit" class="w-full rounded-lg border border-red-200 px-4 py-2.5 text-sm font-extrabold text-red-700 transition hover:bg-red-50">Entrar</button>
               </form>
-              <div class="border-t border-red-50 pt-4">
-                <p class="mb-3 text-center text-xs text-slate-500">Ou entre sem receber e-mail de confirmação</p>
-                <button id="google-signin-button" type="button" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-extrabold text-slate-700 transition hover:bg-slate-50">Continuar com Google</button>
-              </div>
             </div>
             <form id="nickname-form" class="hidden space-y-3" autocomplete="off">
               <p class="text-sm leading-6 text-slate-600">Conta Google conectada. Escolha um apelido público para aparecer no ranking; seu e-mail não será exibido.</p>
@@ -123,7 +108,7 @@
           <div id="score-admin-content" class="mt-4 hidden border-t border-red-100 pt-4"></div>
         </section>
       </div>
-      <p class="mt-4 text-center text-xs leading-5 text-slate-500">A enquete e os prêmios são abertos. Só os palpites para a liga precisam de conta; use uma senha privada e diferente do apelido.</p>
+      <p class="mt-4 text-center text-xs leading-5 text-slate-500">A enquete e os prêmios são abertos. Só os palpites para a liga precisam de conta.</p>
     </section>
 
     <div class="mb-7 flex flex-wrap items-end justify-between gap-4">
