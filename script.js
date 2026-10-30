@@ -10,6 +10,7 @@
   const likeRecords = new Map();
   let likedNewsIds = new Set();
   let authSession = null;
+  let currentArticleId = null;
   let news = [];
 
   function readAuthSession() {
@@ -230,6 +231,7 @@
   function openArticle(id) {
     const item = news.find(entry => entry.id === id);
     if (!item) return;
+    currentArticleId = item.id;
 
     const image = document.querySelector("#article-image");
     image.src = safeImageUrl(item.image);
@@ -255,6 +257,8 @@
     likeButton.textContent = currentLikeButton.textContent;
     const likeNames = document.querySelector("#article-like-names");
     if (likeNames) updateLikeNamesElement(likeNames, item.id);
+    updateCommentFormState();
+    loadArticleComments(item.id);
 
     articleLayer.classList.remove("hidden");
     articleLayer.classList.add("flex");
@@ -269,6 +273,163 @@
     articleLayer.setAttribute("aria-hidden", "true");
     document.body.classList.remove("overflow-hidden");
   }
+
+  function updateCommentFormState() {
+    authSession = readAuthSession();
+    const note = document.querySelector("#article-comment-auth-note");
+    const submit = document.querySelector("#article-comment-form button[type='submit']");
+    const input = document.querySelector("#article-comment-input");
+    const signedIn = Boolean(authSession);
+    note.textContent = signedIn
+      ? "Seu apelido público aparecerá ao lado do comentário."
+      : "Entre com Google e escolha um apelido para comentar.";
+    input.disabled = !signedIn;
+    submit.disabled = !signedIn;
+  }
+
+  function renderArticleComments(comments) {
+    const list = document.querySelector("#article-comments-list");
+    list.replaceChildren();
+    if (!comments.length) {
+      const empty = document.createElement("p");
+      empty.className = "text-sm text-slate-500";
+      empty.textContent = "Ainda não há comentários. Seja o primeiro!";
+      list.append(empty);
+      return;
+    }
+
+    comments.forEach(comment => {
+      const card = document.createElement("article");
+      card.className = "rounded-xl border border-slate-200 bg-slate-50 p-4";
+      const header = document.createElement("div");
+      header.className = "flex flex-wrap items-center justify-between gap-2";
+      const author = document.createElement("p");
+      author.className = "text-sm font-extrabold text-slate-800";
+      author.textContent = comment.nickname;
+      const date = document.createElement("time");
+      date.className = "text-xs text-slate-500";
+      date.dateTime = comment.created_at;
+      date.textContent = formatDate(comment.created_at);
+      header.append(author, date);
+      const content = document.createElement("p");
+      content.className = "mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700";
+      content.textContent = comment.content;
+      card.append(header, content);
+      if (authSession && authSession.user.id === comment.user_id) {
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "mt-3 text-xs font-bold text-slate-500 underline hover:text-red-700";
+        remove.textContent = "Apagar meu comentário";
+        remove.addEventListener("click", () => removeOwnComment(comment));
+        card.append(remove);
+      }
+      list.append(card);
+    });
+  }
+
+  async function loadArticleComments(newsId) {
+    const list = document.querySelector("#article-comments-list");
+    list.replaceChildren();
+    const loading = document.createElement("p");
+    loading.className = "text-sm text-slate-500";
+    loading.textContent = "Carregando comentários…";
+    list.append(loading);
+    try {
+      const comments = await likeRequest("/rest/v1/rpc/get_news_comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ p_news_id: newsId })
+      });
+      if (!Array.isArray(comments) || comments.some(comment =>
+        !comment || typeof comment.comment_id !== "number" ||
+        typeof comment.news_id !== "string" ||
+        (comment.user_id !== null && typeof comment.user_id !== "string") ||
+        typeof comment.nickname !== "string" || typeof comment.content !== "string" ||
+        typeof comment.created_at !== "string" || Number.isNaN(new Date(comment.created_at).getTime()))) {
+        throw new Error("O banco retornou comentários fora do formato esperado.");
+      }
+      if (currentArticleId === newsId) renderArticleComments(comments);
+    } catch (error) {
+      if (currentArticleId !== newsId) return;
+      list.replaceChildren();
+      const failure = document.createElement("p");
+      failure.className = "text-sm text-red-700";
+      failure.textContent = "Não foi possível carregar os comentários: " + error.message;
+      list.append(failure);
+    }
+  }
+
+  async function removeOwnComment(comment) {
+    if (!authSession || authSession.user.id !== comment.user_id) return;
+    if (!window.confirm("Apagar seu comentário? Essa ação não pode ser desfeita.")) return;
+    try {
+      await likeRequest("/rest/v1/news_comments?comment_id=eq." +
+        encodeURIComponent(comment.comment_id) + "&user_id=eq." +
+        encodeURIComponent(authSession.user.id), { method: "DELETE" });
+      await loadArticleComments(comment.news_id);
+      showMessage("Seu comentário foi apagado.", false);
+    } catch (error) {
+      showMessage("Não foi possível apagar o comentário: " + error.message, true);
+    }
+  }
+
+  document.querySelector("#article-comment-form").addEventListener("submit", async event => {
+    event.preventDefault();
+    authSession = readAuthSession();
+    const input = document.querySelector("#article-comment-input");
+    const content = input.value.trim();
+    if (!authSession) {
+      updateCommentFormState();
+      showMessage("Entre com Google para comentar.", false);
+      document.querySelector("#account-heading").scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    if (!currentArticleId || !content) {
+      showMessage("Escreva um comentário antes de enviar.", true);
+      return;
+    }
+
+    const submit = event.currentTarget.querySelector('button[type="submit"]');
+    submit.disabled = true;
+    try {
+      const profiles = await likeRequest("/rest/v1/profiles?select=user_id&user_id=eq." +
+        encodeURIComponent(authSession.user.id));
+      if (!Array.isArray(profiles) || !profiles.length) {
+        throw new Error("Escolha seu apelido público na área de palpites antes de comentar.");
+      }
+      await likeRequest("/rest/v1/news_comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({
+          news_id: currentArticleId,
+          user_id: authSession.user.id,
+          content
+        })
+      });
+      input.value = "";
+      await loadArticleComments(currentArticleId);
+      showMessage("Comentário publicado.", false);
+    } catch (error) {
+      showMessage("Não foi possível publicar o comentário: " + error.message, true);
+    } finally {
+      updateCommentFormState();
+    }
+  });
+
+  window.addEventListener("futsenai-auth-session-updated", event => {
+    authSession = event.detail && typeof event.detail.access_token === "string" ? event.detail : null;
+    updateCommentFormState();
+    if (currentArticleId) loadArticleComments(currentArticleId);
+  });
+
+  window.addEventListener("futsenai-auth-state-changed", event => {
+    authSession = event.detail && typeof event.detail.access_token === "string" ? event.detail : null;
+    updateCommentFormState();
+    if (currentArticleId) loadArticleComments(currentArticleId);
+    loadLikeRecords().then(renderNews).catch(error => {
+      showMessage("Não foi possível atualizar as curtidas: " + error.message, true);
+    });
+  });
 
   async function toggleLike(id) {
     authSession = readAuthSession();

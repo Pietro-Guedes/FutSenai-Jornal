@@ -156,6 +156,19 @@
           <button id="article-like" type="button" class="like-button rounded-lg border border-red-200 px-4 py-2.5 text-sm font-extrabold text-red-700 transition hover:bg-red-50" aria-pressed="false">♡ Curtir</button>
         </div>
         <p id="article-like-names" class="mt-3 text-xs leading-5 text-slate-500"></p>
+        <section class="mt-8 border-t border-slate-100 pt-6" aria-labelledby="article-comments-title">
+          <h3 id="article-comments-title" class="text-lg font-black text-slate-900">Comentários</h3>
+          <form id="article-comment-form" class="mt-4 space-y-3">
+            <label for="article-comment-input" class="block text-xs font-bold text-slate-700">Escreva um comentário (até 1000 caracteres)
+              <textarea id="article-comment-input" maxlength="1000" rows="3" class="field mt-1 w-full resize-y rounded-lg border border-slate-200 px-3 py-2.5 text-sm leading-6" placeholder="O que você achou da notícia?"></textarea>
+            </label>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <p id="article-comment-auth-note" class="text-xs text-slate-500">Entre com Google e escolha um apelido para comentar.</p>
+              <button type="submit" class="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-extrabold text-white transition hover:bg-red-700">Enviar comentário</button>
+            </div>
+          </form>
+          <div id="article-comments-list" class="mt-5 space-y-3" aria-live="polite"></div>
+        </section>
       </div>
     </article>
   </div>

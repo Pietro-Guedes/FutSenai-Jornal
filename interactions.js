@@ -195,6 +195,7 @@
       }
     }
     updateAccountUI();
+    window.dispatchEvent(new CustomEvent("futsenai-auth-state-changed", { detail: session }));
   }
 
   function updateAccountUI() {
@@ -607,6 +608,7 @@
       profile = null;
       isScoreAdmin = false;
       updateAccountUI();
+      window.dispatchEvent(new CustomEvent("futsenai-auth-state-changed", { detail: null }));
       showMessage("Você saiu da conta. A enquete e os prêmios continuam disponíveis sem login.", false);
       await loadInteractions();
     });

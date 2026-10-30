@@ -5,7 +5,7 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 ## Ativar
 
 1. Crie um projeto em [supabase.com](https://supabase.com/).
-2. No painel do projeto, abra **SQL Editor**, cole o conteúdo atualizado de `supabase-setup.sql` e execute. Se já executou uma versão anterior, execute novamente para instalar também o banco e o armazenamento de imagens das notícias, incluindo as curtidas compartilhadas.
+2. No painel do projeto, abra **SQL Editor**, cole o conteúdo atualizado de `supabase-setup.sql` e execute. Se já executou uma versão anterior, execute novamente para instalar também o banco e o armazenamento de imagens das notícias, incluindo curtidas e comentários compartilhados.
 3. Em **Project Settings → API**, copie a **Project URL** e a chave **anon/public**.
 4. Cole esses dois valores em `supabase-config.js`, nos campos `url` e `anonKey`.
 5. Em **Authentication → URL Configuration**, configure a URL do site publicado como **Site URL** e inclua-a em **Redirect URLs** para a confirmação de e-mail voltar ao site.
@@ -31,6 +31,8 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 - A chave `anon` no site não concede permissão para editar notícias. Nunca coloque uma chave `service_role` no navegador nem compartilhe sua senha.
 - O mesmo painel permite criar, editar e ativar/desativar enquetes, prêmios e jogos, além de registrar ou corrigir o placar final. Execute novamente `supabase-setup.sql` para aplicar as permissões e adicionar o campo de ordenação da enquete. Somente editores cadastrados em `news_admins` podem alterar esses itens e registrar placares pela página administrativa; os visitantes continuam podendo ler apenas os registros ativos. Desativar um item mantém seus votos e palpites.
 - Na seção de participação, **Zerar votos ativos** apaga permanentemente os votos da enquete e dos prêmios ativos, sem apagar votos de itens inativos ou palpites de placar. A ação exige confirmação e retorna a quantidade apagada. Execute novamente `supabase-setup.sql` para instalar a função protegida do banco.
+- Comentários são feitos por contas conectadas com apelido público. Cada autor pode apagar os próprios comentários; editores de notícias podem moderar todos na seção **Comentários das notícias** do painel. O texto e o apelido ficam visíveis publicamente. Execute novamente `supabase-setup.sql` para criar a tabela e as permissões.
+- Palavras ofensivas da lista inicial são substituídas por `#` nos comentários e apelidos, tanto nos novos envios quanto nos textos já salvos. A lista pode ser ajustada no array `offensive_words` da função `censor_offensive_words` em `supabase-setup.sql`; execute o SQL novamente para aplicar mudanças. O filtro trata palavras inteiras, sem diferenciar maiúsculas de minúsculas.
 
 ## Contas da liga e placares
 

@@ -21,6 +21,8 @@
   const cancelEdit = document.querySelector("#cancel-edit");
   const imageFile = document.querySelector("#news-image-file");
   const imageStatus = document.querySelector("#news-image-status");
+  const commentsList = document.querySelector("#admin-comments-list");
+  const commentsCount = document.querySelector("#admin-comments-count");
   let session = null;
   let news = [];
   let interactionRecords = { polls: [], awards: [], matches: [] };
@@ -129,6 +131,7 @@
       "Conectado como " + (session.user.email || "editor autorizado");
     await loadNews();
     await loadInteractionRecords();
+    await loadComments();
   }
 
   function validateNews(value) {
@@ -176,6 +179,68 @@
     }
     interactionRecords = { polls, awards, matches };
     renderInteractionRecords();
+  }
+
+  async function loadComments() {
+    commentsCount.textContent = "Carregando…";
+    const result = await request("/rest/v1/rpc/get_news_comments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ p_news_id: null })
+    });
+    if (!Array.isArray(result) || result.some(comment =>
+      !comment || typeof comment.comment_id !== "number" ||
+      typeof comment.news_id !== "string" || typeof comment.nickname !== "string" ||
+      typeof comment.content !== "string" || typeof comment.created_at !== "string")) {
+      throw new Error("O Supabase retornou comentários inválidos.");
+    }
+    commentsCount.textContent = result.length +
+      (result.length === 1 ? " comentário publicado" : " comentários publicados");
+    commentsList.replaceChildren();
+    if (!result.length) {
+      const empty = document.createElement("p");
+      empty.className = "rounded-xl border border-dashed border-slate-300 bg-white p-5 text-center text-sm text-slate-500";
+      empty.textContent = "Ainda não há comentários.";
+      commentsList.append(empty);
+      return;
+    }
+
+    result.forEach(comment => {
+      const card = document.createElement("article");
+      card.className = "rounded-xl border border-slate-200 bg-white p-4 shadow-sm";
+      const header = document.createElement("div");
+      header.className = "flex flex-wrap items-center justify-between gap-2";
+      const author = document.createElement("p");
+      author.className = "text-sm font-extrabold text-slate-800";
+      author.textContent = comment.nickname + " · " + comment.news_id;
+      const date = document.createElement("time");
+      date.className = "text-xs text-slate-500";
+      date.dateTime = comment.created_at;
+      date.textContent = new Intl.DateTimeFormat("pt-BR", {
+        dateStyle: "medium",
+        timeStyle: "short"
+      }).format(new Date(comment.created_at));
+      header.append(author, date);
+      const content = document.createElement("p");
+      content.className = "mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700";
+      content.textContent = comment.content;
+      const remove = createAction("Remover comentário", async () => {
+        if (!window.confirm("Remover permanentemente este comentário?")) return;
+        try {
+          await request("/rest/v1/news_comments?comment_id=eq." +
+            encodeURIComponent(comment.comment_id), { method: "DELETE" });
+          await loadComments();
+          showMessage("Comentário removido.", false);
+        } catch (error) {
+          showMessage("Não foi possível remover o comentário: " + error.message, true);
+        }
+      }, "text-red-700");
+      const actions = document.createElement("div");
+      actions.className = "mt-3 border-t border-slate-100 pt-3";
+      actions.append(remove);
+      card.append(header, content, actions);
+      commentsList.append(card);
+    });
   }
 
   async function resetActiveVotes() {
@@ -743,6 +808,15 @@
     saveSession(null);
     showLogin();
     showMessage("Você saiu da área administrativa.", false);
+  });
+
+  document.querySelector("#refresh-comments").addEventListener("click", async () => {
+    try {
+      await loadComments();
+      showMessage("Lista de comentários atualizada.", false);
+    } catch (error) {
+      showMessage("Não foi possível atualizar os comentários: " + error.message, true);
+    }
   });
 
   bindInteractionForms();
