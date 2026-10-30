@@ -22,7 +22,7 @@
     <div class="mb-8">
       <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Área administrativa</p>
       <h1 class="text-3xl font-black tracking-tight text-slate-900">Painel administrativo</h1>
-      <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Gerencie notícias, enquetes, prêmios semanais e jogos do site.</p>
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Gerencie notícias, enquetes, prêmios semanais, jogos e resultados do site.</p>
     </div>
 
     <div id="admin-message" class="mb-6 hidden rounded-xl border px-4 py-3 text-sm font-semibold" role="status" aria-live="polite"></div>
@@ -115,7 +115,7 @@
         <div class="mb-6">
           <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Participação dos alunos</p>
           <h2 id="interactions-admin-title" class="text-2xl font-black tracking-tight text-slate-900">Enquetes, prêmios e jogos</h2>
-          <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Crie itens novos ou edite os existentes. Desativar um item o oculta do site sem apagar os votos ou palpites. Alterar opções não apaga votos já registrados.</p>
+          <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Crie itens novos ou edite os existentes. Para abrir a enquete, deixe-a ativa e informe a segunda-feira da semana atual; se o prazo de sexta às 15h30 já passou, use a próxima segunda-feira. O público vê a enquete ativa da semana mais recente. Desativar um item o oculta sem apagar votos ou palpites.</p>
           <div class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
             <button id="reset-active-votes" type="button" class="rounded-lg border border-red-300 bg-white px-4 py-2.5 text-sm font-extrabold text-red-700 hover:bg-red-100">Zerar votos ativos</button>
             <p class="max-w-2xl text-xs leading-5 text-red-800">Apaga permanentemente os votos da enquete e dos prêmios ativos. Não apaga votos de itens inativos nem palpites de placar.</p>
@@ -198,7 +198,7 @@
                 <label class="flex items-center gap-2 text-sm font-semibold text-slate-700">
                   <input name="active" type="checkbox" checked class="h-4 w-4 accent-red-600"> Ativo no site
                 </label>
-                <p class="text-xs leading-5 text-slate-500">O placar final continua sendo registrado na área de palpites pelo administrador de placares.</p>
+                <p class="text-xs leading-5 text-slate-500">Para abrir palpites, deixe o jogo ativo e informe uma data futura. O prazo termina às 11h (Brasília) no dia do jogo. Para outra partida depois de registrar um resultado, use “Novo jogo” para criar um novo ID.</p>
                 <div class="flex gap-2">
                   <button type="submit" class="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-extrabold text-white hover:bg-red-700">Salvar jogo</button>
                   <button type="reset" class="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-600">Novo jogo</button>

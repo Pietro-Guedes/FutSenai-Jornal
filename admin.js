@@ -165,7 +165,7 @@
   async function loadInteractionRecords() {
     const [polls, awards, matches] = await Promise.all([
       request(INTERACTION_RESOURCES.polls.endpoint +
-        "?select=id,question,week_start,options,active&order=week_start.desc"),
+        "?select=id,question,week_start,options,active,created_at&order=week_start.desc,created_at.desc,id.desc"),
       request(INTERACTION_RESOURCES.awards.endpoint +
         "?select=id,title,week_start,nominees,active&order=week_start.desc"),
       request(INTERACTION_RESOURCES.matches.endpoint +
@@ -260,9 +260,67 @@
             () => setInteractionActive(key, item), "text-slate-600")
         );
         card.append(title, detail, status, actions);
+        if (key === "matches") card.append(createMatchResultForm(item));
         container.append(card);
       });
     });
+  }
+
+  function createMatchResultForm(match) {
+    const formElement = document.createElement("form");
+    formElement.className = "mt-3 border-t border-slate-100 pt-3";
+    const label = document.createElement("p");
+    label.className = "mb-2 text-xs font-bold text-slate-700";
+    label.textContent = match.home_score === null
+      ? "Registrar placar final"
+      : "Placar final (salvar para corrigir)";
+    const row = document.createElement("div");
+    row.className = "flex items-end gap-2";
+    const homeScore = document.createElement("input");
+    const awayScore = document.createElement("input");
+    [homeScore, awayScore].forEach((input, index) => {
+      input.type = "number";
+      input.min = "0";
+      input.max = "99";
+      input.required = true;
+      input.inputMode = "numeric";
+      input.setAttribute("aria-label", "Placar de " + (index === 0 ? match.home_team : match.away_team));
+      input.placeholder = index === 0 ? match.home_team : match.away_team;
+      input.value = (index === 0 ? match.home_score : match.away_score) ?? "";
+      input.className = "field min-w-0 flex-1 rounded-lg border border-slate-200 px-2 py-2 text-center text-sm font-bold";
+    });
+    const separator = document.createElement("span");
+    separator.className = "pb-2 text-sm font-black text-slate-400";
+    separator.textContent = "×";
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.className = "rounded-lg bg-slate-900 px-3 py-2 text-xs font-extrabold text-white hover:bg-slate-700";
+    submit.textContent = "Salvar placar";
+    row.append(homeScore, separator, awayScore, submit);
+    formElement.append(label, row);
+    formElement.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!formElement.reportValidity()) return;
+      submit.disabled = true;
+      try {
+        await request("/rest/v1/rpc/set_match_result", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            p_match_id: match.id,
+            p_home_score: Number(homeScore.value),
+            p_away_score: Number(awayScore.value)
+          })
+        });
+        await loadInteractionRecords();
+        showMessage("Placar final salvo. O ranking foi atualizado.", false);
+      } catch (error) {
+        showMessage("Não foi possível salvar o placar: " + error.message, true);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+    return formElement;
   }
 
   function editInteractionRecord(type, item) {
@@ -358,6 +416,10 @@
           if (Object.entries(record).some(([key, value]) =>
             key !== "active" && (typeof value === "string" ? !value : Array.isArray(value) && value.some(item => !item)))) {
             throw new Error("Preencha todos os campos obrigatórios.");
+          }
+          if ((type === "polls" || type === "awards") &&
+              new Date(record.week_start + "T00:00:00Z").getUTCDay() !== 1) {
+            throw new Error("A semana da enquete ou prêmio precisa começar numa segunda-feira.");
           }
           await request(INTERACTION_RESOURCES[type].endpoint + "?on_conflict=id", {
             method: "POST",

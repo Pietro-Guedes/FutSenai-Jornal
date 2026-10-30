@@ -3,8 +3,11 @@ create table if not exists public.polls (
   question text not null,
   week_start date not null,
   options text[] not null check (cardinality(options) >= 2),
-  active boolean not null default true
+  active boolean not null default true,
+  created_at timestamptz not null default now()
 );
+alter table public.polls
+  add column if not exists created_at timestamptz not null default now();
 
 create table if not exists public.poll_votes (
   poll_id text not null references public.polls(id) on delete cascade,
@@ -420,8 +423,8 @@ security definer
 set search_path = public
 as $$
 begin
-  if not public.is_score_admin() then
-    raise exception 'Somente a conta administradora pode registrar o placar.';
+  if not (public.is_score_admin() or public.is_news_admin()) then
+    raise exception 'Somente uma conta autorizada pode registrar o placar.';
   end if;
   if p_home_score not between 0 and 99 or p_away_score not between 0 and 99 then
     raise exception 'O placar precisa estar entre 0 e 99.';
@@ -429,9 +432,9 @@ begin
 
   update public.matches
   set home_score = p_home_score, away_score = p_away_score
-  where id = p_match_id and active;
+  where id = p_match_id;
   if not found then
-    raise exception 'Jogo não encontrado ou inativo.';
+    raise exception 'Jogo não encontrado.';
   end if;
 end;
 $$;

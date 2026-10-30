@@ -608,7 +608,7 @@
 
   async function loadInteractions() {
     const [polls, awards, matches, results] = await Promise.all([
-      request("polls?select=id,question,week_start,options&active=eq.true&order=week_start.desc"),
+      request("polls?select=id,question,week_start,options,created_at&active=eq.true&order=week_start.desc,created_at.desc,id.desc"),
       request("weekly_awards?select=id,title,week_start,nominees&active=eq.true&order=week_start.desc"),
       request("matches?select=id,home_team,away_team,match_date,home_score,away_score&active=eq.true&order=match_date.asc"),
       request("rpc/get_interaction_results", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
