@@ -8,9 +8,11 @@
   const message = document.querySelector("#feed-message");
   const articleLayer = document.querySelector("#article-layer");
   const likeRecords = new Map();
+  const COMMENTS_REFRESH_INTERVAL_MS = 15000;
   let likedNewsIds = new Set();
   let authSession = null;
   let currentArticleId = null;
+  let commentsRefreshTimer = null;
   let news = [];
 
   function readAuthSession() {
@@ -259,6 +261,12 @@
     if (likeNames) updateLikeNamesElement(likeNames, item.id);
     updateCommentFormState();
     loadArticleComments(item.id);
+    if (commentsRefreshTimer !== null) window.clearInterval(commentsRefreshTimer);
+    commentsRefreshTimer = window.setInterval(() => {
+      if (!document.hidden && !articleLayer.classList.contains("hidden") && currentArticleId) {
+        loadArticleComments(currentArticleId);
+      }
+    }, COMMENTS_REFRESH_INTERVAL_MS);
 
     articleLayer.classList.remove("hidden");
     articleLayer.classList.add("flex");
@@ -268,6 +276,10 @@
   }
 
   function closeArticle() {
+    if (commentsRefreshTimer !== null) {
+      window.clearInterval(commentsRefreshTimer);
+      commentsRefreshTimer = null;
+    }
     articleLayer.classList.add("hidden");
     articleLayer.classList.remove("flex");
     articleLayer.setAttribute("aria-hidden", "true");
