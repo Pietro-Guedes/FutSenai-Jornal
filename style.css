@@ -57,21 +57,16 @@
     .score-promo {
       position: relative;
       isolation: isolate;
-      display: block;
       overflow: hidden;
       border: 1px solid rgba(255, 255, 255, .12);
-      border-radius: 1.75rem;
+      border-radius: 1.25rem;
       background:
         radial-gradient(circle at 88% 8%, rgba(245, 76, 91, .3), transparent 18rem),
         linear-gradient(118deg, #171b31 0%, #3b1424 54%, #8f1b2a 100%);
-      padding: clamp(1.25rem, 3.2vw, 2.25rem);
+      padding: 1rem 1.2rem;
       color: #fff;
-      text-decoration: none;
       box-shadow: 0 16px 38px rgba(69, 17, 29, .16);
-      transition: transform .2s ease, box-shadow .2s ease;
     }
-    .score-promo:hover { transform: translateY(-3px); box-shadow: 0 22px 44px rgba(69, 17, 29, .24); }
-    .score-promo:focus-visible { outline: 3px solid rgba(201, 35, 50, .5); outline-offset: 4px; }
     .score-promo-top, .score-promo-brand { display: flex; align-items: center; }
     .score-promo-top { justify-content: space-between; gap: .75rem; }
     .score-promo-brand { gap: .55rem; font-size: .68rem; font-weight: 900; letter-spacing: .16em; }
@@ -82,29 +77,34 @@
       font-weight: 700;
       text-align: right;
     }
-    .score-promo-grid {
-      display: grid;
-      grid-template-columns: minmax(0, .8fr) minmax(0, 1.7fr);
-      align-items: end;
-      gap: clamp(1.5rem, 4vw, 3.5rem);
-      margin-top: 1.5rem;
+    .score-promo-carousel { display: flex; min-height: 7rem; align-items: stretch; gap: 1rem; margin-top: .7rem; }
+    .score-promo-slide {
+      display: flex;
+      min-width: 0;
+      flex: 1;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: .9rem;
+      background: rgba(255, 255, 255, .075);
+      padding: .8rem 1rem;
+      color: #fff;
+      text-decoration: none;
+      transition: background-color .2s ease;
     }
-    .score-promo-kicker { margin: 0 0 .45rem; color: #fda4af; font-size: .68rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
-    .score-promo-intro h2 { max-width: 22rem; margin: 0; font-size: clamp(1.6rem, 3.2vw, 2.5rem); font-weight: 900; line-height: 1.08; letter-spacing: -.04em; }
-    .score-promo-intro > p:not(.score-promo-kicker) { max-width: 25rem; margin: .8rem 0 1.2rem; color: rgba(255, 255, 255, .72); font-size: .84rem; line-height: 1.6; }
-    .score-promo-cta { display: inline-flex; align-items: center; gap: .45rem; border-radius: 999px; background: #fff; padding: .65rem .95rem; color: #9f1d2c; font-size: .75rem; font-weight: 900; transition: background-color .2s ease; }
-    .score-promo:hover .score-promo-cta { background: #fff1f2; }
-    .score-promo-stats { display: grid; grid-template-columns: minmax(0, 1.35fr) repeat(2, minmax(0, 1fr)); gap: .65rem; }
-    .score-promo-stat { min-width: 0; min-height: 8.25rem; border: 1px solid rgba(255, 255, 255, .12); border-radius: 1rem; background: rgba(255, 255, 255, .075); padding: .85rem; }
-    .score-promo-label { display: block; margin-bottom: .8rem; color: #fda4af; font-size: .59rem; font-weight: 900; letter-spacing: .1em; line-height: 1.35; text-transform: uppercase; }
-    .score-promo-value { display: block; overflow-wrap: anywhere; font-size: 1.04rem; font-weight: 900; line-height: 1.2; }
-    .score-promo-detail { display: block; margin-top: .35rem; color: rgba(255, 255, 255, .7); font-size: .7rem; line-height: 1.4; }
-    .score-promo-results { display: grid; gap: .5rem; }
-    .score-promo-match { display: flex; align-items: center; justify-content: space-between; gap: .5rem; color: rgba(255, 255, 255, .82); font-size: .68rem; font-weight: 700; }
-    .score-promo-match-teams { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .score-promo-match-score { flex: 0 0 auto; color: #fff; font-size: .8rem; font-weight: 900; }
-    .score-promo-match-date { display: block; margin-top: .1rem; color: rgba(255, 255, 255, .52); font-size: .59rem; font-weight: 600; }
-    .score-promo-placeholder { margin: 0; color: rgba(255, 255, 255, .7); font-size: .72rem; line-height: 1.5; }
+    .score-promo-slide:hover { background: rgba(255, 255, 255, .13); }
+    .score-promo-slide:focus-visible, .score-promo-arrow:focus-visible { outline: 3px solid #fda4af; outline-offset: 3px; }
+    .score-promo-label { display: block; margin-bottom: .3rem; color: #fda4af; font-size: .61rem; font-weight: 900; letter-spacing: .1em; line-height: 1.35; text-transform: uppercase; }
+    .score-promo-value { display: block; overflow-wrap: anywhere; font-size: clamp(1rem, 2vw, 1.4rem); font-weight: 900; line-height: 1.2; }
+    .score-promo-value-list { font-size: .76rem; line-height: 1.55; }
+    .score-promo-value-list span { display: block; }
+    .score-promo-detail { display: block; margin-top: .25rem; color: rgba(255, 255, 255, .7); font-size: .7rem; line-height: 1.4; }
+    .score-promo-cta { display: inline-flex; align-items: center; gap: .35rem; margin-top: .45rem; color: #fff; font-size: .68rem; font-weight: 900; }
+    .score-promo-controls { display: flex; flex: 0 0 auto; align-items: center; gap: .35rem; align-self: center; }
+    .score-promo-arrow { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid rgba(255, 255, 255, .2); border-radius: 999px; background: rgba(255, 255, 255, .08); color: #fff; cursor: pointer; font-size: 1.25rem; line-height: 1; }
+    .score-promo-arrow:hover { background: rgba(255, 255, 255, .18); }
+    .score-promo-counter { min-width: 2.2rem; color: rgba(255, 255, 255, .72); font-size: .65rem; font-weight: 800; text-align: center; }
     .cards-promo {
       display: block;
       overflow: hidden;
@@ -245,17 +245,17 @@
     .article-body { white-space: pre-wrap; overflow-wrap: anywhere; }
     @keyframes card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     @media (max-width: 900px) {
-      .score-promo-grid { grid-template-columns: 1fr; align-items: start; gap: 1.4rem; }
-      .score-promo-intro h2 { max-width: 32rem; }
       .cards-promo-heading { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: .5rem; }
       .cards-promo-features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 540px) {
-      .score-promo-top { align-items: flex-start; flex-direction: column; }
-      .score-promo-status { text-align: left; }
-      .score-promo-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .score-promo-results-stat { grid-column: 1 / -1; }
-      .score-promo-stat { min-height: 7.5rem; }
+      .score-promo { padding: .85rem; }
+      .score-promo-top { align-items: flex-start; }
+      .score-promo-status { max-width: 9rem; }
+      .score-promo-carousel { min-height: 7.5rem; gap: .5rem; }
+      .score-promo-slide { padding: .7rem; }
+      .score-promo-controls { gap: .2rem; }
+      .score-promo-arrow { width: 1.8rem; height: 1.8rem; }
       .cards-promo-heading { grid-template-columns: 1fr; }
       .cards-promo-showcase { min-height: 12.5rem; }
       .cards-player-card { width: clamp(6rem, 24vw, 7.4rem); }

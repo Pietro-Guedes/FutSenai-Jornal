@@ -3,12 +3,15 @@
 
   const DATA_URL = "https://futsenai-score.vercel.app/data/futsenai.json";
   const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
-  const resultsContainer = document.querySelector("#score-promo-results");
   const status = document.querySelector("#score-promo-status");
-  const scorerName = document.querySelector("#score-promo-scorer");
-  const scorerGoals = document.querySelector("#score-promo-scorer-goals");
-  const streakCount = document.querySelector("#score-promo-streak");
-  const streakPlayer = document.querySelector("#score-promo-streak-player");
+  const slideLink = document.querySelector("#score-promo-slide");
+  const slideLabel = document.querySelector("#score-promo-label");
+  const slideValue = document.querySelector("#score-promo-value");
+  const slideDetail = document.querySelector("#score-promo-detail");
+  const slideCounter = document.querySelector("#score-promo-counter");
+  const scoreUrl = "https://futsenai-score.vercel.app";
+  let slides = [];
+  let currentSlide = 0;
 
   function validateData(data) {
     return data && Array.isArray(data.players) && Array.isArray(data.matches) &&
@@ -85,58 +88,75 @@
       .format(new Date(year, month - 1, day));
   }
 
-  function renderResults(matches, scores) {
-    resultsContainer.replaceChildren();
-    if (!matches.length) {
-      const empty = document.createElement("p");
-      empty.className = "score-promo-placeholder";
-      empty.textContent = "Ainda não há partidas registradas.";
-      resultsContainer.append(empty);
-      return;
+  function renderCurrentSlide() {
+    if (!slides.length) return;
+    const slide = slides[currentSlide];
+    slideLink.href = scoreUrl + slide.path;
+    slideLabel.textContent = slide.label;
+    slideValue.textContent = slide.value;
+    slideValue.classList.toggle("score-promo-value-list", Array.isArray(slide.value));
+    if (Array.isArray(slide.value)) {
+      slideValue.replaceChildren(...slide.value.map(value => {
+        const row = document.createElement("span");
+        row.textContent = value;
+        return row;
+      }));
     }
+    slideDetail.textContent = slide.detail;
+    slideCounter.textContent = (currentSlide + 1) + " / " + slides.length;
+    slideLink.setAttribute("aria-label", "Abrir " + slide.label.toLowerCase() + " no FutSENAI Score em uma nova aba");
+  }
 
-    matches.forEach(match => {
-      const row = document.createElement("div");
-      const teams = document.createElement("span");
-      const score = document.createElement("span");
-      const date = document.createElement("span");
-      const matchScore = scores.get(match.id);
-
-      row.className = "score-promo-match";
-      teams.className = "score-promo-match-teams";
-      teams.textContent = match.opponent_type === "second_year" ? "3º A × 2º Ano" : "Time Vermelho × Time Branco";
-      score.className = "score-promo-match-score";
-      score.textContent = matchScore.A + " × " + matchScore.B;
-      row.append(teams, score);
-
-      date.className = "score-promo-match-date";
-      date.textContent = formatDate(match.played_on);
-      resultsContainer.append(row, date);
-    });
+  function changeSlide(direction) {
+    if (!slides.length) return;
+    currentSlide = (currentSlide + direction + slides.length) % slides.length;
+    renderCurrentSlide();
   }
 
   function render(data) {
     const scores = getScores(data.matches, data.goals);
     const summary = summarize(data);
-    renderResults(summary.recentMatches, scores);
+    const recentResults = summary.recentMatches.map(match => {
+      const score = scores.get(match.id);
+      const teams = match.opponent_type === "second_year" ? "3º A × 2º Ano" : "Vermelho × Branco";
+      return formatDate(match.played_on) + " · " + teams + " · " + score.A + " × " + score.B;
+    });
+    const streak = summary.bestStreak && summary.bestStreak.best > 0
+      ? summary.bestStreak.best + (summary.bestStreak.best === 1 ? " vitória" : " vitórias")
+      : "Aguardando";
 
-    if (summary.topScorer) {
-      scorerName.textContent = summary.topScorer.player.name;
-      scorerGoals.textContent = summary.topScorer.goals +
-        (summary.topScorer.goals === 1 ? " gol marcado" : " gols marcados");
-    } else {
-      scorerName.textContent = "Ainda sem gols";
-      scorerGoals.textContent = "A artilharia começa com o próximo jogo.";
-    }
-
-    if (summary.bestStreak && summary.bestStreak.best > 0) {
-      streakCount.textContent = summary.bestStreak.best +
-        (summary.bestStreak.best === 1 ? " vitória" : " vitórias");
-      streakPlayer.textContent = summary.bestStreak.player.name + " · recorde individual";
-    } else {
-      streakCount.textContent = "Aguardando";
-      streakPlayer.textContent = "A próxima vitória abre a sequência.";
-    }
+    slides = [
+      {
+        label: "Últimos resultados",
+        value: recentResults.length ? recentResults : "Ainda não há partidas",
+        detail: "Placares mais recentes da turma.",
+        path: "/#/partidas"
+      },
+      {
+        label: "Artilheiro do momento",
+        value: summary.topScorer ? summary.topScorer.player.name : "Ainda sem gols",
+        detail: summary.topScorer
+          ? summary.topScorer.goals + (summary.topScorer.goals === 1 ? " gol marcado · ranking completo" : " gols marcados · ranking completo")
+          : "A artilharia começa com o próximo jogo.",
+        path: "/#/estatisticas"
+      },
+      {
+        label: "Maior sequência de vitórias",
+        value: streak,
+        detail: summary.bestStreak && summary.bestStreak.best > 0
+          ? summary.bestStreak.player.name + " · recorde individual"
+          : "A próxima vitória abre a sequência.",
+        path: "/#/estatisticas"
+      },
+      {
+        label: "Gols registrados",
+        value: String(data.goals.length),
+        detail: data.matches.length + (data.matches.length === 1 ? " partida registrada" : " partidas registradas"),
+        path: "/#/estatisticas"
+      }
+    ];
+    currentSlide %= slides.length;
+    renderCurrentSlide();
 
     status.textContent = "Estatísticas atualizadas";
   }
@@ -150,18 +170,24 @@
       render(data);
     } catch (error) {
       status.textContent = "Não foi possível carregar as estatísticas agora.";
-      resultsContainer.replaceChildren();
-      const unavailable = document.createElement("p");
-      unavailable.className = "score-promo-placeholder";
-      unavailable.textContent = "Abra o FutSENAI Score para ver os resultados e estatísticas atualizados.";
-      resultsContainer.append(unavailable);
-      scorerName.textContent = "Ver no site";
-      scorerGoals.textContent = "";
-      streakCount.textContent = "Ver no site";
-      streakPlayer.textContent = "";
+      slides = [{
+        label: "Estatísticas do FutSENAI Score",
+        value: "Ver no site",
+        detail: "Os dados não puderam ser carregados agora.",
+        path: "/"
+      }];
+      currentSlide = 0;
+      renderCurrentSlide();
       console.error("Não foi possível atualizar o resumo do FutSENAI Score:", error);
     }
   }
+
+  document.querySelector("#score-promo-prev").addEventListener("click", () => changeSlide(-1));
+  document.querySelector("#score-promo-next").addEventListener("click", () => changeSlide(1));
+  document.querySelector(".score-promo-carousel").addEventListener("keydown", event => {
+    if (event.key === "ArrowLeft") changeSlide(-1);
+    if (event.key === "ArrowRight") changeSlide(1);
+  });
 
   loadStats();
   window.setInterval(() => {

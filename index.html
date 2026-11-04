@@ -112,44 +112,32 @@
     </section>
 
     <section class="score-promo-section mb-12" aria-label="Estatísticas do FutSENAI Score">
-      <a
-        class="score-promo"
-        href="https://futsenai-score.vercel.app/"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Abrir FutSENAI Score em uma nova aba"
-      >
+      <div class="score-promo">
         <div class="score-promo-top">
           <span class="score-promo-brand"><span aria-hidden="true">⚽</span> FUTSENAI SCORE</span>
           <span id="score-promo-status" class="score-promo-status" aria-live="polite">Carregando estatísticas…</span>
         </div>
-        <div class="score-promo-grid">
-          <div class="score-promo-intro">
-            <p class="score-promo-kicker">A quadra tem novos números</p>
-            <h2>Quem está dominando o jogo?</h2>
-            <p>Acompanhe os placares, descubra quem está balançando a rede e confira as marcas da turma.</p>
-            <span class="score-promo-cta">Ver tudo no FutSENAI Score <span aria-hidden="true">↗</span></span>
-          </div>
-          <div class="score-promo-stats">
-            <div class="score-promo-stat score-promo-results-stat">
-              <span class="score-promo-label">Últimos resultados</span>
-              <div id="score-promo-results" class="score-promo-results">
-                <p class="score-promo-placeholder">Buscando os placares mais recentes…</p>
-              </div>
-            </div>
-            <div class="score-promo-stat">
-              <span class="score-promo-label">Artilheiro do momento</span>
-              <strong id="score-promo-scorer" class="score-promo-value">Carregando…</strong>
-              <span id="score-promo-scorer-goals" class="score-promo-detail"></span>
-            </div>
-            <div class="score-promo-stat">
-              <span class="score-promo-label">Maior sequência de vitórias</span>
-              <strong id="score-promo-streak" class="score-promo-value">Carregando…</strong>
-              <span id="score-promo-streak-player" class="score-promo-detail"></span>
-            </div>
+        <div class="score-promo-carousel" aria-label="Estatísticas em destaque">
+          <a
+            id="score-promo-slide"
+            class="score-promo-slide"
+            href="https://futsenai-score.vercel.app/#/partidas"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Abrir estatística no FutSENAI Score em uma nova aba"
+          >
+            <span id="score-promo-label" class="score-promo-label">Últimos resultados</span>
+            <span id="score-promo-value" class="score-promo-value">Buscando os placares…</span>
+            <span id="score-promo-detail" class="score-promo-detail">Acompanhe as partidas no FutSENAI Score.</span>
+            <span class="score-promo-cta">Ver esta estatística <span aria-hidden="true">↗</span></span>
+          </a>
+          <div class="score-promo-controls" role="group" aria-label="Navegar pelas estatísticas">
+            <button id="score-promo-prev" class="score-promo-arrow" type="button" aria-label="Estatística anterior">‹</button>
+            <span id="score-promo-counter" class="score-promo-counter" aria-live="polite">1 / 4</span>
+            <button id="score-promo-next" class="score-promo-arrow" type="button" aria-label="Próxima estatística">›</button>
           </div>
         </div>
-      </a>
+      </div>
     </section>
 
     <section class="cards-promo-section mb-12" aria-label="Conheça o jogo FutSENAI Cards">
