@@ -191,7 +191,9 @@
     if (!Array.isArray(result) || result.some(comment =>
       !comment || typeof comment.comment_id !== "number" ||
       typeof comment.news_id !== "string" || typeof comment.nickname !== "string" ||
-      typeof comment.content !== "string" || typeof comment.created_at !== "string")) {
+      typeof comment.content !== "string" || typeof comment.created_at !== "string" ||
+      (comment.updated_at !== null &&
+        (typeof comment.updated_at !== "string" || Number.isNaN(new Date(comment.updated_at).getTime()))))) {
       throw new Error("O Supabase retornou comentários inválidos.");
     }
     commentsCount.textContent = result.length +
@@ -221,14 +223,24 @@
         timeStyle: "short"
       }).format(new Date(comment.created_at));
       header.append(author, date);
+      if (comment.updated_at) {
+        const edited = document.createElement("span");
+        edited.className = "rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500";
+        edited.textContent = "Editado";
+        header.insertBefore(edited, date);
+      }
       const content = document.createElement("p");
       content.className = "mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700";
       content.textContent = comment.content;
       const remove = createAction("Remover comentário", async () => {
         if (!window.confirm("Remover permanentemente este comentário?")) return;
         try {
-          await request("/rest/v1/news_comments?comment_id=eq." +
-            encodeURIComponent(comment.comment_id), { method: "DELETE" });
+          const removed = await request("/rest/v1/rpc/delete_news_comment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ p_comment_id: comment.comment_id })
+          });
+          if (removed !== true) throw new Error("O Supabase não confirmou a remoção.");
           await loadComments();
           showMessage("Comentário removido.", false);
         } catch (error) {

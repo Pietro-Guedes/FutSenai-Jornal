@@ -323,18 +323,81 @@
       date.dateTime = comment.created_at;
       date.textContent = formatDate(comment.created_at);
       header.append(author, date);
+      if (comment.updated_at) {
+        const edited = document.createElement("span");
+        edited.className = "rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600";
+        edited.textContent = "Editado";
+        header.insertBefore(edited, date);
+      }
       const content = document.createElement("p");
       content.className = "mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700";
       content.textContent = comment.content;
       card.append(header, content);
+      const actions = document.createElement("div");
+      actions.className = "mt-3 flex flex-wrap items-center gap-3";
+      const like = document.createElement("button");
+      like.type = "button";
+      like.className = "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition " +
+        (comment.liked_by_me
+          ? "border-red-200 bg-red-50 text-red-700"
+          : "border-slate-200 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700");
+      like.setAttribute("aria-pressed", String(comment.liked_by_me));
+      like.setAttribute("aria-label", comment.liked_by_me
+        ? "Remover curtida do comentário"
+        : "Curtir comentário");
+      like.textContent = (comment.liked_by_me ? "♥" : "♡") + " " +
+        comment.like_count + (comment.like_count === 1 ? " curtida" : " curtidas");
+      like.addEventListener("click", () => toggleCommentLike(comment, like));
+      actions.append(like);
       if (authSession && authSession.user.id === comment.user_id) {
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "text-xs font-bold text-slate-500 underline hover:text-red-700";
+        edit.textContent = "Editar";
         const remove = document.createElement("button");
         remove.type = "button";
-        remove.className = "mt-3 text-xs font-bold text-slate-500 underline hover:text-red-700";
+        remove.className = "text-xs font-bold text-slate-500 underline hover:text-red-700";
         remove.textContent = "Apagar meu comentário";
+        const editForm = document.createElement("form");
+        editForm.className = "mt-3 hidden space-y-2";
+        const editInput = document.createElement("textarea");
+        editInput.maxLength = 1000;
+        editInput.required = true;
+        editInput.rows = 3;
+        editInput.className = "field w-full resize-y rounded-lg border border-slate-200 px-3 py-2.5 text-sm leading-6";
+        const editButtons = document.createElement("div");
+        editButtons.className = "flex flex-wrap gap-2";
+        const saveEdit = document.createElement("button");
+        saveEdit.type = "submit";
+        saveEdit.className = "rounded-lg bg-red-600 px-3 py-2 text-xs font-extrabold text-white hover:bg-red-700";
+        saveEdit.textContent = "Salvar edição";
+        const cancelEdit = document.createElement("button");
+        cancelEdit.type = "button";
+        cancelEdit.className = "rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100";
+        cancelEdit.textContent = "Cancelar";
+        editButtons.append(saveEdit, cancelEdit);
+        editForm.append(editInput, editButtons);
+        edit.addEventListener("click", () => {
+          editInput.value = comment.content;
+          content.classList.add("hidden");
+          actions.classList.add("hidden");
+          editForm.classList.remove("hidden");
+          editInput.focus();
+        });
+        cancelEdit.addEventListener("click", () => {
+          editForm.classList.add("hidden");
+          content.classList.remove("hidden");
+          actions.classList.remove("hidden");
+        });
+        editForm.addEventListener("submit", event => {
+          event.preventDefault();
+          saveOwnComment(comment, editInput, saveEdit, cancelEdit);
+        });
         remove.addEventListener("click", () => removeOwnComment(comment));
-        card.append(remove);
+        actions.append(edit, remove);
+        card.append(editForm);
       }
+      card.append(actions);
       list.append(card);
     });
   }
@@ -357,7 +420,11 @@
         typeof comment.news_id !== "string" ||
         (comment.user_id !== null && typeof comment.user_id !== "string") ||
         typeof comment.nickname !== "string" || typeof comment.content !== "string" ||
-        typeof comment.created_at !== "string" || Number.isNaN(new Date(comment.created_at).getTime()))) {
+        !Number.isInteger(comment.like_count) || comment.like_count < 0 ||
+        typeof comment.liked_by_me !== "boolean" ||
+        typeof comment.created_at !== "string" || Number.isNaN(new Date(comment.created_at).getTime()) ||
+        (comment.updated_at !== null &&
+          (typeof comment.updated_at !== "string" || Number.isNaN(new Date(comment.updated_at).getTime()))))) {
         throw new Error("O banco retornou comentários fora do formato esperado.");
       }
       if (currentArticleId === newsId) renderArticleComments(comments);
@@ -371,17 +438,73 @@
     }
   }
 
+  async function saveOwnComment(comment, input, saveButton, cancelButton) {
+    const content = input.value.trim();
+    if (!content) {
+      showMessage("Escreva um comentário antes de salvar.", true);
+      return;
+    }
+
+    saveButton.disabled = true;
+    cancelButton.disabled = true;
+    try {
+      const updated = await likeRequest("/rest/v1/rpc/update_news_comment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ p_comment_id: comment.comment_id, p_content: content })
+      });
+      if (updated !== true) throw new Error("O Supabase não confirmou a edição.");
+      await loadArticleComments(comment.news_id);
+      showMessage("Seu comentário foi atualizado.", false);
+    } catch (error) {
+      showMessage("Não foi possível editar o comentário: " + error.message, true);
+    } finally {
+      saveButton.disabled = false;
+      cancelButton.disabled = false;
+    }
+  }
+
   async function removeOwnComment(comment) {
     if (!authSession || authSession.user.id !== comment.user_id) return;
     if (!window.confirm("Apagar seu comentário? Essa ação não pode ser desfeita.")) return;
     try {
-      await likeRequest("/rest/v1/news_comments?comment_id=eq." +
-        encodeURIComponent(comment.comment_id) + "&user_id=eq." +
-        encodeURIComponent(authSession.user.id), { method: "DELETE" });
+      const removed = await likeRequest("/rest/v1/rpc/delete_news_comment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ p_comment_id: comment.comment_id })
+      });
+      if (removed !== true) throw new Error("O Supabase não confirmou a remoção.");
       await loadArticleComments(comment.news_id);
       showMessage("Seu comentário foi apagado.", false);
     } catch (error) {
       showMessage("Não foi possível apagar o comentário: " + error.message, true);
+    }
+  }
+
+  async function toggleCommentLike(comment, button) {
+    authSession = readAuthSession();
+    if (!authSession) {
+      showMessage("Entre com sua conta para curtir comentários.", false);
+      document.querySelector("#account-heading").scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    button.disabled = true;
+    try {
+      const liked = await likeRequest("/rest/v1/rpc/toggle_news_comment_like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ p_comment_id: comment.comment_id })
+      });
+      if (typeof liked !== "boolean") {
+        throw new Error("O Supabase retornou uma resposta inválida para a curtida.");
+      }
+      if (currentArticleId === comment.news_id) await loadArticleComments(comment.news_id);
+      showMessage(liked ? "Você curtiu o comentário." : "Você removeu sua curtida.", false);
+    } catch (error) {
+      showMessage("Não foi possível atualizar a curtida: " + error.message, true);
+    } finally {
+      button.disabled = false;
     }
   }
 

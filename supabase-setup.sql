@@ -111,10 +111,20 @@ create table if not exists public.news_comments (
   news_id text not null references public.news(id) on delete cascade,
   user_id uuid not null references public.profiles(user_id) on delete cascade,
   content text not null check (char_length(btrim(content)) between 1 and 1000),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
 );
+alter table public.news_comments
+  add column if not exists updated_at timestamptz;
 create index if not exists news_comments_news_created_idx
   on public.news_comments (news_id, created_at, comment_id);
+
+create table if not exists public.news_comment_likes (
+  comment_id bigint not null references public.news_comments(comment_id) on delete cascade,
+  user_id uuid not null references public.profiles(user_id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (comment_id, user_id)
+);
 
 create or replace function public.censor_offensive_words(p_text text)
 returns text
@@ -300,6 +310,7 @@ alter table public.news_admins enable row level security;
 alter table public.news enable row level security;
 alter table public.news_likes enable row level security;
 alter table public.news_comments enable row level security;
+alter table public.news_comment_likes enable row level security;
 
 drop policy if exists "Public can read active polls" on public.polls;
 create policy "Public can read active polls" on public.polls
@@ -358,6 +369,19 @@ create policy "Authenticated users can add their own comments" on public.news_co
     and exists (select 1 from public.profiles p where p.user_id = auth.uid())
   );
 
+drop policy if exists "Users can read their own comment likes" on public.news_comment_likes;
+create policy "Users can read their own comment likes" on public.news_comment_likes
+  for select to authenticated using (user_id = auth.uid());
+drop policy if exists "Users can like comments as themselves" on public.news_comment_likes;
+create policy "Users can like comments as themselves" on public.news_comment_likes
+  for insert to authenticated with check (
+    user_id = auth.uid()
+    and exists (select 1 from public.profiles p where p.user_id = auth.uid())
+  );
+drop policy if exists "Users can remove their own comment likes" on public.news_comment_likes;
+create policy "Users can remove their own comment likes" on public.news_comment_likes
+  for delete to authenticated using (user_id = auth.uid());
+
 revoke all on public.polls, public.weekly_awards, public.matches, public.news from anon, authenticated;
 grant select on public.polls, public.weekly_awards, public.matches, public.news to anon, authenticated;
 grant insert, update on public.polls, public.weekly_awards to authenticated;
@@ -372,6 +396,8 @@ revoke all on public.news_likes from anon, authenticated;
 grant select, insert, delete on public.news_likes to authenticated;
 revoke all on public.news_comments from anon, authenticated;
 grant insert, delete on public.news_comments to authenticated;
+revoke all on public.news_comment_likes from anon, authenticated;
+grant select, insert, delete on public.news_comment_likes to authenticated;
 
 insert into storage.buckets (id, name, public)
 values ('news-images', 'news-images', true)
@@ -639,14 +665,18 @@ as $$
   ) grouped;
 $$;
 
-create or replace function public.get_news_comments(p_news_id text default null)
+drop function if exists public.get_news_comments(text);
+create function public.get_news_comments(p_news_id text default null)
 returns table (
   comment_id bigint,
   news_id text,
   user_id uuid,
   nickname text,
   content text,
-  created_at timestamptz
+  created_at timestamptz,
+  updated_at timestamptz,
+  like_count bigint,
+  liked_by_me boolean
 )
 language plpgsql
 stable
@@ -661,11 +691,111 @@ begin
   return query
   select c.comment_id, c.news_id,
          case when c.user_id = auth.uid() then c.user_id else null::uuid end,
-         p.nickname, c.content, c.created_at
+         p.nickname, c.content, c.created_at, c.updated_at,
+         (select count(*) from public.news_comment_likes cl
+          where cl.comment_id = c.comment_id),
+         exists (
+           select 1 from public.news_comment_likes cl
+           where cl.comment_id = c.comment_id and cl.user_id = auth.uid()
+         )
   from public.news_comments c
   join public.profiles p on p.user_id = c.user_id
   where p_news_id is null or c.news_id = p_news_id
   order by c.created_at desc, c.comment_id desc;
+end;
+$$;
+
+create or replace function public.update_news_comment(p_comment_id bigint, p_content text)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  updated_count integer;
+begin
+  if current_user_id is null then
+    raise exception 'Entre na sua conta para editar um comentário.';
+  end if;
+  if p_content is null or char_length(btrim(p_content)) not between 1 and 1000 then
+    raise exception 'O comentário deve ter entre 1 e 1000 caracteres.';
+  end if;
+
+  update public.news_comments c
+  set content = btrim(p_content),
+      updated_at = now()
+  where c.comment_id = p_comment_id
+    and c.user_id = current_user_id
+    and c.content is distinct from btrim(p_content);
+  get diagnostics updated_count = row_count;
+  if updated_count = 0 and not exists (
+    select 1 from public.news_comments c
+    where c.comment_id = p_comment_id and c.user_id = current_user_id
+  ) then
+    raise exception 'Comentário não encontrado ou você não tem permissão para editá-lo.';
+  end if;
+
+  return true;
+end;
+$$;
+
+create or replace function public.delete_news_comment(p_comment_id bigint)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  deleted_count integer;
+begin
+  if auth.uid() is null then
+    raise exception 'Entre na sua conta para remover um comentário.';
+  end if;
+
+  delete from public.news_comments c
+  where c.comment_id = p_comment_id
+    and (c.user_id = auth.uid() or public.is_news_admin());
+  get diagnostics deleted_count = row_count;
+  if deleted_count = 0 then
+    raise exception 'Comentário não encontrado ou você não tem permissão para removê-lo.';
+  end if;
+
+  return true;
+end;
+$$;
+
+create or replace function public.toggle_news_comment_like(p_comment_id bigint)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  inserted_count integer;
+begin
+  if current_user_id is null then
+    raise exception 'Entre na sua conta para curtir comentários.';
+  end if;
+  if not exists (select 1 from public.profiles p where p.user_id = current_user_id) then
+    raise exception 'Escolha seu apelido público antes de curtir comentários.';
+  end if;
+  if not exists (select 1 from public.news_comments c where c.comment_id = p_comment_id) then
+    raise exception 'Este comentário não existe mais.';
+  end if;
+
+  insert into public.news_comment_likes (comment_id, user_id)
+  values (p_comment_id, current_user_id)
+  on conflict (comment_id, user_id) do nothing;
+  get diagnostics inserted_count = row_count;
+  if inserted_count > 0 then
+    return true;
+  end if;
+
+  delete from public.news_comment_likes
+  where comment_id = p_comment_id and user_id = current_user_id;
+  return false;
 end;
 $$;
 
@@ -675,6 +805,9 @@ revoke all on function public.submit_prediction(text, integer, integer) from pub
 revoke all on function public.get_interaction_results() from public;
 revoke all on function public.get_news_likes() from public;
 revoke all on function public.get_news_comments(text) from public;
+revoke all on function public.update_news_comment(bigint, text) from public;
+revoke all on function public.delete_news_comment(bigint) from public;
+revoke all on function public.toggle_news_comment_like(bigint) from public;
 revoke all on function public.weekly_voting_deadline(date) from public;
 revoke all on function public.prediction_deadline(date) from public;
 revoke all on function public.is_score_admin() from public;
@@ -691,12 +824,18 @@ revoke all on function public.set_match_result(text, integer, integer) from anon
 revoke all on function public.reset_active_votes() from anon, authenticated;
 revoke all on function public.get_news_likes() from anon, authenticated;
 revoke all on function public.get_news_comments(text) from anon, authenticated;
+revoke all on function public.update_news_comment(bigint, text) from anon, authenticated;
+revoke all on function public.delete_news_comment(bigint) from anon, authenticated;
+revoke all on function public.toggle_news_comment_like(bigint) from anon, authenticated;
 grant execute on function public.submit_poll_vote(text, uuid, text) to anon, authenticated;
 grant execute on function public.submit_award_vote(text, uuid, text) to anon, authenticated;
 grant execute on function public.submit_prediction(text, integer, integer) to authenticated;
 grant execute on function public.get_interaction_results() to anon, authenticated;
 grant execute on function public.get_news_likes() to anon, authenticated;
 grant execute on function public.get_news_comments(text) to anon, authenticated;
+grant execute on function public.update_news_comment(bigint, text) to authenticated;
+grant execute on function public.delete_news_comment(bigint) to authenticated;
+grant execute on function public.toggle_news_comment_like(bigint) to authenticated;
 grant execute on function public.is_score_admin() to authenticated;
 grant execute on function public.is_news_admin() to authenticated;
 grant execute on function public.set_my_nickname(text) to authenticated;
