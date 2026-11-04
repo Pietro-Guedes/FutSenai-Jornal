@@ -94,8 +94,11 @@ create table if not exists public.news (
   player text not null,
   image text not null default '',
   content text not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  published boolean not null default true
 );
+alter table public.news
+  add column if not exists published boolean not null default true;
 
 create table if not exists public.news_likes (
   news_id text not null references public.news(id) on delete cascade,
@@ -339,8 +342,9 @@ create policy "News admins can manage matches" on public.matches
   with check (public.is_news_admin());
 
 drop policy if exists "Public can read news" on public.news;
-create policy "Public can read news" on public.news
-  for select to anon, authenticated using (true);
+drop policy if exists "Public can read published news" on public.news;
+create policy "Public can read published news" on public.news
+  for select to anon, authenticated using (published);
 drop policy if exists "News admins can manage news" on public.news;
 create policy "News admins can manage news" on public.news
   for all to authenticated

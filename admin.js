@@ -151,8 +151,11 @@
   async function loadNews() {
     count.textContent = "Carregando…";
     const result = await request(NEWS_ENDPOINT +
-      "?select=id,title,category,player,image,content,created_at&order=created_at.desc");
+      "?select=id,title,category,player,image,content,created_at,published&order=created_at.desc");
     if (!Array.isArray(result)) throw new Error("O Supabase retornou uma lista de notícias inválida.");
+    if (result.some(item => typeof item.published !== "boolean")) {
+      throw new Error("O Supabase retornou notícias sem o estado de publicação esperado. Execute supabase-setup.sql atualizado.");
+    }
     news = result.map(item => ({
       id: item.id,
       title: item.title,
@@ -160,7 +163,8 @@
       player: item.player,
       image: item.image || "",
       content: item.content,
-      createdAt: item.created_at
+      createdAt: item.created_at,
+      published: item.published
     }));
     renderNews();
   }
@@ -558,7 +562,11 @@
 
   function renderNews() {
     list.replaceChildren();
-    count.textContent = news.length + (news.length === 1 ? " matéria publicada" : " matérias publicadas");
+    const publishedCount = news.filter(item => item.published).length;
+    const archivedCount = news.length - publishedCount;
+    count.textContent = news.length + (news.length === 1 ? " matéria" : " matérias") +
+      " · " + publishedCount + " no ar · " + archivedCount + " arquivada" +
+      (archivedCount === 1 ? "" : "s");
     if (!news.length) {
       const empty = document.createElement("p");
       empty.className = "rounded-xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center text-sm text-slate-500";
@@ -578,7 +586,14 @@
       const category = document.createElement("span");
       category.className = "shrink-0 rounded bg-red-50 px-2 py-1 text-[10px] font-black text-red-800";
       category.textContent = item.category;
-      header.append(title, category);
+      const state = document.createElement("span");
+      state.className = "shrink-0 rounded px-2 py-1 text-[10px] font-black " +
+        (item.published ? "bg-green-50 text-green-800" : "bg-slate-100 text-slate-600");
+      state.textContent = item.published ? "NO AR" : "ARQUIVADA";
+      const labels = document.createElement("div");
+      labels.className = "flex flex-wrap items-center gap-2";
+      labels.append(category, state);
+      header.append(title, labels);
       const meta = document.createElement("p");
       meta.className = "mt-2 text-xs text-slate-500";
       meta.textContent = item.player + " · " +
@@ -587,14 +602,46 @@
       excerpt.className = "mt-2 line-clamp-2 text-sm leading-5 text-slate-600";
       excerpt.textContent = item.content;
       const actions = document.createElement("div");
-      actions.className = "mt-3 flex gap-4 border-t border-slate-100 pt-3";
+      actions.className = "mt-3 flex flex-wrap gap-4 border-t border-slate-100 pt-3";
       actions.append(
         createAction("Editar", () => startEdit(item.id), "text-red-700"),
+        createAction(
+          item.published ? "Retirar do ar" : "Publicar no site",
+          () => setNewsPublished(item, !item.published),
+          item.published ? "text-amber-700" : "text-green-700"
+        ),
         createAction("Excluir", () => removeNews(item), "text-slate-500")
       );
       card.append(header, meta, excerpt, actions);
       list.append(card);
     });
+  }
+
+  async function setNewsPublished(item, published) {
+    if (!published && !window.confirm(
+      'Retirar "' + item.title + '" do ar? Ela continuará salva e poderá ser publicada novamente.'
+    )) return;
+
+    try {
+      const result = await request(
+        NEWS_ENDPOINT + "?id=eq." + encodeURIComponent(item.id) + "&select=id,published",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Prefer: "return=representation"
+          },
+          body: JSON.stringify({ published })
+        }
+      );
+      if (!Array.isArray(result) || result.length !== 1 || result[0].published !== published) {
+        throw new Error("O Supabase não confirmou a alteração de publicação.");
+      }
+      await loadNews();
+      showMessage(published ? "Matéria publicada novamente no site." : "Matéria retirada do ar e mantida salva.", false);
+    } catch (error) {
+      showMessage("Não foi possível alterar a publicação da matéria: " + error.message, true);
+    }
   }
 
   async function removeNews(item) {
@@ -720,7 +767,8 @@
         player,
         image,
         content,
-        created_at: existing ? existing.createdAt : new Date().toISOString()
+        created_at: existing ? existing.createdAt : new Date().toISOString(),
+        published: existing ? existing.published : true
       };
       await request(NEWS_ENDPOINT + "?on_conflict=id", {
         method: "POST",

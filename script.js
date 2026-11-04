@@ -657,10 +657,11 @@
             typeof item.player === "string" &&
             typeof item.content === "string" &&
             typeof item.createdAt === "string" &&
-            !Number.isNaN(new Date(item.createdAt).getTime())
+            !Number.isNaN(new Date(item.createdAt).getTime()) &&
+            (item.published === undefined || typeof item.published === "boolean")
           );
           if (!isValid) throw new Error("As notícias locais não estão no formato esperado.");
-          news = parsed;
+          news = parsed.filter(item => item.published !== false);
           renderNews();
           showMessage("Prévia local: os alunos verão o arquivo noticias.json publicado, não estas notícias salvas neste navegador.", false);
           return;
@@ -679,7 +680,7 @@
     if (config && config.url && config.anonKey) {
       try {
         const response = await fetch(config.url.replace(/\/$/, "") +
-          "/rest/v1/news?select=id,title,category,player,image,content,created_at&order=created_at.desc", {
+          "/rest/v1/news?select=id,title,category,player,image,content,created_at,published&published=eq.true&order=created_at.desc", {
           headers: { apikey: config.anonKey, Authorization: "Bearer " + config.anonKey },
           cache: "no-store"
         });
@@ -693,6 +694,7 @@
           typeof item.content !== "string" ||
           typeof item.created_at !== "string" ||
           Number.isNaN(new Date(item.created_at).getTime()) ||
+          item.published !== true ||
           (item.image !== undefined && typeof item.image !== "string")
         )) {
           throw new Error("O banco retornou notícias fora do formato esperado.");
@@ -711,10 +713,23 @@
           await refreshLikeRecords();
           return;
         }
-        remoteError = new Error("Ainda não há notícias no banco de dados.");
+        renderNews();
+        return;
       } catch (error) {
         remoteError = error;
       }
+    }
+
+    if (config && config.url && config.anonKey) {
+      news = [];
+      renderNews();
+      showMessage(
+        "Não foi possível confirmar quais notícias estão publicadas. " +
+        "Para evitar exibir matérias arquivadas, a lista ficará oculta até o Supabase responder. " +
+        "Detalhe: " + remoteError.message,
+        true
+      );
+      return;
     }
 
     try {
@@ -729,17 +744,14 @@
         typeof item.player !== "string" ||
         typeof item.content !== "string" ||
         typeof item.createdAt !== "string" ||
-        Number.isNaN(new Date(item.createdAt).getTime())
+        Number.isNaN(new Date(item.createdAt).getTime()) ||
+        (item.published !== undefined && typeof item.published !== "boolean")
       )) {
         throw new Error("O arquivo noticias.json não tem o formato esperado.");
       }
-      news = parsed;
+      news = parsed.filter(item => item.published !== false);
       renderNews();
       await refreshLikeRecords();
-      if (remoteError) {
-        showMessage("Exibindo noticias.json porque as notícias online não puderam ser carregadas. " +
-          remoteError.message + " Importe o arquivo no painel administrativo para sincronizar o banco.", true);
-      }
     } catch (error) {
       news = [];
       renderNews();
