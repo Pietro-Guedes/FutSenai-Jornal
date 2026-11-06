@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#c92332">
   <meta name="description" content="As notícias mais quentes do futebol de intervalo do Senai.">
   <title>Jornal FutSenai — O futebol acontece aqui</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" href="favicon.png?v=1">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -37,44 +37,6 @@
           <span class="masthead-access-pill">Acesso dos alunos</span>
         </div>
       </div>
-      <section class="football-section football-featured-section" aria-labelledby="football-title">
-        <div class="football-section-heading">
-          <div>
-            <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Campeonato Brasileiro</p>
-            <h2 id="football-title" class="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Jogos decisivos da rodada</h2>
-            <p class="mt-2 text-sm leading-6 text-slate-600">Os dois primeiros e os times do Botafogo para baixo, somente na rodada atual.</p>
-          </div>
-          <a class="football-provider" href="https://www.football-data.org/coverage" target="_blank" rel="noopener noreferrer">Dados de futebol por football-data.org ↗</a>
-        </div>
-
-        <div id="football-status" class="football-status" role="status" aria-live="polite">Carregando os times e os próximos jogos…</div>
-
-        <section class="football-fixtures-section" aria-labelledby="football-fixtures-title">
-          <div class="football-fixtures-heading">
-            <div>
-              <h3 id="football-fixtures-title">Jogos em destaque</h3>
-              <p id="football-round-label">Carregando rodada atual…</p>
-            </div>
-          </div>
-          <div id="football-fixtures" class="football-fixtures" aria-live="polite"></div>
-        </section>
-
-        <section class="football-follow-panel" aria-labelledby="football-follow-title">
-          <div class="football-follow-copy">
-            <h3 id="football-follow-title">Seus times favoritos</h3>
-            <p id="football-account-status">Entre na sua conta para salvar seus times favoritos e sincronizá-los entre dispositivos.</p>
-            <button id="football-login-button" class="football-login-button" type="button">Entrar para seguir times</button>
-          </div>
-          <div class="football-follow-controls">
-            <label class="sr-only" for="football-team-picker">Escolher time para seguir</label>
-            <select id="football-team-picker" class="field football-team-picker" disabled>
-              <option value="">Carregando times…</option>
-            </select>
-            <button id="football-follow-button" class="football-follow-button" type="button" disabled>Seguir time</button>
-          </div>
-          <div id="football-favorites" class="football-favorites" aria-live="polite"></div>
-        </section>
-      </section>
       <div class="relative flex flex-col gap-6 pb-10 pt-10 text-white sm:pb-14 sm:pt-14 lg:flex-row lg:items-end lg:justify-between">
         <div class="max-w-2xl">
           <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.18em] text-white">
@@ -128,6 +90,25 @@
   </header>
 
   <main class="mx-auto min-h-[55vh] max-w-[1180px] px-5 py-9 sm:px-8 sm:py-12">
+    <section class="football-section football-featured-section mb-10" aria-labelledby="football-title">
+      <div class="football-section-heading">
+        <div>
+          <p class="mb-1 text-[9px] font-black uppercase tracking-[.18em] text-red-600">Campeonato Brasileiro</p>
+          <h2 id="football-title" class="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">Jogos decisivos da rodada</h2>
+        </div>
+        <a class="football-provider" href="https://www.football-data.org/coverage" target="_blank" rel="noopener noreferrer">Dados: football-data.org ↗</a>
+      </div>
+
+      <div id="football-status" class="football-status" role="status" aria-live="polite">Carregando os jogos em destaque…</div>
+
+      <section class="football-fixtures-section" aria-labelledby="football-fixtures-title">
+        <div class="football-fixtures-heading">
+          <h3 id="football-fixtures-title">Rodada <span id="football-round-label">—</span></h3>
+        </div>
+        <div id="football-fixtures" class="football-fixtures" aria-live="polite"></div>
+      </section>
+    </section>
+
     <section class="mb-12" aria-labelledby="round-title">
       <div class="mb-6">
         <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Participe da resenha</p>
@@ -264,6 +245,24 @@
           <span class="promo-card-disclaimer">Simulador virtual · 18+</span>
         </div>
       </article>
+    </section>
+
+    <section class="football-section football-favorites-section mb-12" aria-labelledby="football-follow-title">
+      <div class="football-follow-panel">
+        <div class="football-follow-copy">
+          <h3 id="football-follow-title">Seus times favoritos</h3>
+          <p id="football-account-status">Entre na sua conta para salvar seus times favoritos e sincronizá-los entre dispositivos.</p>
+          <button id="football-login-button" class="football-login-button" type="button">Entrar para seguir times</button>
+        </div>
+        <div class="football-follow-controls">
+          <label class="sr-only" for="football-team-picker">Escolher time para seguir</label>
+          <select id="football-team-picker" class="field football-team-picker" disabled>
+            <option value="">Carregando times…</option>
+          </select>
+          <button id="football-follow-button" class="football-follow-button" type="button" disabled>Seguir time</button>
+        </div>
+        <div id="football-favorites" class="football-favorites" aria-live="polite"></div>
+      </div>
     </section>
 
     <div class="mb-7 flex flex-wrap items-end justify-between gap-4">

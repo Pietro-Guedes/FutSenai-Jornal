@@ -34,7 +34,6 @@
     .brasilia-clock-dot { width: .42rem; height: .42rem; border-radius: 50%; background: #c92332; box-shadow: 0 0 0 3px rgba(201, 35, 50, .12); }
     .brasilia-clock time { color: #7f1420; font-size: 1.15rem; font-weight: 950; font-variant-numeric: tabular-nums; letter-spacing: .04em; line-height: 1.1; }
     .masthead-access-pill { border-radius: 999px; background: #fef2f2; padding: .5rem .75rem; color: #b42318; font-size: .75rem; font-weight: 800; white-space: nowrap; }
-    .football-featured-section { position: relative; z-index: 1; margin: 1.25rem auto 0; }
     .hero-ball {
       position: absolute;
       right: max(4vw, calc((100vw - 1180px) / 2));
@@ -89,14 +88,15 @@
     .weather-city-confirm { width: 100%; margin-top: .4rem; }
     .weather-location-button { width: 100%; margin-top: .45rem; border: 1px solid rgba(255, 255, 255, .3); border-radius: .6rem; background: transparent; padding: .5rem .65rem; color: #fff; font-size: .65rem; font-weight: 800; transition: background-color .2s ease; }
     .weather-privacy { margin: .55rem 0 0; color: rgba(255, 255, 255, .65); font-size: .58rem; line-height: 1.4; }
-    .football-section { overflow: hidden; border: 1px solid #e7eaf0; border-radius: 1.25rem; background: #fff; padding: clamp(1rem, 3vw, 1.5rem); box-shadow: 0 8px 26px rgba(20, 32, 55, .055); }
-    .football-section-heading, .football-fixtures-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
-    .football-provider { flex: 0 0 auto; color: #667085; font-size: .65rem; font-weight: 800; text-decoration: none; }
+    .football-section { overflow: hidden; border: 1px solid #e7eaf0; border-radius: 1rem; background: #fff; padding: 1rem; box-shadow: 0 6px 20px rgba(20, 32, 55, .05); }
+    .football-featured-section { padding: .8rem 1rem; }
+    .football-section-heading, .football-fixtures-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+    .football-provider { flex: 0 0 auto; color: #667085; font-size: .58rem; font-weight: 800; text-decoration: none; }
     .football-provider:hover { color: #c92332; text-decoration: underline; }
-    .football-status { margin-top: 1rem; border-radius: .7rem; background: #f8fafc; padding: .7rem .85rem; color: #475467; font-size: .75rem; line-height: 1.5; }
+    .football-status { margin-top: .5rem; border-radius: .55rem; background: #f8fafc; padding: .45rem .6rem; color: #475467; font-size: .66rem; line-height: 1.4; }
     .football-status:empty { display: none; }
     .football-status.is-error { border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; }
-    .football-follow-panel { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: .75rem 1rem; margin-top: 1rem; border: 1px solid #f1e7e8; border-radius: .9rem; background: #fffafa; padding: .9rem; }
+    .football-follow-panel { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: .75rem 1rem; margin-top: .75rem; border: 1px solid #f1e7e8; border-radius: .8rem; background: #fffafa; padding: .75rem; }
     .football-follow-copy h3, .football-fixtures-heading h3 { margin: 0; color: #172033; font-size: .95rem; font-weight: 900; }
     .football-follow-copy p, .football-fixtures-heading p { margin: .25rem 0 0; color: #667085; font-size: .68rem; line-height: 1.5; }
     .football-login-button { margin-top: .5rem; border: 0; background: transparent; padding: 0; color: #b42318; font-size: .68rem; font-weight: 900; text-decoration: underline; text-underline-offset: 2px; }
@@ -107,6 +107,7 @@
     .football-follow-button { flex: 0 0 auto; border: 0; border-radius: .6rem; background: #c92332; padding: .6rem .85rem; color: #fff; font-size: .7rem; font-weight: 900; transition: background-color .2s ease; }
     .football-follow-button:hover:not(:disabled) { background: #a81727; }
     .football-follow-button:disabled { cursor: not-allowed; opacity: .5; }
+    .football-favorites-section { padding: 0; border: 0; background: transparent; box-shadow: none; }
     .football-favorites { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: .65rem; }
     .football-empty { grid-column: 1 / -1; margin: 0; border: 1px dashed #d0d5dd; border-radius: .65rem; padding: .8rem; color: #667085; font-size: .72rem; line-height: 1.5; }
     .football-favorite { min-width: 0; border: 1px solid #e7eaf0; border-radius: .7rem; background: #fff; padding: .7rem; }
@@ -122,12 +123,12 @@
     .football-previous-title { margin: 0; color: #667085; font-size: .59rem; font-weight: 800; text-transform: uppercase; }
     .football-previous-match { margin: .3rem 0 0; color: #172033; font-size: .7rem; font-weight: 900; line-height: 1.4; }
     .football-previous-meta { margin: .2rem 0 0; color: #667085; font-size: .62rem; }
-    .football-fixtures-section { margin-top: 1.25rem; border-top: 1px solid #e7eaf0; padding-top: 1rem; }
-    .football-fixtures-heading { align-items: flex-start; }
-    .football-fixtures { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: .55rem; margin-top: .75rem; }
-    .football-fixture { min-width: 0; border: 1px solid #e7eaf0; border-radius: .7rem; background: linear-gradient(135deg, #fff, #fffafa); padding: .7rem; }
-    .football-fixture-time { margin: 0 0 .45rem; color: #667085; font-size: .59rem; font-weight: 800; }
-    .football-fixture-importance { margin: 0 0 .4rem; color: #b42318; font-size: .57rem; font-weight: 900; }
+    .football-fixtures-section { margin-top: .6rem; border-top: 1px solid #e7eaf0; padding-top: .55rem; }
+    .football-fixtures-heading { align-items: center; }
+    .football-fixtures { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: .4rem; margin-top: .45rem; }
+    .football-fixture { min-width: 0; border: 1px solid #e7eaf0; border-radius: .6rem; background: linear-gradient(135deg, #fff, #fffafa); padding: .5rem .6rem; }
+    .football-fixture-time { margin: 0 0 .25rem; color: #667085; font-size: .56rem; font-weight: 800; }
+    .football-fixture-importance { margin: 0 0 .25rem; color: #b42318; font-size: .53rem; font-weight: 900; }
     .football-fixture-team { display: flex; align-items: center; gap: .4rem; color: #344054; font-size: .68rem; font-weight: 800; }
     .football-fixture-team + .football-fixture-team { margin-top: .25rem; }
     .football-fixture-team .football-team-logo { width: 1.2rem; height: 1.2rem; flex-basis: 1.2rem; }
@@ -316,8 +317,9 @@
       .brasilia-clock { padding: .3rem .5rem .35rem; }
       .brasilia-clock-label { font-size: .48rem; }
       .brasilia-clock time { font-size: 1rem; }
-      .football-section-heading, .football-fixtures-heading { align-items: flex-start; flex-direction: column; }
-      .football-provider { align-self: flex-end; }
+      .football-section-heading { align-items: flex-start; }
+      .football-provider { align-self: center; }
+      .football-featured-section { padding: .7rem; }
       .football-follow-panel { grid-template-columns: 1fr; }
       .football-follow-controls { flex-direction: column; }
       .football-follow-button { min-height: 2.5rem; }
