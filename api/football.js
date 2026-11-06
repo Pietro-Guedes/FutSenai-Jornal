@@ -22,8 +22,18 @@ function mapTeam(value) {
   }
   return {
     id: value.id,
-    name: value.shortName || value.name,
+    name: value.name,
     logo: typeof value.crest === "string" ? value.crest : ""
+  };
+}
+
+function mapStanding(value) {
+  if (!isObject(value) || !Number.isInteger(value.position)) {
+    throw new Error("O football-data.org retornou uma classificação inválida.");
+  }
+  return {
+    position: value.position,
+    team: mapTeam(value.team)
   };
 }
 
@@ -109,6 +119,9 @@ module.exports = async function handler(req, res) {
   if (type === "teams") {
     path = "/competitions/" + BRAZIL_SERIE_A_CODE + "/teams?season=" + season;
     cacheSeconds = 86400;
+  } else if (type === "standings") {
+    path = "/competitions/" + BRAZIL_SERIE_A_CODE + "/standings?season=" + season;
+    cacheSeconds = 3600;
   } else if (type === "fixtures") {
     path = "/competitions/" + BRAZIL_SERIE_A_CODE + "/matches?season=" + season;
     cacheSeconds = 900;
@@ -126,6 +139,18 @@ module.exports = async function handler(req, res) {
       const teams = payload.teams.map(mapTeam).sort((left, right) =>
         left.name.localeCompare(right.name, "pt-BR"));
       sendJson(res, 200, { teams }, cacheSeconds);
+      return;
+    }
+    if (type === "standings") {
+      if (!Array.isArray(payload.standings)) {
+        throw new Error("O football-data.org não retornou a classificação da Série A.");
+      }
+      const table = payload.standings.find(standing =>
+        isObject(standing) && standing.type === "TOTAL") || payload.standings[0];
+      if (!isObject(table) || !Array.isArray(table.table)) {
+        throw new Error("O football-data.org retornou uma tabela de classificação inválida.");
+      }
+      sendJson(res, 200, { standings: table.table.map(mapStanding) }, cacheSeconds);
       return;
     }
     if (!Array.isArray(payload.matches)) {

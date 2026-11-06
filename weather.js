@@ -9,6 +9,11 @@
   const temperature = document.querySelector("#weather-temperature");
   const condition = document.querySelector("#weather-condition");
   const details = document.querySelector("#weather-details");
+  const cityForm = document.querySelector("#weather-city-form");
+  const cityInput = document.querySelector("#weather-city-input");
+  const cityButton = document.querySelector("#weather-city-button");
+  const cityResults = document.querySelector("#weather-city-results");
+  let cities = [];
 
   const weatherDescriptions = {
     0: { label: "Céu limpo", icon: "☀️" },
@@ -110,8 +115,80 @@
       "° · Umidade " + Math.round(current.relative_humidity_2m) +
       "% · Vento " + Math.round(current.wind_speed_10m) + " km/h";
     result.hidden = false;
-    status.textContent = "Condições atuais da sua região";
+    return true;
   }
+
+  async function searchCities(query) {
+    const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
+    url.search = new URLSearchParams({
+      name: query,
+      count: "5",
+      language: "pt",
+      format: "json"
+    }).toString();
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("A busca de cidades respondeu com erro " + response.status + ".");
+    }
+    const data = await response.json();
+    if (!data || (data.results !== undefined && !Array.isArray(data.results))) {
+      throw new Error("O serviço de cidades retornou dados em formato inesperado.");
+    }
+    return (data.results || []).filter(city =>
+      city && typeof city.name === "string" &&
+      Number.isFinite(city.latitude) && Number.isFinite(city.longitude));
+  }
+
+  function cityLabel(city) {
+    return [city.name, city.admin1, city.country].filter(Boolean).join(", ");
+  }
+
+  cityForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const query = cityInput.value.trim();
+    if (query.length < 2) {
+      status.textContent = "Digite pelo menos 2 letras para buscar uma cidade.";
+      return;
+    }
+
+    cityButton.disabled = true;
+    cityResults.hidden = true;
+    status.textContent = "Buscando cidades…";
+    try {
+      cities = await searchCities(query);
+      if (!cities.length) {
+        status.textContent = "Nenhuma cidade encontrada. Confira o nome e tente novamente.";
+        return;
+      }
+
+      cityResults.replaceChildren(...cities.map((city, index) =>
+        new Option(cityLabel(city), String(index))));
+      cityResults.hidden = false;
+      status.textContent = "Escolha sua cidade para ver o clima.";
+    } catch (error) {
+      status.textContent = error.message || "Não foi possível buscar cidades. Tente novamente.";
+      console.error("Não foi possível buscar cidades para o clima:", error);
+    } finally {
+      cityButton.disabled = false;
+    }
+  });
+
+  cityResults.addEventListener("change", async () => {
+    const city = cities[Number(cityResults.value)];
+    if (!city) return;
+    cityResults.disabled = true;
+    status.textContent = "Buscando o clima de " + cityLabel(city) + "…";
+    try {
+      await loadWeather(city.latitude, city.longitude);
+      status.textContent = "Condições atuais em " + cityLabel(city);
+    } catch (error) {
+      status.textContent = error.message || "Não foi possível carregar o clima desta cidade.";
+      console.error("Não foi possível carregar o clima da cidade escolhida:", error);
+    } finally {
+      cityResults.disabled = false;
+    }
+  });
 
   button.addEventListener("click", async () => {
     button.disabled = true;
@@ -122,6 +199,7 @@
       const position = await getCurrentPosition();
       status.textContent = "Buscando o clima da sua região…";
       await loadWeather(position.coords.latitude, position.coords.longitude);
+      status.textContent = "Condições atuais da sua região";
     } catch (error) {
       status.textContent = locationErrorMessage(error);
       console.error("Não foi possível carregar o clima local:", error);

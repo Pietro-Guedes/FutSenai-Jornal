@@ -68,9 +68,15 @@
     .weather-temperature { margin: 0; font-size: 1.6rem; font-weight: 950; line-height: 1; }
     .weather-condition { margin: .2rem 0 0; font-size: .74rem; font-weight: 800; }
     .weather-details { margin: .2rem 0 0; color: rgba(255, 255, 255, .74); font-size: .64rem; }
-    .weather-button { width: 100%; margin-top: .8rem; border: 1px solid rgba(255, 255, 255, .28); border-radius: .65rem; background: #fff; padding: .62rem .75rem; color: #9f1239; font-size: .72rem; font-weight: 900; transition: background-color .2s ease; }
-    .weather-button:hover:not(:disabled) { background: #fff1f2; }
-    .weather-button:disabled { cursor: wait; opacity: .8; }
+    .weather-city-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .4rem; margin-top: .8rem; }
+    .weather-city-input, .weather-city-results { min-width: 0; border: 1px solid rgba(255, 255, 255, .28); border-radius: .6rem; background: #fff; padding: .58rem .65rem; color: #344054; font-size: .68rem; }
+    .weather-city-input:focus, .weather-city-results:focus { outline: 2px solid #fecdd3; outline-offset: 2px; }
+    .weather-button { border: 1px solid rgba(255, 255, 255, .28); border-radius: .6rem; background: #fff; padding: .58rem .65rem; color: #9f1239; font-size: .68rem; font-weight: 900; transition: background-color .2s ease; }
+    .weather-button:hover:not(:disabled), .weather-location-button:hover:not(:disabled) { background: #fff1f2; }
+    .weather-button:disabled, .weather-location-button:disabled { cursor: wait; opacity: .8; }
+    .weather-city-results { width: 100%; margin-top: .45rem; }
+    .weather-city-results[hidden] { display: none; }
+    .weather-location-button { width: 100%; margin-top: .45rem; border: 1px solid rgba(255, 255, 255, .3); border-radius: .6rem; background: transparent; padding: .5rem .65rem; color: #fff; font-size: .65rem; font-weight: 800; transition: background-color .2s ease; }
     .weather-privacy { margin: .55rem 0 0; color: rgba(255, 255, 255, .65); font-size: .58rem; line-height: 1.4; }
     .football-section { overflow: hidden; border: 1px solid #e7eaf0; border-radius: 1.25rem; background: #fff; padding: clamp(1rem, 3vw, 1.5rem); box-shadow: 0 8px 26px rgba(20, 32, 55, .055); }
     .football-section-heading, .football-fixtures-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
@@ -111,6 +117,7 @@
     .football-fixtures { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: .55rem; margin-top: .75rem; }
     .football-fixture { min-width: 0; border: 1px solid #e7eaf0; border-radius: .7rem; background: linear-gradient(135deg, #fff, #fffafa); padding: .7rem; }
     .football-fixture-time { margin: 0 0 .45rem; color: #667085; font-size: .59rem; font-weight: 800; }
+    .football-fixture-importance { margin: 0 0 .4rem; color: #b42318; font-size: .57rem; font-weight: 900; }
     .football-fixture-team { display: flex; align-items: center; gap: .4rem; color: #344054; font-size: .68rem; font-weight: 800; }
     .football-fixture-team + .football-fixture-team { margin-top: .25rem; }
     .football-fixture-team .football-team-logo { width: 1.2rem; height: 1.2rem; flex-basis: 1.2rem; }

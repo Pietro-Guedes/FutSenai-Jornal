@@ -65,8 +65,15 @@
               <p id="weather-details" class="weather-details"></p>
             </div>
           </div>
-          <button id="weather-button" class="weather-button" type="button">Ver clima da minha região</button>
-          <p class="weather-privacy">Seu navegador pedirá permissão. As coordenadas serão usadas para consultar o clima e não serão salvas pelo site.</p>
+          <form id="weather-city-form" class="weather-city-form">
+            <label class="sr-only" for="weather-city-input">Buscar clima por cidade</label>
+            <input id="weather-city-input" class="weather-city-input" type="search" maxlength="100" placeholder="Digite sua cidade" autocomplete="address-level2">
+            <button id="weather-city-button" class="weather-button" type="submit">Buscar cidade</button>
+          </form>
+          <label class="sr-only" for="weather-city-results">Escolha a cidade</label>
+          <select id="weather-city-results" class="weather-city-results" hidden></select>
+          <button id="weather-button" class="weather-location-button" type="button">Ou usar minha localização</button>
+          <p class="weather-privacy">A busca por cidade não usa a localização do computador. A opção de localização precisa de permissão do navegador.</p>
         </section>
       </div>
     </div>
@@ -79,12 +86,27 @@
         <div>
           <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Campeonato Brasileiro</p>
           <h2 id="football-title" class="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Jogos dos times da Série A</h2>
-          <p class="mt-2 text-sm leading-6 text-slate-600">Acompanhe os próximos confrontos e veja o último jogo dos times que você segue.</p>
+          <p class="mt-2 text-sm leading-6 text-slate-600">Veja apenas os próximos jogos dos times no G4 e na zona de rebaixamento. A classificação é atualizada pela API.</p>
         </div>
         <a class="football-provider" href="https://www.football-data.org/coverage" target="_blank" rel="noopener noreferrer">Dados de futebol por football-data.org ↗</a>
       </div>
 
       <div id="football-status" class="football-status" role="status" aria-live="polite">Carregando os times e os próximos jogos…</div>
+
+      <section class="football-fixtures-section" aria-labelledby="football-fixtures-title">
+        <div class="football-fixtures-heading">
+          <div>
+            <h3 id="football-fixtures-title">Próximos jogos</h3>
+            <p>Partidas envolvendo os 4 primeiros ou os 4 últimos colocados.</p>
+          </div>
+          <label class="football-filter-label">Mostrar
+            <select id="football-fixture-filter" class="field football-filter" disabled>
+              <option value="all">Todos os jogos importantes</option>
+            </select>
+          </label>
+        </div>
+        <div id="football-fixtures" class="football-fixtures" aria-live="polite"></div>
+      </section>
 
       <section class="football-follow-panel" aria-labelledby="football-follow-title">
         <div class="football-follow-copy">
@@ -100,21 +122,6 @@
           <button id="football-follow-button" class="football-follow-button" type="button" disabled>Seguir time</button>
         </div>
         <div id="football-favorites" class="football-favorites" aria-live="polite"></div>
-      </section>
-
-      <section class="football-fixtures-section" aria-labelledby="football-fixtures-title">
-        <div class="football-fixtures-heading">
-          <div>
-            <h3 id="football-fixtures-title">Próximos jogos</h3>
-            <p>Agenda, placares e resultados da Série A.</p>
-          </div>
-          <label class="football-filter-label">Mostrar
-            <select id="football-fixture-filter" class="field football-filter" disabled>
-              <option value="all">Todos os times</option>
-            </select>
-          </label>
-        </div>
-        <div id="football-fixtures" class="football-fixtures" aria-live="polite"></div>
       </section>
     </section>
 

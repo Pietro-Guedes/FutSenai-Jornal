@@ -8,7 +8,7 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 2. No painel do projeto, abra **SQL Editor**, cole o conteúdo atualizado de `supabase-setup.sql` e execute. Se já executou uma versão anterior, execute novamente para instalar também o banco e o armazenamento de imagens das notícias, incluindo curtidas e comentários compartilhados.
 3. Em **Project Settings → API**, copie a **Project URL** e a chave **anon/public**.
 4. Cole esses dois valores em `supabase-config.js`, nos campos `url` e `anonKey`.
-5. Em **Authentication → URL Configuration**, configure a URL do site publicado como **Site URL** e inclua-a em **Redirect URLs** para a confirmação de e-mail voltar ao site.
+5. Em **Authentication → URL Configuration**, configure `https://futsenaijornal.vercel.app` como **Site URL** e adicione `https://futsenaijornal.vercel.app/**` em **Redirect URLs**. Inclua também `http://localhost:*/**` se usar um servidor local. Sem o endereço da Vercel na lista permitida, o Supabase pode redirecionar o login para o Site URL antigo.
 6. Para oferecer login Google, em **Authentication → Sign In / Providers → Google**, ative o provedor e informe o OAuth Client ID e Client Secret criados no Google Cloud. No cliente OAuth do Google, cadastre como URI de redirecionamento autorizado o callback exibido pelo Supabase (normalmente `https://<project-ref>.supabase.co/auth/v1/callback`). Mantenha a URL do site em **Redirect URLs** no Supabase.
 7. Cadastre uma conta de editor em `news_admins` conforme as instruções abaixo; ela também poderá gerenciar enquetes, prêmios e jogos pelo painel.
 8. Publique os arquivos do site, incluindo `index.html`, `style.css`, `script.js`, `interactions.js`, `football-widget.js`, `api/football.js`, `supabase-config.js` e `noticias.json`, junto às imagens.
@@ -19,7 +19,7 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 - Crie uma conta no [football-data.org](https://www.football-data.org/) e confira na [página de cobertura](https://www.football-data.org/coverage) se a Série A do Brasil e a temporada atual estão disponíveis no nível gratuito da sua conta.
 - No projeto da Vercel, abra **Settings → Environment Variables** e adicione `FOOTBALL_DATA_TOKEN` com o token da conta. Selecione **Production** e faça um novo deploy para disponibilizar a variável à função `api/football.js`.
 - Nunca coloque o token em `index.html`, `football-widget.js`, `supabase-config.js` ou em outro arquivo público. A função da Vercel mantém o token no servidor e expõe somente os dados das partidas.
-- O widget usa a fonte gratuita para times, agenda e placares. Estatísticas detalhadas, como posse de bola e finalizações, não fazem parte desta integração.
+- O widget usa a fonte gratuita para times, tabela, agenda e placares. Mostra apenas partidas futuras com clubes entre os 4 primeiros ou os 4 últimos colocados. Estatísticas detalhadas, como posse de bola e finalizações, não fazem parte desta integração.
 - A variável antiga `API_FOOTBALL_KEY` não é mais usada pelo widget e pode ser removida da Vercel.
 - Execute novamente `supabase-setup.sql` no **SQL Editor** do Supabase para criar a tabela protegida dos times favoritos. Cada pessoa conectada pode salvar e remover os próprios times; os favoritos sincronizam entre dispositivos usando a mesma conta.
 - A agenda aparece para todos. Para salvar favoritos, entre com a conta do site. A partida anterior e seu placar aparecem ao abrir os detalhes do time seguido.

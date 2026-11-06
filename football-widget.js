@@ -15,6 +15,7 @@
   const fixturesContainer = document.querySelector("#football-fixtures");
   const fixtureFilter = document.querySelector("#football-fixture-filter");
   const teamsById = new Map();
+  const standingsByTeamId = new Map();
   let session = null;
   let teams = [];
   let fixtures = [];
@@ -189,7 +190,7 @@
     const selected = fixtureFilter.value;
     const selectedTeamId = Number(selected);
     const upcomingFixtures = fixtures.filter(fixture =>
-      ["SCHEDULED", "TIMED", "IN_PLAY", "PAUSED", "LIVE"].includes(fixture.status.short));
+      isUpcomingFixture(fixture) && isImportantFixture(fixture));
     let visibleFixtures = upcomingFixtures;
     if (selected === "favorites") {
       const favoriteIds = new Set(followedTeams.keys());
@@ -212,6 +213,11 @@
     visibleFixtures.forEach(fixture => {
       const card = createElement("article", "football-fixture");
       const kickoff = createElement("p", "football-fixture-time", formatDate(fixture.date));
+      const importance = getFixtureImportance(fixture);
+      const importanceLabels = [];
+      if (importance.title) importanceLabels.push("Briga pelo título");
+      if (importance.relegation) importanceLabels.push("Luta contra o rebaixamento");
+      card.append(createElement("p", "football-fixture-importance", importanceLabels.join(" · ")));
       const home = createElement("div", "football-fixture-team");
       const homeLogo = createTeamLogo(fixture.teams.home, "football-team-logo");
       if (homeLogo) home.append(homeLogo);
@@ -231,6 +237,27 @@
       fragment.append(card);
     });
     fixturesContainer.replaceChildren(fragment);
+  }
+
+  function getFixtureImportance(fixture) {
+    const homePosition = standingsByTeamId.get(fixture.teams.home.id);
+    const awayPosition = standingsByTeamId.get(fixture.teams.away.id);
+    return {
+      title: (homePosition >= 1 && homePosition <= 4) ||
+        (awayPosition >= 1 && awayPosition <= 4),
+      relegation: (homePosition >= 17 && homePosition <= 20) ||
+        (awayPosition >= 17 && awayPosition <= 20)
+    };
+  }
+
+  function isImportantFixture(fixture) {
+    const importance = getFixtureImportance(fixture);
+    return importance.title || importance.relegation;
+  }
+
+  function isUpcomingFixture(fixture) {
+    return ["SCHEDULED", "TIMED"].includes(fixture.status.short) &&
+      Number.isFinite(fixture.timestamp) && fixture.timestamp >= Math.floor(Date.now() / 1000);
   }
 
   function renderFavoriteCard(teamId, teamName) {
@@ -388,7 +415,8 @@
   async function loadLeagueData() {
     const results = await Promise.allSettled([
       fetchFootball("teams"),
-      fetchFootball("fixtures")
+      fetchFootball("fixtures"),
+      fetchFootball("standings")
     ]);
 
     if (results[0].status === "rejected") {
@@ -420,11 +448,29 @@
       setStatus("O serviço retornou uma lista de jogos inválida.", true);
       return;
     }
+    if (results[2].status === "rejected") {
+      fixtures = [];
+      renderFixtures();
+      setStatus("Os times foram carregados, mas não foi possível consultar a classificação para destacar os jogos importantes: " +
+        results[2].reason.message, true);
+      return;
+    }
+    if (!Array.isArray(results[2].value.standings) ||
+      results[2].value.standings.some(row =>
+        !row || !Number.isInteger(row.position) || !row.team ||
+        !Number.isInteger(row.team.id))) {
+      setStatus("O serviço retornou uma classificação inválida.", true);
+      return;
+    }
     fixtures = results[1].value.fixtures;
+    standingsByTeamId.clear();
+    results[2].value.standings.forEach(row =>
+      standingsByTeamId.set(row.team.id, row.position));
     renderFixtures();
-    const upcomingCount = fixtures.filter(fixture =>
-      ["SCHEDULED", "TIMED", "IN_PLAY", "PAUSED", "LIVE"].includes(fixture.status.short)).length;
-    setStatus(teams.length + " times da Série A e " + upcomingCount + " próximos jogos carregados.");
+    const importantCount = fixtures.filter(fixture =>
+      isUpcomingFixture(fixture) && isImportantFixture(fixture)).length;
+    setStatus(teams.length + " times da Série A e " + importantCount +
+      " próximos jogos importantes carregados (4 primeiros e 4 últimos da tabela).");
   }
 
   loginButton.addEventListener("click", () => {
