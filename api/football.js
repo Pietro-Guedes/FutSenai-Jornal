@@ -1,7 +1,7 @@
 "use strict";
 
-const API_BASE_URL = "https://v3.football.api-sports.io";
-const BRAZIL_SERIE_A_LEAGUE_ID = 71;
+const API_BASE_URL = "https://api.football-data.org/v4";
+const BRAZIL_SERIE_A_CODE = "BSA";
 const REQUEST_TIMEOUT_MS = 10000;
 
 function sendJson(res, status, body, cacheSeconds) {
@@ -18,39 +18,41 @@ function isObject(value) {
 
 function mapTeam(value) {
   if (!isObject(value) || !Number.isInteger(value.id) || typeof value.name !== "string") {
-    throw new Error("A API de futebol retornou dados inválidos de time.");
+    throw new Error("O football-data.org retornou dados inválidos de time.");
   }
   return {
     id: value.id,
-    name: value.name,
-    logo: typeof value.logo === "string" ? value.logo : ""
+    name: value.shortName || value.name,
+    logo: typeof value.crest === "string" ? value.crest : ""
   };
 }
 
-function mapFixture(value) {
-  if (!isObject(value) || !isObject(value.fixture) ||
-    !Number.isInteger(value.fixture.id) || typeof value.fixture.date !== "string" ||
-    !isObject(value.fixture.status) || !isObject(value.teams) ||
-    !isObject(value.teams.home) || !isObject(value.teams.away) ||
-    !isObject(value.goals)) {
-    throw new Error("A API de futebol retornou dados inválidos de partida.");
+function mapMatch(value) {
+  if (!isObject(value) || !Number.isInteger(value.id) ||
+    typeof value.utcDate !== "string" || typeof value.status !== "string" ||
+    !isObject(value.homeTeam) || !isObject(value.awayTeam)) {
+    throw new Error("O football-data.org retornou dados inválidos de partida.");
   }
+  const score = isObject(value.score) && isObject(value.score.fullTime)
+    ? value.score.fullTime
+    : {};
+  const timestamp = Date.parse(value.utcDate);
   return {
-    id: value.fixture.id,
-    date: value.fixture.date,
-    timestamp: Number.isFinite(value.fixture.timestamp) ? value.fixture.timestamp : null,
+    id: value.id,
+    date: value.utcDate,
+    timestamp: Number.isFinite(timestamp) ? Math.floor(timestamp / 1000) : null,
     status: {
-      short: typeof value.fixture.status.short === "string" ? value.fixture.status.short : "",
-      long: typeof value.fixture.status.long === "string" ? value.fixture.status.long : ""
+      short: value.status,
+      long: value.status
     },
-    round: isObject(value.league) && typeof value.league.round === "string" ? value.league.round : "",
+    round: Number.isInteger(value.matchday) ? "Rodada " + value.matchday : "",
     teams: {
-      home: mapTeam(value.teams.home),
-      away: mapTeam(value.teams.away)
+      home: mapTeam(value.homeTeam),
+      away: mapTeam(value.awayTeam)
     },
     goals: {
-      home: Number.isInteger(value.goals.home) ? value.goals.home : null,
-      away: Number.isInteger(value.goals.away) ? value.goals.away : null
+      home: Number.isInteger(score.home) ? score.home : null,
+      away: Number.isInteger(score.away) ? score.away : null
     }
   };
 }
@@ -61,26 +63,24 @@ async function requestProvider(path, apiKey) {
   let response;
   try {
     response = await fetch(API_BASE_URL + path, {
-      headers: { "x-apisports-key": apiKey },
+      headers: { "X-Auth-Token": apiKey },
       signal: controller.signal
     });
   } finally {
     clearTimeout(timeoutId);
   }
 
+  const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error("A API-Football respondeu com erro HTTP " + response.status + ".");
+    const message = isObject(payload) && typeof payload.message === "string"
+      ? payload.message
+      : "O football-data.org respondeu com erro HTTP " + response.status + ".";
+    throw new Error(message);
   }
-  const payload = await response.json();
-  if (!isObject(payload) || !Array.isArray(payload.response)) {
-    throw new Error("A API-Football retornou uma resposta fora do formato esperado.");
+  if (!isObject(payload)) {
+    throw new Error("O football-data.org retornou uma resposta fora do formato esperado.");
   }
-  if ((isObject(payload.errors) && Object.keys(payload.errors).length > 0) ||
-    (Array.isArray(payload.errors) && payload.errors.length > 0)) {
-    console.error("API-Football provider errors:", JSON.stringify(payload.errors));
-    throw new Error("A API-Football informou um erro na consulta. Verifique a chave e os limites da conta.");
-  }
-  return payload.response;
+  return payload;
 }
 
 module.exports = async function handler(req, res) {
@@ -90,9 +90,9 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const apiKey = process.env.API_FOOTBALL_KEY;
+  const apiKey = process.env.FOOTBALL_DATA_TOKEN;
   if (!apiKey) {
-    sendJson(res, 503, { error: "A chave da API-Football ainda não foi configurada na Vercel." });
+    sendJson(res, 503, { error: "Configure FOOTBALL_DATA_TOKEN nas variáveis da Vercel." });
     return;
   }
 
@@ -106,72 +106,36 @@ module.exports = async function handler(req, res) {
 
   let path;
   let cacheSeconds;
-  let resultType;
   if (type === "teams") {
-    path = "/teams?league=" + BRAZIL_SERIE_A_LEAGUE_ID + "&season=" + season;
+    path = "/competitions/" + BRAZIL_SERIE_A_CODE + "/teams?season=" + season;
     cacheSeconds = 86400;
-    resultType = "teams";
   } else if (type === "fixtures") {
-    path = "/fixtures?league=" + BRAZIL_SERIE_A_LEAGUE_ID + "&season=" + season + "&next=20";
+    path = "/competitions/" + BRAZIL_SERIE_A_CODE + "/matches?season=" + season;
     cacheSeconds = 900;
-    resultType = "fixtures";
-  } else if (type === "last") {
-    const teamId = Number(req.query.team);
-    if (!Number.isInteger(teamId) || teamId < 1 || teamId > 1000000) {
-      sendJson(res, 400, { error: "O time informado é inválido." });
-      return;
-    }
-    path = "/fixtures?league=" + BRAZIL_SERIE_A_LEAGUE_ID + "&season=" + season +
-      "&team=" + teamId + "&last=1";
-    cacheSeconds = 900;
-    resultType = "fixtures";
-  } else if (type === "statistics") {
-    const fixtureId = Number(req.query.fixture);
-    if (!Number.isInteger(fixtureId) || fixtureId < 1 || fixtureId > 1000000000) {
-      sendJson(res, 400, { error: "A partida informada é inválida." });
-      return;
-    }
-    path = "/fixtures/statistics?fixture=" + fixtureId;
-    cacheSeconds = 3600;
-    resultType = "statistics";
   } else {
     sendJson(res, 400, { error: "Tipo de consulta de futebol desconhecido." });
     return;
   }
 
   try {
-    const response = await requestProvider(path, apiKey);
-    if (resultType === "teams") {
-      const teams = response.map(item => mapTeam(item.team)).sort((left, right) =>
+    const payload = await requestProvider(path, apiKey);
+    if (type === "teams") {
+      if (!Array.isArray(payload.teams)) {
+        throw new Error("O football-data.org não retornou uma lista de times.");
+      }
+      const teams = payload.teams.map(mapTeam).sort((left, right) =>
         left.name.localeCompare(right.name, "pt-BR"));
       sendJson(res, 200, { teams }, cacheSeconds);
       return;
     }
-    if (resultType === "fixtures") {
-      const fixtures = response.map(mapFixture).sort((left, right) =>
-        (left.timestamp || 0) - (right.timestamp || 0));
-      sendJson(res, 200, { fixtures }, cacheSeconds);
-      return;
+    if (!Array.isArray(payload.matches)) {
+      throw new Error("O football-data.org não retornou uma lista de partidas.");
     }
-
-    const statistics = response.map(item => {
-      const team = mapTeam(item.team);
-      if (!Array.isArray(item.statistics)) {
-        throw new Error("A API de futebol retornou estatísticas inválidas.");
-      }
-      return {
-        team,
-        statistics: item.statistics
-          .filter(statistic => isObject(statistic) &&
-            typeof statistic.type === "string" &&
-            (typeof statistic.value === "string" || typeof statistic.value === "number" ||
-              statistic.value === null))
-          .map(statistic => ({ type: statistic.type, value: statistic.value }))
-      };
-    });
-    sendJson(res, 200, { statistics }, cacheSeconds);
+    const fixtures = payload.matches.map(mapMatch).sort((left, right) =>
+      (left.timestamp || 0) - (right.timestamp || 0));
+    sendJson(res, 200, { fixtures }, cacheSeconds);
   } catch (error) {
-    console.error("Não foi possível consultar a API-Football:", error);
+    console.error("Não foi possível consultar o football-data.org:", error);
     sendJson(res, 502, { error: error.message || "Não foi possível carregar os dados de futebol." });
   }
 };

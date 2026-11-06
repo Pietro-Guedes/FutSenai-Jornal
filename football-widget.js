@@ -19,30 +19,6 @@
   let teams = [];
   let fixtures = [];
 
-  const statLabels = {
-    "Shots on Goal": "Chutes no gol",
-    "Shots off Goal": "Chutes para fora",
-    "Total Shots": "Finalizações",
-    "Blocked Shots": "Chutes bloqueados",
-    "Shots insidebox": "Chutes na área",
-    "Shots outsidebox": "Chutes fora da área",
-    "Fouls": "Faltas",
-    "Corner Kicks": "Escanteios",
-    "Offsides": "Impedimentos",
-    "Ball Possession": "Posse de bola",
-    "Yellow Cards": "Cartões amarelos",
-    "Red Cards": "Cartões vermelhos",
-    "Goalkeeper Saves": "Defesas",
-    "Total passes": "Passes",
-    "Passes accurate": "Passes certos",
-    "Passes %": "Precisão nos passes",
-    "expected_goals": "Gols esperados"
-  };
-  const preferredStats = [
-    "Ball Possession", "Total Shots", "Shots on Goal", "Corner Kicks",
-    "Fouls", "Yellow Cards", "Red Cards", "Goalkeeper Saves"
-  ];
-
   function setStatus(message, isError) {
     status.textContent = message;
     status.classList.toggle("is-error", Boolean(isError));
@@ -212,13 +188,15 @@
   function renderFixtures() {
     const selected = fixtureFilter.value;
     const selectedTeamId = Number(selected);
-    let visibleFixtures = fixtures;
+    const upcomingFixtures = fixtures.filter(fixture =>
+      ["SCHEDULED", "TIMED", "IN_PLAY", "PAUSED", "LIVE"].includes(fixture.status.short));
+    let visibleFixtures = upcomingFixtures;
     if (selected === "favorites") {
       const favoriteIds = new Set(followedTeams.keys());
-      visibleFixtures = fixtures.filter(fixture =>
+      visibleFixtures = upcomingFixtures.filter(fixture =>
         favoriteIds.has(fixture.teams.home.id) || favoriteIds.has(fixture.teams.away.id));
     } else if (selected !== "all" && Number.isInteger(selectedTeamId)) {
-      visibleFixtures = fixtures.filter(fixture =>
+      visibleFixtures = upcomingFixtures.filter(fixture =>
         fixture.teams.home.id === selectedTeamId || fixture.teams.away.id === selectedTeamId);
     }
 
@@ -378,12 +356,8 @@
     previous.append(createElement("p", "football-previous-meta",
       formatDate(fixture.date) + (fixture.round ? " · " + fixture.round : "")));
 
-    const statsButton = createElement("button", "football-stats-button", "Ver estatísticas da partida");
-    statsButton.type = "button";
-    const statsPanel = createElement("div", "football-stat-list");
-    statsPanel.hidden = true;
-    statsButton.addEventListener("click", () => loadStatistics(fixture, statsButton, statsPanel));
-    previous.append(statsButton, statsPanel);
+    previous.append(createElement("p", "football-previous-meta",
+      "A fonte gratuita informa o placar, mas não fornece estatísticas detalhadas da partida."));
     panel.replaceChildren(previous);
     panel.hidden = false;
   }
@@ -394,74 +368,18 @@
     panel.replaceChildren();
     panel.hidden = true;
     try {
-      const data = await fetchFootball("last", { team: String(team.id) });
-      if (!data || !Array.isArray(data.fixtures)) {
-        throw new Error("A resposta do serviço não contém uma lista de partidas válida.");
-      }
-      renderPreviousMatch(data.fixtures[0] || null, panel);
+      const previousMatch = fixtures
+        .filter(fixture => fixture.status.short === "FINISHED" &&
+          fixture.timestamp < Math.floor(Date.now() / 1000) &&
+          (fixture.teams.home.id === team.id || fixture.teams.away.id === team.id))
+        .sort((left, right) => right.timestamp - left.timestamp)[0];
+      renderPreviousMatch(previousMatch || null, panel);
       button.textContent = "Atualizar partida anterior";
     } catch (error) {
       panel.replaceChildren(createElement("p", "football-previous-meta", error.message));
       panel.hidden = false;
       button.textContent = "Tentar novamente";
       console.error("Não foi possível carregar a partida anterior:", error);
-    } finally {
-      button.disabled = false;
-    }
-  }
-
-  function renderStatistics(data, fixture, panel) {
-    if (!data || !Array.isArray(data.statistics) || data.statistics.length < 2) {
-      panel.replaceChildren(createElement("p", "football-previous-meta",
-        "As estatísticas detalhadas não estão disponíveis para esta partida."));
-      panel.hidden = false;
-      return;
-    }
-    const byTeam = new Map(data.statistics.map(item => [
-      item.team.id,
-      new Map(item.statistics.map(statistic => [statistic.type, statistic.value]))
-    ]));
-    const home = byTeam.get(fixture.teams.home.id);
-    const away = byTeam.get(fixture.teams.away.id);
-    if (!home || !away) {
-      panel.replaceChildren(createElement("p", "football-previous-meta",
-        "As estatísticas detalhadas não estão disponíveis para esta partida."));
-      panel.hidden = false;
-      return;
-    }
-
-    const available = preferredStats.filter(type => home.has(type) || away.has(type));
-    if (!available.length) {
-      panel.replaceChildren(createElement("p", "football-previous-meta",
-        "A API não forneceu estatísticas para esta partida."));
-      panel.hidden = false;
-      return;
-    }
-
-    const fragment = document.createDocumentFragment();
-    available.forEach(type => {
-      const row = createElement("div", "football-stat-item");
-      row.append(createElement("span", "", statLabels[type] || type));
-      row.append(createElement("strong", "",
-        String(home.get(type) ?? "—") + " · " + String(away.get(type) ?? "—")));
-      fragment.append(row);
-    });
-    panel.replaceChildren(fragment);
-    panel.hidden = false;
-  }
-
-  async function loadStatistics(fixture, button, panel) {
-    button.disabled = true;
-    button.textContent = "Carregando estatísticas…";
-    try {
-      const data = await fetchFootball("statistics", { fixture: String(fixture.id) });
-      renderStatistics(data, fixture, panel);
-      button.textContent = "Atualizar estatísticas";
-    } catch (error) {
-      panel.replaceChildren(createElement("p", "football-previous-meta", error.message));
-      panel.hidden = false;
-      button.textContent = "Tentar novamente";
-      console.error("Não foi possível carregar estatísticas da partida:", error);
     } finally {
       button.disabled = false;
     }
@@ -504,7 +422,9 @@
     }
     fixtures = results[1].value.fixtures;
     renderFixtures();
-    setStatus(teams.length + " times da Série A e " + fixtures.length + " próximos jogos carregados.");
+    const upcomingCount = fixtures.filter(fixture =>
+      ["SCHEDULED", "TIMED", "IN_PLAY", "PAUSED", "LIVE"].includes(fixture.status.short)).length;
+    setStatus(teams.length + " times da Série A e " + upcomingCount + " próximos jogos carregados.");
   }
 
   loginButton.addEventListener("click", () => {

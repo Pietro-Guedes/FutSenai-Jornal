@@ -16,12 +16,14 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 
 ## Widget do Brasileirão
 
-- Crie uma conta no [API-Football](https://www.api-football.com/) e gere uma chave para consultar os clubes da Série A, os próximos jogos e as estatísticas das partidas anteriores.
-- No projeto da Vercel, abra **Settings → Environment Variables** e adicione `API_FOOTBALL_KEY` com a chave da API. Selecione os ambientes nos quais o site será publicado e faça um novo deploy para disponibilizar a variável à função `api/football.js`.
-- Nunca coloque essa chave em `index.html`, `football-widget.js`, `supabase-config.js` ou em outro arquivo público. A função da Vercel mantém a chave no servidor e expõe somente os dados das partidas.
+- Crie uma conta no [football-data.org](https://www.football-data.org/) e confira na [página de cobertura](https://www.football-data.org/coverage) se a Série A do Brasil e a temporada atual estão disponíveis no nível gratuito da sua conta.
+- No projeto da Vercel, abra **Settings → Environment Variables** e adicione `FOOTBALL_DATA_TOKEN` com o token da conta. Selecione **Production** e faça um novo deploy para disponibilizar a variável à função `api/football.js`.
+- Nunca coloque o token em `index.html`, `football-widget.js`, `supabase-config.js` ou em outro arquivo público. A função da Vercel mantém o token no servidor e expõe somente os dados das partidas.
+- O widget usa a fonte gratuita para times, agenda e placares. Estatísticas detalhadas, como posse de bola e finalizações, não fazem parte desta integração.
+- A variável antiga `API_FOOTBALL_KEY` não é mais usada pelo widget e pode ser removida da Vercel.
 - Execute novamente `supabase-setup.sql` no **SQL Editor** do Supabase para criar a tabela protegida dos times favoritos. Cada pessoa conectada pode salvar e remover os próprios times; os favoritos sincronizam entre dispositivos usando a mesma conta.
-- A agenda aparece para todos. Para salvar favoritos, entre com a conta do site. A partida anterior e as estatísticas de cada time seguido são carregadas quando a pessoa abre esses detalhes; a disponibilidade de estatísticas depende da cobertura do provedor para cada partida e do plano da API.
-- A API possui limites de uso definidos pelo provedor. A função usa cache para reduzir chamadas; confira os limites e a cobertura vigentes na conta API-Football.
+- A agenda aparece para todos. Para salvar favoritos, entre com a conta do site. A partida anterior e seu placar aparecem ao abrir os detalhes do time seguido.
+- A API possui limites de uso definidos pelo provedor. A função usa cache para reduzir chamadas; confira os limites vigentes na conta football-data.org.
 
 ## Editar notícias
 

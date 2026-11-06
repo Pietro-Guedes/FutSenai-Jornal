@@ -98,16 +98,13 @@
     .football-favorite-name { min-width: 0; flex: 1; overflow: hidden; color: #172033; font-size: .75rem; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
     .football-remove { flex: 0 0 auto; border: 0; background: transparent; padding: .25rem; color: #b42318; font-size: .65rem; font-weight: 800; }
     .football-remove:hover { text-decoration: underline; }
-    .football-last-button, .football-stats-button { width: 100%; margin-top: .55rem; border: 1px solid #f3c6cb; border-radius: .55rem; background: #fff; padding: .5rem .65rem; color: #a81727; font-size: .65rem; font-weight: 900; text-align: left; }
-    .football-last-button:hover:not(:disabled), .football-stats-button:hover:not(:disabled) { background: #fff5f5; }
-    .football-last-button:disabled, .football-stats-button:disabled { cursor: wait; opacity: .65; }
-    .football-previous, .football-stat-list { margin-top: .55rem; border-radius: .55rem; background: #f8fafc; padding: .6rem; }
+    .football-last-button { width: 100%; margin-top: .55rem; border: 1px solid #f3c6cb; border-radius: .55rem; background: #fff; padding: .5rem .65rem; color: #a81727; font-size: .65rem; font-weight: 900; text-align: left; }
+    .football-last-button:hover:not(:disabled) { background: #fff5f5; }
+    .football-last-button:disabled { cursor: wait; opacity: .65; }
+    .football-previous { margin-top: .55rem; border-radius: .55rem; background: #f8fafc; padding: .6rem; }
     .football-previous-title { margin: 0; color: #667085; font-size: .59rem; font-weight: 800; text-transform: uppercase; }
     .football-previous-match { margin: .3rem 0 0; color: #172033; font-size: .7rem; font-weight: 900; line-height: 1.4; }
     .football-previous-meta { margin: .2rem 0 0; color: #667085; font-size: .62rem; }
-    .football-stat-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; }
-    .football-stat-item { display: flex; min-width: 0; justify-content: space-between; gap: .3rem; border-radius: .35rem; background: #fff; padding: .35rem; color: #475467; font-size: .57rem; line-height: 1.35; }
-    .football-stat-item strong { flex: 0 0 auto; color: #172033; }
     .football-fixtures-section { margin-top: 1.25rem; border-top: 1px solid #e7eaf0; padding-top: 1rem; }
     .football-filter-label { display: flex; align-items: center; gap: .4rem; color: #667085; font-size: .65rem; font-weight: 800; }
     .football-filter { padding: .45rem .55rem; }
