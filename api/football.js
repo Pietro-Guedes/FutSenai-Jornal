@@ -55,6 +55,7 @@ function mapMatch(value) {
       short: value.status,
       long: value.status
     },
+    matchday: Number.isInteger(value.matchday) ? value.matchday : null,
     round: Number.isInteger(value.matchday) ? "Rodada " + value.matchday : "",
     teams: {
       home: mapTeam(value.homeTeam),

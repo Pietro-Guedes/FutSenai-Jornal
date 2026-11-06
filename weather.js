@@ -12,7 +12,9 @@
   const cityForm = document.querySelector("#weather-city-form");
   const cityInput = document.querySelector("#weather-city-input");
   const cityButton = document.querySelector("#weather-city-button");
+  const cityChoice = document.querySelector("#weather-city-choice");
   const cityResults = document.querySelector("#weather-city-results");
+  const cityConfirmButton = document.querySelector("#weather-city-confirm");
   let cities = [];
 
   const weatherDescriptions = {
@@ -153,7 +155,8 @@
     }
 
     cityButton.disabled = true;
-    cityResults.hidden = true;
+    cityChoice.hidden = true;
+    cityConfirmButton.disabled = true;
     status.textContent = "Buscando cidades…";
     try {
       cities = await searchCities(query);
@@ -162,10 +165,13 @@
         return;
       }
 
-      cityResults.replaceChildren(...cities.map((city, index) =>
-        new Option(cityLabel(city), String(index))));
-      cityResults.hidden = false;
-      status.textContent = "Escolha sua cidade para ver o clima.";
+      cityResults.replaceChildren(
+        new Option("Escolha uma cidade", ""),
+        ...cities.map((city, index) => new Option(cityLabel(city), String(index)))
+      );
+      cityResults.value = "";
+      cityChoice.hidden = false;
+      status.textContent = "Escolha uma cidade e confirme para ver o clima.";
     } catch (error) {
       status.textContent = error.message || "Não foi possível buscar cidades. Tente novamente.";
       console.error("Não foi possível buscar cidades para o clima:", error);
@@ -174,9 +180,15 @@
     }
   });
 
-  cityResults.addEventListener("change", async () => {
-    const city = cities[Number(cityResults.value)];
+  cityResults.addEventListener("change", () => {
+    cityConfirmButton.disabled = cityResults.value === "";
+  });
+
+  cityConfirmButton.addEventListener("click", async () => {
+    const cityIndex = Number(cityResults.value);
+    const city = cityResults.value === "" ? null : cities[cityIndex];
     if (!city) return;
+    cityConfirmButton.disabled = true;
     cityResults.disabled = true;
     status.textContent = "Buscando o clima de " + cityLabel(city) + "…";
     try {
@@ -187,6 +199,7 @@
       console.error("Não foi possível carregar o clima da cidade escolhida:", error);
     } finally {
       cityResults.disabled = false;
+      cityConfirmButton.disabled = cityResults.value === "";
     }
   });
 

@@ -11,7 +11,7 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 5. Em **Authentication → URL Configuration**, configure `https://futsenaijornal.vercel.app` como **Site URL** e adicione `https://futsenaijornal.vercel.app/**` em **Redirect URLs**. Inclua também `http://localhost:*/**` se usar um servidor local. Sem o endereço da Vercel na lista permitida, o Supabase pode redirecionar o login para o Site URL antigo.
 6. Para oferecer login Google, em **Authentication → Sign In / Providers → Google**, ative o provedor e informe o OAuth Client ID e Client Secret criados no Google Cloud. No cliente OAuth do Google, cadastre como URI de redirecionamento autorizado o callback exibido pelo Supabase (normalmente `https://<project-ref>.supabase.co/auth/v1/callback`). Mantenha a URL do site em **Redirect URLs** no Supabase.
 7. Cadastre uma conta de editor em `news_admins` conforme as instruções abaixo; ela também poderá gerenciar enquetes, prêmios e jogos pelo painel.
-8. Publique os arquivos do site, incluindo `index.html`, `style.css`, `script.js`, `interactions.js`, `football-widget.js`, `api/football.js`, `supabase-config.js` e `noticias.json`, junto às imagens.
+8. Publique os arquivos do site, incluindo `index.html`, `style.css`, `script.js`, `interactions.js`, `weather.js`, `clock.js`, `football-widget.js`, `api/football.js`, `supabase-config.js` e `noticias.json`, junto às imagens.
 9. Abra o site em `https://` ou em `http://localhost`; `file://` não funciona para as chamadas ao Supabase.
 
 ## Widget do Brasileirão

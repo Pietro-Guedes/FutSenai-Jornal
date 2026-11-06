@@ -13,12 +13,15 @@
   const loginButton = document.querySelector("#football-login-button");
   const favoritesContainer = document.querySelector("#football-favorites");
   const fixturesContainer = document.querySelector("#football-fixtures");
-  const fixtureFilter = document.querySelector("#football-fixture-filter");
+  const roundLabel = document.querySelector("#football-round-label");
   const teamsById = new Map();
   const standingsByTeamId = new Map();
   let session = null;
   let teams = [];
   let fixtures = [];
+  let botafogoPosition = null;
+  let currentRound = null;
+  let loadingLeagueData = false;
 
   function setStatus(message, isError) {
     status.textContent = message;
@@ -153,10 +156,6 @@
     teams.forEach(team => pickerOptions.push(new Option(team.name, String(team.id))));
     teamPicker.replaceChildren(...pickerOptions);
 
-    const filterOptions = [new Option("Todos os times", "all"), new Option("Só meus favoritos", "favorites")];
-    teams.forEach(team => filterOptions.push(new Option(team.name, String(team.id))));
-    fixtureFilter.replaceChildren(...filterOptions);
-    fixtureFilter.disabled = false;
     updateAccountControls();
   }
 
@@ -187,25 +186,23 @@
   }
 
   function renderFixtures() {
-    const selected = fixtureFilter.value;
-    const selectedTeamId = Number(selected);
-    const upcomingFixtures = fixtures.filter(fixture =>
-      isUpcomingFixture(fixture) && isImportantFixture(fixture));
-    let visibleFixtures = upcomingFixtures;
-    if (selected === "favorites") {
-      const favoriteIds = new Set(followedTeams.keys());
-      visibleFixtures = upcomingFixtures.filter(fixture =>
-        favoriteIds.has(fixture.teams.home.id) || favoriteIds.has(fixture.teams.away.id));
-    } else if (selected !== "all" && Number.isInteger(selectedTeamId)) {
-      visibleFixtures = upcomingFixtures.filter(fixture =>
-        fixture.teams.home.id === selectedTeamId || fixture.teams.away.id === selectedTeamId);
-    }
+    currentRound = fixtures
+      .filter(fixture => isUpcomingFixture(fixture) && Number.isInteger(fixture.matchday))
+      .reduce((earliest, fixture) =>
+        earliest === null ? fixture.matchday : Math.min(earliest, fixture.matchday), null);
+    roundLabel.textContent = currentRound === null
+      ? "Não há mais partidas programadas nesta temporada."
+      : "Rodada " + currentRound;
+    const visibleFixtures = fixtures.filter(fixture =>
+      isUpcomingFixture(fixture) &&
+      fixture.matchday === currentRound &&
+      isImportantFixture(fixture));
 
     if (!visibleFixtures.length) {
-      const text = selected === "favorites" && !followedTeams.size
-        ? "Siga um time para filtrar os jogos por seus favoritos."
-        : "Nenhum próximo jogo encontrado para este filtro.";
-      fixturesContainer.replaceChildren(createElement("p", "football-empty", text));
+      const message = currentRound === null
+        ? "Não há próximos jogos programados."
+        : "Não há jogos desta rodada envolvendo os times em destaque.";
+      fixturesContainer.replaceChildren(createElement("p", "football-empty", message));
       return;
     }
 
@@ -243,10 +240,10 @@
     const homePosition = standingsByTeamId.get(fixture.teams.home.id);
     const awayPosition = standingsByTeamId.get(fixture.teams.away.id);
     return {
-      title: (homePosition >= 1 && homePosition <= 4) ||
-        (awayPosition >= 1 && awayPosition <= 4),
-      relegation: (homePosition >= 17 && homePosition <= 20) ||
-        (awayPosition >= 17 && awayPosition <= 20)
+      title: homePosition === 1 || homePosition === 2 ||
+        awayPosition === 1 || awayPosition === 2,
+      relegation: homePosition >= botafogoPosition ||
+        awayPosition >= botafogoPosition
     };
   }
 
@@ -289,14 +286,12 @@
       favoritesContainer.replaceChildren(createElement("p", "football-empty",
         session ? "Ainda não há times seguidos. Escolha um time acima para começar." :
           "Entre na sua conta e escolha quais times da Série A quer acompanhar."));
-      renderFixtures();
       return;
     }
 
     const fragment = document.createDocumentFragment();
     followedTeams.forEach((teamName, teamId) => fragment.append(renderFavoriteCard(teamId, teamName)));
     favoritesContainer.replaceChildren(fragment);
-    renderFixtures();
   }
 
   async function loadFavorites() {
@@ -413,64 +408,80 @@
   }
 
   async function loadLeagueData() {
-    const results = await Promise.allSettled([
-      fetchFootball("teams"),
-      fetchFootball("fixtures"),
-      fetchFootball("standings")
-    ]);
+    if (loadingLeagueData) return;
+    loadingLeagueData = true;
+    try {
+      const results = await Promise.allSettled([
+        fetchFootball("teams"),
+        fetchFootball("fixtures"),
+        fetchFootball("standings")
+      ]);
 
-    if (results[0].status === "rejected") {
-      setStatus("Não foi possível carregar os times: " + results[0].reason.message, true);
-      teamPicker.replaceChildren(new Option("Times indisponíveis", ""));
-      return;
-    }
+      if (results[0].status === "rejected") {
+        setStatus("Não foi possível carregar os times: " + results[0].reason.message, true);
+        teamPicker.replaceChildren(new Option("Times indisponíveis", ""));
+        return;
+      }
 
-    const teamsResult = results[0].value.teams;
-    if (!Array.isArray(teamsResult) || teamsResult.some(team =>
-      !team || !Number.isInteger(team.id) || typeof team.name !== "string")) {
-      setStatus("O serviço retornou uma lista de times inválida.", true);
-      return;
-    }
-    teams = teamsResult;
-    teamsById.clear();
-    teams.forEach(team => teamsById.set(team.id, team));
-    fillTeamSelectors();
+      const teamsResult = results[0].value.teams;
+      if (!Array.isArray(teamsResult) || teamsResult.some(team =>
+        !team || !Number.isInteger(team.id) || typeof team.name !== "string")) {
+        setStatus("O serviço retornou uma lista de times inválida.", true);
+        return;
+      }
+      teams = teamsResult;
+      teamsById.clear();
+      teams.forEach(team => teamsById.set(team.id, team));
+      fillTeamSelectors();
 
-    if (results[1].status === "rejected") {
-      fixtures = [];
+      if (results[1].status === "rejected") {
+        fixtures = [];
+        renderFixtures();
+        setStatus("Os times foram carregados, mas não foi possível buscar os próximos jogos: " +
+          results[1].reason.message, true);
+        return;
+      }
+
+      if (!Array.isArray(results[1].value.fixtures)) {
+        setStatus("O serviço retornou uma lista de jogos inválida.", true);
+        return;
+      }
+      if (results[2].status === "rejected") {
+        fixtures = [];
+        renderFixtures();
+        setStatus("Os times foram carregados, mas não foi possível consultar a classificação para destacar os jogos importantes: " +
+          results[2].reason.message, true);
+        return;
+      }
+      if (!Array.isArray(results[2].value.standings) ||
+        results[2].value.standings.some(row =>
+          !row || !Number.isInteger(row.position) || !row.team ||
+          !Number.isInteger(row.team.id) || typeof row.team.name !== "string")) {
+        setStatus("O serviço retornou uma classificação inválida.", true);
+        return;
+      }
+      const botafogo = results[2].value.standings.find(row =>
+        /botafogo/i.test(row.team.name));
+      if (!botafogo) {
+        setStatus("Não foi possível localizar o Botafogo na classificação para definir o início da zona de destaque.", true);
+        return;
+      }
+      fixtures = results[1].value.fixtures;
+      botafogoPosition = botafogo.position;
+      standingsByTeamId.clear();
+      results[2].value.standings.forEach(row =>
+        standingsByTeamId.set(row.team.id, row.position));
       renderFixtures();
-      setStatus("Os times foram carregados, mas não foi possível buscar os próximos jogos: " +
-        results[1].reason.message, true);
-      return;
+      const importantCount = fixtures.filter(fixture =>
+        isUpcomingFixture(fixture) &&
+        fixture.matchday === currentRound &&
+        isImportantFixture(fixture)).length;
+      setStatus((currentRound === null ? "Nenhuma rodada futura." : "Rodada " + currentRound) +
+        ": " + importantCount +
+        " jogos dos 2 primeiros e do Botafogo para baixo carregados.");
+    } finally {
+      loadingLeagueData = false;
     }
-
-    if (!Array.isArray(results[1].value.fixtures)) {
-      setStatus("O serviço retornou uma lista de jogos inválida.", true);
-      return;
-    }
-    if (results[2].status === "rejected") {
-      fixtures = [];
-      renderFixtures();
-      setStatus("Os times foram carregados, mas não foi possível consultar a classificação para destacar os jogos importantes: " +
-        results[2].reason.message, true);
-      return;
-    }
-    if (!Array.isArray(results[2].value.standings) ||
-      results[2].value.standings.some(row =>
-        !row || !Number.isInteger(row.position) || !row.team ||
-        !Number.isInteger(row.team.id))) {
-      setStatus("O serviço retornou uma classificação inválida.", true);
-      return;
-    }
-    fixtures = results[1].value.fixtures;
-    standingsByTeamId.clear();
-    results[2].value.standings.forEach(row =>
-      standingsByTeamId.set(row.team.id, row.position));
-    renderFixtures();
-    const importantCount = fixtures.filter(fixture =>
-      isUpcomingFixture(fixture) && isImportantFixture(fixture)).length;
-    setStatus(teams.length + " times da Série A e " + importantCount +
-      " próximos jogos importantes carregados (4 primeiros e 4 últimos da tabela).");
   }
 
   loginButton.addEventListener("click", () => {
@@ -483,7 +494,6 @@
     document.querySelector("#prediction-heading").scrollIntoView({ behavior: "smooth", block: "center" });
   });
   followButton.addEventListener("click", addFavorite);
-  fixtureFilter.addEventListener("change", renderFixtures);
   window.addEventListener("futsenai-auth-state-changed", event => handleAccountChange(event.detail));
   window.addEventListener("futsenai-auth-session-updated", event => {
     if (event.detail && typeof event.detail.access_token === "string") session = event.detail;
@@ -506,4 +516,10 @@
   } else {
     renderFavorites();
   }
+  window.setInterval(() => {
+    loadLeagueData().catch(error => {
+      setStatus("Não foi possível atualizar a rodada: " + error.message, true);
+      console.error("Não foi possível atualizar os jogos da Série A:", error);
+    });
+  }, 15 * 60 * 1000);
 })();
