@@ -110,7 +110,8 @@
       PIPOCADA: "bg-red-50 text-red-700",
       TRANSFERÊNCIA: "bg-rose-200 text-rose-900",
       CHORO: "bg-pink-100 text-rose-800",
-      CANELADA: "bg-slate-100 text-slate-700"
+      CANELADA: "bg-slate-100 text-slate-700",
+      NOVIDADE: "bg-emerald-100 text-emerald-800"
     };
     return styles[category] || "bg-red-100 text-red-800";
   }

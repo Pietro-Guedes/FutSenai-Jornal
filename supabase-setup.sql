@@ -77,6 +77,14 @@ create table if not exists public.profiles (
 create unique index if not exists profiles_nickname_unique
   on public.profiles (lower(nickname));
 
+create table if not exists public.favorite_football_teams (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  team_id integer not null check (team_id between 1 and 1000000),
+  team_name text not null check (char_length(btrim(team_name)) between 1 and 100),
+  created_at timestamptz not null default now(),
+  primary key (user_id, team_id)
+);
+
 create table if not exists public.score_admins (
   user_id uuid primary key references auth.users(id) on delete cascade,
   created_at timestamptz not null default now()
@@ -314,6 +322,7 @@ alter table public.news enable row level security;
 alter table public.news_likes enable row level security;
 alter table public.news_comments enable row level security;
 alter table public.news_comment_likes enable row level security;
+alter table public.favorite_football_teams enable row level security;
 
 drop policy if exists "Public can read active polls" on public.polls;
 create policy "Public can read active polls" on public.polls
@@ -427,6 +436,17 @@ create policy "News admins can delete news images" on storage.objects
 drop policy if exists "Public can read profile nicknames" on public.profiles;
 create policy "Public can read profile nicknames" on public.profiles
   for select to anon, authenticated using (true);
+
+drop policy if exists "Users can read own favorite football teams" on public.favorite_football_teams;
+create policy "Users can read own favorite football teams" on public.favorite_football_teams
+  for select to authenticated using (auth.uid() = user_id);
+drop policy if exists "Users can add own favorite football teams" on public.favorite_football_teams;
+create policy "Users can add own favorite football teams" on public.favorite_football_teams
+  for insert to authenticated with check (auth.uid() = user_id);
+drop policy if exists "Users can remove own favorite football teams" on public.favorite_football_teams;
+create policy "Users can remove own favorite football teams" on public.favorite_football_teams
+  for delete to authenticated using (auth.uid() = user_id);
+grant select, insert, delete on public.favorite_football_teams to authenticated;
 
 drop policy if exists "Users can read own predictions" on public.predictions;
 create policy "Users can read own predictions" on public.predictions

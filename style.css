@@ -47,6 +47,78 @@
       inset: 15%;
     }
     .hero-ball::after { inset: 30%; }
+    .weather-widget {
+      width: min(100%, 20rem);
+      flex: 0 0 auto;
+      border: 1px solid rgba(255, 255, 255, .22);
+      border-radius: 1rem;
+      background: rgba(68, 13, 24, .38);
+      padding: 1rem;
+      color: #fff;
+      box-shadow: 0 12px 30px rgba(83, 13, 25, .16);
+      backdrop-filter: blur(8px);
+    }
+    .weather-widget-heading { display: flex; align-items: center; gap: .65rem; }
+    .weather-widget-icon { font-size: 1.65rem; }
+    .weather-widget-heading h2 { margin: 0; font-size: .86rem; font-weight: 900; }
+    .weather-widget-heading p { margin: .2rem 0 0; color: rgba(255, 255, 255, .75); font-size: .68rem; line-height: 1.4; }
+    .weather-result { display: flex; align-items: center; gap: .65rem; margin-top: .8rem; }
+    .weather-result[hidden] { display: none; }
+    .weather-condition-icon { font-size: 2.4rem; line-height: 1; }
+    .weather-temperature { margin: 0; font-size: 1.6rem; font-weight: 950; line-height: 1; }
+    .weather-condition { margin: .2rem 0 0; font-size: .74rem; font-weight: 800; }
+    .weather-details { margin: .2rem 0 0; color: rgba(255, 255, 255, .74); font-size: .64rem; }
+    .weather-button { width: 100%; margin-top: .8rem; border: 1px solid rgba(255, 255, 255, .28); border-radius: .65rem; background: #fff; padding: .62rem .75rem; color: #9f1239; font-size: .72rem; font-weight: 900; transition: background-color .2s ease; }
+    .weather-button:hover:not(:disabled) { background: #fff1f2; }
+    .weather-button:disabled { cursor: wait; opacity: .8; }
+    .weather-privacy { margin: .55rem 0 0; color: rgba(255, 255, 255, .65); font-size: .58rem; line-height: 1.4; }
+    .football-section { overflow: hidden; border: 1px solid #e7eaf0; border-radius: 1.25rem; background: #fff; padding: clamp(1rem, 3vw, 1.5rem); box-shadow: 0 8px 26px rgba(20, 32, 55, .055); }
+    .football-section-heading, .football-fixtures-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+    .football-provider { flex: 0 0 auto; color: #667085; font-size: .65rem; font-weight: 800; text-decoration: none; }
+    .football-provider:hover { color: #c92332; text-decoration: underline; }
+    .football-status { margin-top: 1rem; border-radius: .7rem; background: #f8fafc; padding: .7rem .85rem; color: #475467; font-size: .75rem; line-height: 1.5; }
+    .football-status:empty { display: none; }
+    .football-status.is-error { border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; }
+    .football-follow-panel { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: .75rem 1rem; margin-top: 1rem; border: 1px solid #f1e7e8; border-radius: .9rem; background: #fffafa; padding: .9rem; }
+    .football-follow-copy h3, .football-fixtures-heading h3 { margin: 0; color: #172033; font-size: .95rem; font-weight: 900; }
+    .football-follow-copy p, .football-fixtures-heading p { margin: .25rem 0 0; color: #667085; font-size: .68rem; line-height: 1.5; }
+    .football-login-button { margin-top: .5rem; border: 0; background: transparent; padding: 0; color: #b42318; font-size: .68rem; font-weight: 900; text-decoration: underline; text-underline-offset: 2px; }
+    .football-login-button[hidden] { display: none; }
+    .football-follow-controls { display: flex; min-width: 0; gap: .5rem; }
+    .football-team-picker, .football-filter { min-width: 0; border-radius: .6rem; background: #fff; padding: .6rem .7rem; color: #344054; font-size: .72rem; }
+    .football-team-picker { flex: 1; }
+    .football-follow-button { flex: 0 0 auto; border: 0; border-radius: .6rem; background: #c92332; padding: .6rem .85rem; color: #fff; font-size: .7rem; font-weight: 900; transition: background-color .2s ease; }
+    .football-follow-button:hover:not(:disabled) { background: #a81727; }
+    .football-follow-button:disabled { cursor: not-allowed; opacity: .5; }
+    .football-favorites { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: .65rem; }
+    .football-empty { grid-column: 1 / -1; margin: 0; border: 1px dashed #d0d5dd; border-radius: .65rem; padding: .8rem; color: #667085; font-size: .72rem; line-height: 1.5; }
+    .football-favorite { min-width: 0; border: 1px solid #e7eaf0; border-radius: .7rem; background: #fff; padding: .7rem; }
+    .football-favorite-heading { display: flex; align-items: center; gap: .5rem; }
+    .football-team-logo { width: 1.8rem; height: 1.8rem; flex: 0 0 1.8rem; object-fit: contain; }
+    .football-favorite-name { min-width: 0; flex: 1; overflow: hidden; color: #172033; font-size: .75rem; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+    .football-remove { flex: 0 0 auto; border: 0; background: transparent; padding: .25rem; color: #b42318; font-size: .65rem; font-weight: 800; }
+    .football-remove:hover { text-decoration: underline; }
+    .football-last-button, .football-stats-button { width: 100%; margin-top: .55rem; border: 1px solid #f3c6cb; border-radius: .55rem; background: #fff; padding: .5rem .65rem; color: #a81727; font-size: .65rem; font-weight: 900; text-align: left; }
+    .football-last-button:hover:not(:disabled), .football-stats-button:hover:not(:disabled) { background: #fff5f5; }
+    .football-last-button:disabled, .football-stats-button:disabled { cursor: wait; opacity: .65; }
+    .football-previous, .football-stat-list { margin-top: .55rem; border-radius: .55rem; background: #f8fafc; padding: .6rem; }
+    .football-previous-title { margin: 0; color: #667085; font-size: .59rem; font-weight: 800; text-transform: uppercase; }
+    .football-previous-match { margin: .3rem 0 0; color: #172033; font-size: .7rem; font-weight: 900; line-height: 1.4; }
+    .football-previous-meta { margin: .2rem 0 0; color: #667085; font-size: .62rem; }
+    .football-stat-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; }
+    .football-stat-item { display: flex; min-width: 0; justify-content: space-between; gap: .3rem; border-radius: .35rem; background: #fff; padding: .35rem; color: #475467; font-size: .57rem; line-height: 1.35; }
+    .football-stat-item strong { flex: 0 0 auto; color: #172033; }
+    .football-fixtures-section { margin-top: 1.25rem; border-top: 1px solid #e7eaf0; padding-top: 1rem; }
+    .football-filter-label { display: flex; align-items: center; gap: .4rem; color: #667085; font-size: .65rem; font-weight: 800; }
+    .football-filter { padding: .45rem .55rem; }
+    .football-fixtures { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: .55rem; margin-top: .75rem; }
+    .football-fixture { min-width: 0; border: 1px solid #e7eaf0; border-radius: .7rem; background: linear-gradient(135deg, #fff, #fffafa); padding: .7rem; }
+    .football-fixture-time { margin: 0 0 .45rem; color: #667085; font-size: .59rem; font-weight: 800; }
+    .football-fixture-team { display: flex; align-items: center; gap: .4rem; color: #344054; font-size: .68rem; font-weight: 800; }
+    .football-fixture-team + .football-fixture-team { margin-top: .25rem; }
+    .football-fixture-team .football-team-logo { width: 1.2rem; height: 1.2rem; flex-basis: 1.2rem; }
+    .football-fixture-score { margin-left: auto; color: #172033; font-size: .75rem; font-weight: 950; }
+    .football-fixture-round { margin: .45rem 0 0; color: #98a2b3; font-size: .57rem; }
     .news-card {
       animation: card-in .35s ease both;
       box-shadow: 0 5px 18px rgba(20, 32, 55, .045);
@@ -225,6 +297,13 @@
     .article-body { white-space: pre-wrap; overflow-wrap: anywhere; }
     @keyframes card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     @media (max-width: 540px) {
+      .football-section-heading, .football-fixtures-heading { align-items: flex-start; flex-direction: column; }
+      .football-provider { align-self: flex-end; }
+      .football-follow-panel { grid-template-columns: 1fr; }
+      .football-follow-controls { flex-direction: column; }
+      .football-follow-button { min-height: 2.5rem; }
+      .football-filter-label { width: 100%; justify-content: space-between; }
+      .football-filter { flex: 1; }
       .score-promo { padding: .85rem; }
       .score-promo-top { align-items: flex-start; }
       .score-promo-status { max-width: 9rem; }

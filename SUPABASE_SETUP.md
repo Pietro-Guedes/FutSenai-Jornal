@@ -11,8 +11,17 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 5. Em **Authentication → URL Configuration**, configure a URL do site publicado como **Site URL** e inclua-a em **Redirect URLs** para a confirmação de e-mail voltar ao site.
 6. Para oferecer login Google, em **Authentication → Sign In / Providers → Google**, ative o provedor e informe o OAuth Client ID e Client Secret criados no Google Cloud. No cliente OAuth do Google, cadastre como URI de redirecionamento autorizado o callback exibido pelo Supabase (normalmente `https://<project-ref>.supabase.co/auth/v1/callback`). Mantenha a URL do site em **Redirect URLs** no Supabase.
 7. Cadastre uma conta de editor em `news_admins` conforme as instruções abaixo; ela também poderá gerenciar enquetes, prêmios e jogos pelo painel.
-8. Publique `index.html`, `admin.html`, `style.css`, `script.js`, `admin.js`, `interactions.js`, `supabase-config.js` e `noticias.json` junto às imagens do site.
+8. Publique os arquivos do site, incluindo `index.html`, `style.css`, `script.js`, `interactions.js`, `football-widget.js`, `api/football.js`, `supabase-config.js` e `noticias.json`, junto às imagens.
 9. Abra o site em `https://` ou em `http://localhost`; `file://` não funciona para as chamadas ao Supabase.
+
+## Widget do Brasileirão
+
+- Crie uma conta no [API-Football](https://www.api-football.com/) e gere uma chave para consultar os clubes da Série A, os próximos jogos e as estatísticas das partidas anteriores.
+- No projeto da Vercel, abra **Settings → Environment Variables** e adicione `API_FOOTBALL_KEY` com a chave da API. Selecione os ambientes nos quais o site será publicado e faça um novo deploy para disponibilizar a variável à função `api/football.js`.
+- Nunca coloque essa chave em `index.html`, `football-widget.js`, `supabase-config.js` ou em outro arquivo público. A função da Vercel mantém a chave no servidor e expõe somente os dados das partidas.
+- Execute novamente `supabase-setup.sql` no **SQL Editor** do Supabase para criar a tabela protegida dos times favoritos. Cada pessoa conectada pode salvar e remover os próprios times; os favoritos sincronizam entre dispositivos usando a mesma conta.
+- A agenda aparece para todos. Para salvar favoritos, entre com a conta do site. A partida anterior e as estatísticas de cada time seguido são carregadas quando a pessoa abre esses detalhes; a disponibilidade de estatísticas depende da cobertura do provedor para cada partida e do plano da API.
+- A API possui limites de uso definidos pelo provedor. A função usa cache para reduzir chamadas; confira os limites e a cobertura vigentes na conta API-Football.
 
 ## Editar notícias
 

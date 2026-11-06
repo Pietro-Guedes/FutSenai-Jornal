@@ -33,26 +33,91 @@
           <span class="rounded-full bg-red-50 px-3 py-2 text-xs font-extrabold text-red-700">Acesso dos alunos</span>
         </div>
       </div>
-      <div class="relative max-w-2xl pb-10 pt-10 text-white sm:pb-14 sm:pt-14">
-        <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.18em] text-white">
-          <span class="h-2 w-2 animate-pulse rounded-full bg-white"></span> Plantão do intervalo
+      <div class="relative flex flex-col gap-6 pb-10 pt-10 text-white sm:pb-14 sm:pt-14 lg:flex-row lg:items-end lg:justify-between">
+        <div class="max-w-2xl">
+          <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.18em] text-white">
+            <span class="h-2 w-2 animate-pulse rounded-full bg-white"></span> Plantão do intervalo
+          </div>
+          <h1 class="max-w-xl text-4xl font-black leading-[1.08] tracking-tight sm:text-6xl">O futebol acontece <span class="text-red-100">aqui.</span></h1>
+          <p class="mt-4 max-w-lg text-sm leading-6 text-red-50 sm:text-base">O Portal Oficial da Zoeira e do Futebol no Senai. Lances duvidosos, craques improváveis e notícias direto do intervalo.</p>
+          <div class="mt-7 flex items-center gap-3 text-xs font-bold text-red-50">
+            <span class="flex -space-x-2" aria-hidden="true">
+              <span class="grid h-7 w-7 place-items-center rounded-full border-2 border-red-700 bg-white text-[10px]">⚽</span>
+              <span class="grid h-7 w-7 place-items-center rounded-full border-2 border-red-700 bg-red-100 text-[10px]">🏆</span>
+              <span class="grid h-7 w-7 place-items-center rounded-full border-2 border-red-700 bg-red-300 text-[10px]">📣</span>
+            </span>
+            <span>As notícias mais quentes do recreio</span>
+          </div>
         </div>
-        <h1 class="max-w-xl text-4xl font-black leading-[1.08] tracking-tight sm:text-6xl">O futebol acontece <span class="text-red-100">aqui.</span></h1>
-        <p class="mt-4 max-w-lg text-sm leading-6 text-red-50 sm:text-base">O Portal Oficial da Zoeira e do Futebol no Senai. Lances duvidosos, craques improváveis e notícias direto do intervalo.</p>
-        <div class="mt-7 flex items-center gap-3 text-xs font-bold text-red-50">
-          <span class="flex -space-x-2" aria-hidden="true">
-            <span class="grid h-7 w-7 place-items-center rounded-full border-2 border-red-700 bg-white text-[10px]">⚽</span>
-            <span class="grid h-7 w-7 place-items-center rounded-full border-2 border-red-700 bg-red-100 text-[10px]">🏆</span>
-            <span class="grid h-7 w-7 place-items-center rounded-full border-2 border-red-700 bg-red-300 text-[10px]">📣</span>
-          </span>
-          <span>As notícias mais quentes do recreio</span>
-        </div>
+        <section class="weather-widget" aria-labelledby="weather-title">
+          <div class="weather-widget-heading">
+            <span class="weather-widget-icon" aria-hidden="true">🌤️</span>
+            <div>
+              <h2 id="weather-title">Clima onde você está</h2>
+              <p id="weather-status" role="status" aria-live="polite">Consulte a temperatura da sua região.</p>
+            </div>
+          </div>
+          <div id="weather-result" class="weather-result" hidden>
+            <span id="weather-condition-icon" class="weather-condition-icon" aria-hidden="true"></span>
+            <div>
+              <p id="weather-temperature" class="weather-temperature"></p>
+              <p id="weather-condition" class="weather-condition"></p>
+              <p id="weather-details" class="weather-details"></p>
+            </div>
+          </div>
+          <button id="weather-button" class="weather-button" type="button">Ver clima da minha região</button>
+          <p class="weather-privacy">Seu navegador pedirá permissão. As coordenadas serão usadas para consultar o clima e não serão salvas pelo site.</p>
+        </section>
       </div>
     </div>
     <div class="absolute bottom-0 h-1 w-full bg-white"></div>
   </header>
 
   <main class="mx-auto min-h-[55vh] max-w-[1180px] px-5 py-9 sm:px-8 sm:py-12">
+    <section class="football-section mb-12" aria-labelledby="football-title">
+      <div class="football-section-heading">
+        <div>
+          <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Campeonato Brasileiro</p>
+          <h2 id="football-title" class="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Jogos dos times da Série A</h2>
+          <p class="mt-2 text-sm leading-6 text-slate-600">Acompanhe os próximos confrontos e veja o último jogo dos times que você segue.</p>
+        </div>
+        <a class="football-provider" href="https://www.api-football.com/" target="_blank" rel="noopener noreferrer">Dados de futebol por API-Football ↗</a>
+      </div>
+
+      <div id="football-status" class="football-status" role="status" aria-live="polite">Carregando os times e os próximos jogos…</div>
+
+      <section class="football-follow-panel" aria-labelledby="football-follow-title">
+        <div class="football-follow-copy">
+          <h3 id="football-follow-title">Seus times favoritos</h3>
+          <p id="football-account-status">Entre na sua conta para salvar seus times favoritos e sincronizá-los entre dispositivos.</p>
+          <button id="football-login-button" class="football-login-button" type="button">Entrar para seguir times</button>
+        </div>
+        <div class="football-follow-controls">
+          <label class="sr-only" for="football-team-picker">Escolher time para seguir</label>
+          <select id="football-team-picker" class="field football-team-picker" disabled>
+            <option value="">Carregando times…</option>
+          </select>
+          <button id="football-follow-button" class="football-follow-button" type="button" disabled>Seguir time</button>
+        </div>
+        <div id="football-favorites" class="football-favorites" aria-live="polite"></div>
+      </section>
+
+      <section class="football-fixtures-section" aria-labelledby="football-fixtures-title">
+        <div class="football-fixtures-heading">
+          <div>
+            <h3 id="football-fixtures-title">Próximos jogos</h3>
+            <p>Agenda da Série A atualizada pela API de futebol.</p>
+          </div>
+          <label class="football-filter-label">Mostrar
+            <select id="football-fixture-filter" class="field football-filter" disabled>
+              <option value="all">Todos os times</option>
+            </select>
+          </label>
+        </div>
+        <div id="football-fixtures" class="football-fixtures" aria-live="polite"></div>
+      </section>
+    </section>
+
     <section class="mb-12" aria-labelledby="round-title">
       <div class="mb-6">
         <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Participe da resenha</p>
@@ -259,5 +324,7 @@
   <script src="interactions.js" defer></script>
   <script src="score-promo.js" defer></script>
   <script src="promo-carousels.js" defer></script>
+  <script src="weather.js" defer></script>
+  <script src="football-widget.js" defer></script>
 </body>
 </html>
