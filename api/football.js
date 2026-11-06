@@ -77,6 +77,7 @@ async function requestProvider(path, apiKey) {
   }
   if ((isObject(payload.errors) && Object.keys(payload.errors).length > 0) ||
     (Array.isArray(payload.errors) && payload.errors.length > 0)) {
+    console.error("API-Football provider errors:", JSON.stringify(payload.errors));
     throw new Error("A API-Football informou um erro na consulta. Verifique a chave e os limites da conta.");
   }
   return payload.response;
