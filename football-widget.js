@@ -186,16 +186,27 @@
   }
 
   function renderFixtures() {
-    currentRound = fixtures
-      .filter(fixture => isUpcomingFixture(fixture) && Number.isInteger(fixture.matchday))
-      .reduce((earliest, fixture) =>
-        earliest === null ? fixture.matchday : Math.min(earliest, fixture.matchday), null);
+    const upcomingRoundCounts = new Map();
+    fixtures.forEach(fixture => {
+      if (!isUpcomingFixture(fixture) || !Number.isInteger(fixture.matchday)) return;
+      upcomingRoundCounts.set(fixture.matchday,
+        (upcomingRoundCounts.get(fixture.matchday) || 0) + 1);
+    });
+    const currentRoundEntry = Array.from(upcomingRoundCounts.entries()).reduce(
+      (largest, entry) => largest === null || entry[1] > largest.count
+        ? { matchday: entry[0], count: entry[1] }
+        : largest,
+      null
+    );
+    currentRound = currentRoundEntry ? currentRoundEntry.matchday : null;
     roundLabel.textContent = currentRound === null
       ? "Não há mais partidas programadas nesta temporada."
-      : "Rodada " + currentRound;
+      : String(currentRound) + (hasDelayedFixtures() ? " + atrasados" : "");
     const visibleFixtures = fixtures.filter(fixture =>
       isUpcomingFixture(fixture) &&
-      fixture.matchday === currentRound &&
+      currentRound !== null &&
+      Number.isInteger(fixture.matchday) &&
+      fixture.matchday <= currentRound &&
       isImportantFixture(fixture));
 
     if (!visibleFixtures.length) {
@@ -255,6 +266,12 @@
   function isUpcomingFixture(fixture) {
     return ["SCHEDULED", "TIMED"].includes(fixture.status.short) &&
       Number.isFinite(fixture.timestamp) && fixture.timestamp >= Math.floor(Date.now() / 1000);
+  }
+
+  function hasDelayedFixtures() {
+    return currentRound !== null && fixtures.some(fixture =>
+      isUpcomingFixture(fixture) && Number.isInteger(fixture.matchday) &&
+      fixture.matchday < currentRound);
   }
 
   function renderFavoriteCard(teamId, teamName) {
@@ -474,9 +491,12 @@
       renderFixtures();
       const importantCount = fixtures.filter(fixture =>
         isUpcomingFixture(fixture) &&
-        fixture.matchday === currentRound &&
+        currentRound !== null &&
+        Number.isInteger(fixture.matchday) &&
+        fixture.matchday <= currentRound &&
         isImportantFixture(fixture)).length;
-      setStatus((currentRound === null ? "Nenhuma rodada futura." : "Rodada " + currentRound) +
+      setStatus((currentRound === null ? "Nenhuma rodada futura." :
+        "Rodada " + currentRound + (hasDelayedFixtures() ? " e jogos atrasados" : "")) +
         ": " + importantCount +
         " jogos do Palmeiras, do Flamengo e do Botafogo para baixo carregados.");
     } finally {
