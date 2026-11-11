@@ -160,9 +160,13 @@
     .football-simulator-status, .football-simulator-note { margin: .4rem 0 0; color: #667085; font-size: .62rem; line-height: 1.45; }
     .football-simulator-status.is-error { color: #991b1b; }
     .football-simulator-note { color: #98a2b3; }
-    .football-simulator { display: grid; gap: .65rem; margin-top: .6rem; }
-    .football-simulation-round { min-width: 0; }
-    .football-simulation-round-title { margin: 0 0 .35rem; color: #344054; font-size: .7rem; font-weight: 900; }
+    .football-simulator-round-navigation { display: flex; align-items: center; justify-content: center; gap: .7rem; margin-top: .55rem; }
+    .football-simulator-round-navigation[hidden] { display: none; }
+    .football-simulator-round-button { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border: 1px solid #f3c6cb; border-radius: 50%; background: #fff; color: #a81727; cursor: pointer; font-size: 1.15rem; font-weight: 900; line-height: 1; }
+    .football-simulator-round-button:hover:not(:disabled) { background: #fff5f5; }
+    .football-simulator-round-button:disabled { cursor: not-allowed; opacity: .4; }
+    .football-simulator-round-label { min-width: 9rem; color: #344054; font-size: .65rem; font-weight: 900; text-align: center; }
+    .football-simulator { margin-top: .45rem; }
     .football-simulation-round-matches { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: .4rem; }
     .football-simulation-match { min-width: 0; border: 1px solid #e7eaf0; border-radius: .6rem; background: #fff; padding: .5rem .6rem; }
     .football-simulation-date { margin: 0; color: #98a2b3; font-size: .55rem; font-weight: 800; }

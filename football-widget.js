@@ -19,6 +19,10 @@
   const standingsContent = document.querySelector("#football-standings-content");
   const simulatorContainer = document.querySelector("#football-simulator");
   const simulatorStatus = document.querySelector("#football-simulator-status");
+  const simulatorRoundNavigation = document.querySelector("#football-simulator-round-navigation");
+  const simulatorRoundLabel = document.querySelector("#football-simulator-round-label");
+  const simulatorPreviousRoundButton = document.querySelector("#football-simulator-previous");
+  const simulatorNextRoundButton = document.querySelector("#football-simulator-next");
   const clearSimulationButton = document.querySelector("#football-simulator-clear");
   const roundLabel = document.querySelector("#football-round-label");
   const teamsById = new Map();
@@ -29,6 +33,8 @@
   let fixtures = [];
   let standings = [];
   let simulationFixtures = [];
+  let simulationRounds = [];
+  let simulationRoundIndex = 0;
   let standingsUpdatedAt = "";
   let botafogoPosition = null;
   let currentRound = null;
@@ -241,27 +247,53 @@
   }
 
   function renderSimulator(allFixtures) {
+    const hadSelectedRound = simulationRounds.length > 0;
+    const selectedMatchday = simulationRounds.length
+      ? simulationRounds[simulationRoundIndex].matchday
+      : null;
     simulationFixtures = allFixtures.filter(fixture =>
       ["SCHEDULED", "TIMED", "POSTPONED", "SUSPENDED"].includes(fixture.status.short));
-    const fragment = document.createDocumentFragment();
     const rounds = new Map();
     simulationFixtures.forEach(fixture => {
       const round = Number.isInteger(fixture.matchday) ? fixture.matchday : null;
       if (!rounds.has(round)) rounds.set(round, []);
       rounds.get(round).push(fixture);
     });
+    simulationRounds = Array.from(rounds.entries())
+      .map(entry => ({ matchday: entry[0], fixtures: entry[1] }))
+      .sort((left, right) => {
+        if (left.matchday === null) return right.matchday === null ? 0 : 1;
+        if (right.matchday === null) return -1;
+        return left.matchday - right.matchday;
+      });
+    const selectedIndex = hadSelectedRound
+      ? simulationRounds.findIndex(round => round.matchday === selectedMatchday)
+      : -1;
+    simulationRoundIndex = selectedIndex >= 0 ? selectedIndex : 0;
+    renderSimulationRound();
+  }
 
-    Array.from(rounds.entries()).forEach(entry => {
-      const heading = entry[0] === null ? "Rodada a definir" : "Rodada " + entry[0];
-      const roundSection = createElement("section", "football-simulation-round");
-      roundSection.append(createElement("h4", "football-simulation-round-title", heading));
+  function renderSimulationRound() {
+    const fragment = document.createDocumentFragment();
+    const round = simulationRounds[simulationRoundIndex];
+    simulatorRoundNavigation.hidden = !round;
+    simulatorPreviousRoundButton.disabled = simulationRoundIndex === 0;
+    simulatorNextRoundButton.disabled =
+      simulationRoundIndex >= simulationRounds.length - 1;
+
+    if (round) {
+      const heading = round.matchday === null ? "Rodada a definir" : "Rodada " + round.matchday;
+      simulatorRoundLabel.textContent =
+        heading + " · " + (simulationRoundIndex + 1) + " de " + simulationRounds.length;
       const matchList = createElement("div", "football-simulation-round-matches");
-      entry[1].forEach(fixture => {
+      round.fixtures.forEach(fixture => {
         const card = createElement("article", "football-simulation-match");
-        const homeScore = createSimulationInput(fixture, "home", fixture.teams.home);
-        const awayScore = createSimulationInput(fixture, "away", fixture.teams.away);
         const scores = createElement("div", "football-simulation-scores");
-        scores.append(homeScore, createElement("span", "football-simulation-separator", "×"), awayScore);
+        scores.append(
+          createSimulationInput(fixture, "home", fixture.teams.home),
+          createElement("span", "football-simulation-separator", "×"),
+          createSimulationInput(fixture, "away", fixture.teams.away)
+        );
         card.append(
           createElement("p", "football-simulation-date", formatDate(fixture.date)),
           createElement("p", "football-simulation-teams",
@@ -270,11 +302,9 @@
         );
         matchList.append(card);
       });
-      roundSection.append(matchList);
-      fragment.append(roundSection);
-    });
-
-    if (!simulationFixtures.length) {
+      fragment.append(matchList);
+    } else {
+      simulatorRoundLabel.textContent = "";
       fragment.append(createElement("p", "football-empty",
         "Não há jogos restantes disponíveis para simular."));
     }
@@ -721,6 +751,16 @@
     score[side] = input.value;
     simulationScores.set(fixtureId, score);
     applyScoreSimulation();
+  });
+  simulatorPreviousRoundButton.addEventListener("click", () => {
+    if (simulationRoundIndex === 0) return;
+    simulationRoundIndex -= 1;
+    renderSimulationRound();
+  });
+  simulatorNextRoundButton.addEventListener("click", () => {
+    if (simulationRoundIndex >= simulationRounds.length - 1) return;
+    simulationRoundIndex += 1;
+    renderSimulationRound();
   });
   clearSimulationButton.addEventListener("click", () => {
     simulationScores.clear();
