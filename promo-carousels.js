@@ -25,29 +25,6 @@
         title: "Thiago é o próximo craque?",
         description: "Colecione cartas da turma e monte sua escalação."
       }
-    ],
-    adega: [
-      {
-        src: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=500&auto=format&fit=crop&q=80",
-        alt: "Drink virtual da Adega Senai",
-        caption: "DRINKS VIRTUAIS",
-        title: "Seu próximo turno começa aqui.",
-        description: "Prepare drinks virtuais e assuma o balcão da Adega."
-      },
-      {
-        src: "https://images.unsplash.com/photo-1546173159-315724a31696?w=500&auto=format&fit=crop&q=80",
-        alt: "Bebida tropical virtual da Adega Senai",
-        caption: "COMBINAÇÕES TROPICAIS",
-        title: "Partiu criar combinações?",
-        description: "Atenda comandas, combine ingredientes e ganhe XP."
-      },
-      {
-        src: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=500&auto=format&fit=crop&q=80",
-        alt: "Coquetel virtual em destaque na Adega Senai",
-        caption: "CRIE SEU DRINK",
-        title: "Clientes na fila. Você no comando!",
-        description: "Cumpra missões e suba de nível no simulador virtual."
-      }
     ]
   };
 

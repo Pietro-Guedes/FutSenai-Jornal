@@ -135,17 +135,41 @@
     .football-fixture-score { margin-left: auto; color: #172033; font-size: .75rem; font-weight: 950; }
     .football-fixture-round { margin: .45rem 0 0; color: #98a2b3; font-size: .57rem; }
     .football-standings-section { margin-top: .75rem; border-top: 1px solid #e7eaf0; padding-top: .65rem; }
-    .football-standings-status { margin: 0; color: #667085; font-size: .58rem; text-align: right; }
+    .football-standings-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+    .football-standings-heading h3 { margin: 0; }
+    .football-standings-toggle { display: inline-flex; align-items: center; gap: .45rem; border: 0; background: transparent; padding: .2rem 0; color: #172033; cursor: pointer; font-size: .9rem; font-weight: 900; text-align: left; }
+    .football-standings-toggle:focus-visible { outline: 2px solid #c92332; outline-offset: 3px; }
+    .football-standings-chevron { color: #b42318; font-size: 1.1rem; transition: transform .2s ease; }
+    .football-standings-toggle[aria-expanded="true"] .football-standings-chevron { transform: rotate(180deg); }
+    .football-standings-status { margin: 0; color: #667085; font-size: .55rem; text-align: right; }
     .football-standings-status.is-error { color: #991b1b; }
     .football-standings-scroll { margin-top: .45rem; overflow-x: auto; overscroll-behavior-x: contain; }
-    .football-standings-table { width: 100%; min-width: 34rem; border-collapse: collapse; color: #344054; font-size: .65rem; text-align: center; }
-    .football-standings-table th, .football-standings-table td { border-bottom: 1px solid #f1f3f5; padding: .42rem .5rem; }
-    .football-standings-table thead { background: #f8fafc; color: #667085; font-size: .58rem; text-transform: uppercase; }
+    .football-standings-table { width: 100%; min-width: 30rem; border-collapse: collapse; color: #344054; font-size: .58rem; text-align: center; }
+    .football-standings-table th, .football-standings-table td { border-bottom: 1px solid #f1f3f5; padding: .28rem .36rem; }
+    .football-standings-table thead { background: #f8fafc; color: #667085; font-size: .53rem; text-transform: uppercase; }
     .football-standings-table tbody tr:nth-child(even) { background: #fcfcfd; }
-    .football-standings-table .football-standing-team { display: flex; align-items: center; gap: .45rem; min-width: 10rem; color: #172033; font-weight: 800; text-align: left; }
-    .football-standing-club-heading { min-width: 10rem; text-align: left; }
-    .football-standing-logo { width: 1.15rem; height: 1.15rem; flex: 0 0 1.15rem; object-fit: contain; }
+    .football-standings-table .football-standing-team { display: flex; align-items: center; gap: .35rem; min-width: 8.5rem; color: #172033; font-weight: 800; text-align: left; }
+    .football-standing-club-heading { min-width: 8.5rem; text-align: left; }
+    .football-standing-logo { width: .95rem; height: .95rem; flex: 0 0 .95rem; object-fit: contain; }
     .football-standings-table .football-standing-points { color: #172033; font-weight: 950; }
+    .football-simulator-section { margin-top: .75rem; border-top: 1px solid #e7eaf0; padding-top: .65rem; }
+    .football-simulator-heading { align-items: flex-start; }
+    .football-simulator-clear { flex: 0 0 auto; border: 1px solid #f3c6cb; border-radius: .55rem; background: #fff; padding: .45rem .65rem; color: #a81727; font-size: .62rem; font-weight: 900; }
+    .football-simulator-clear:hover:not(:disabled) { background: #fff5f5; }
+    .football-simulator-clear:disabled { cursor: not-allowed; opacity: .5; }
+    .football-simulator-status, .football-simulator-note { margin: .4rem 0 0; color: #667085; font-size: .62rem; line-height: 1.45; }
+    .football-simulator-status.is-error { color: #991b1b; }
+    .football-simulator-note { color: #98a2b3; }
+    .football-simulator { display: grid; gap: .65rem; margin-top: .6rem; }
+    .football-simulation-round { min-width: 0; }
+    .football-simulation-round-title { margin: 0 0 .35rem; color: #344054; font-size: .7rem; font-weight: 900; }
+    .football-simulation-round-matches { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: .4rem; }
+    .football-simulation-match { min-width: 0; border: 1px solid #e7eaf0; border-radius: .6rem; background: #fff; padding: .5rem .6rem; }
+    .football-simulation-date { margin: 0; color: #98a2b3; font-size: .55rem; font-weight: 800; }
+    .football-simulation-teams { margin: .2rem 0 .4rem; color: #344054; font-size: .65rem; font-weight: 850; }
+    .football-simulation-scores { display: flex; align-items: center; justify-content: center; gap: .45rem; }
+    .football-simulation-score { width: 3.2rem; border: 1px solid #d0d5dd; border-radius: .4rem; padding: .35rem .4rem; color: #172033; font-size: .75rem; font-weight: 850; text-align: center; }
+    .football-simulation-score:focus { border-color: #c92332; outline: 2px solid rgba(201, 35, 50, .15); }
     .news-card {
       animation: card-in .35s ease both;
       box-shadow: 0 5px 18px rgba(20, 32, 55, .045);
@@ -204,9 +228,11 @@
     .score-promo-arrow { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid rgba(255, 255, 255, .2); border-radius: 999px; background: rgba(255, 255, 255, .08); color: #fff; cursor: pointer; font-size: 1.25rem; line-height: 1; }
     .score-promo-arrow:hover { background: rgba(255, 255, 255, .18); }
     .score-promo-counter { min-width: 2.2rem; color: rgba(255, 255, 255, .72); font-size: .65rem; font-weight: 800; text-align: center; }
-    .promos-section { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+    .promos-section { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: .85rem; }
     .promo-card {
       display: grid;
+      width: 100%;
+      max-width: 48rem;
       min-width: 0;
       grid-template-columns: minmax(6.5rem, .72fr) minmax(0, 1.28fr);
       overflow: hidden;
@@ -235,9 +261,7 @@
     .promo-card-copy p { margin: .4rem 0 .65rem; color: rgba(255, 255, 255, .72); font-size: .68rem; line-height: 1.45; }
     .promo-card-cta { display: inline-flex; align-items: center; gap: .3rem; margin-top: auto; border-radius: 999px; background: #fbbf24; padding: .48rem .7rem; color: #241a27; font-size: .62rem; font-weight: 950; text-decoration: none; transition: background-color .2s ease; }
     .promo-card-cta:hover { background: #fcd34d; }
-    .promo-card-disclaimer { margin-top: .4rem; color: rgba(255, 255, 255, .54); font-size: .53rem; font-weight: 700; }
     .promo-card-cards { background: linear-gradient(125deg, #171b31, #252744 58%, #4b3721); }
-    .promo-card-adega { background: linear-gradient(125deg, #21172b, #431a38 58%, #722c42); }
     .promo-card:focus-within { outline: 3px solid rgba(201, 35, 50, .48); outline-offset: 3px; }
     .interaction-option {
       display: flex;

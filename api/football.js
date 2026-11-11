@@ -37,6 +37,8 @@ function mapStanding(value) {
     "draw",
     "lost",
     "points",
+    "goalsFor",
+    "goalsAgainst",
     "goalDifference"
   ];
   if (statistics.some(field => !Number.isInteger(value[field]))) {
@@ -50,6 +52,8 @@ function mapStanding(value) {
     draw: value.draw,
     lost: value.lost,
     points: value.points,
+    goalsFor: value.goalsFor,
+    goalsAgainst: value.goalsAgainst,
     goalDifference: value.goalDifference
   };
 }
