@@ -101,6 +101,34 @@
 
       <div id="football-status" class="football-status" role="status" aria-live="polite">Carregando os jogos em destaque…</div>
 
+      <section class="football-standings-section" aria-labelledby="football-standings-title">
+        <div class="football-fixtures-heading">
+          <div>
+            <h3 id="football-standings-title">Classificação do Brasileirão</h3>
+            <p>Posição, pontos e campanha dos clubes.</p>
+          </div>
+          <p id="football-standings-status" class="football-standings-status" role="status" aria-live="polite">Carregando classificação…</p>
+        </div>
+        <div class="football-standings-scroll" tabindex="0" aria-label="Tabela de classificação. Deslize horizontalmente para ver todas as colunas.">
+          <table class="football-standings-table">
+            <caption class="sr-only">Classificação atual do Campeonato Brasileiro Série A</caption>
+            <thead>
+              <tr>
+                <th scope="col">Pos.</th>
+                <th scope="col" class="football-standing-club-heading">Time</th>
+                <th scope="col">Pts</th>
+                <th scope="col">J</th>
+                <th scope="col">V</th>
+                <th scope="col">E</th>
+                <th scope="col">D</th>
+                <th scope="col">SG</th>
+              </tr>
+            </thead>
+            <tbody id="football-standings"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="football-fixtures-section" aria-labelledby="football-fixtures-title">
         <div class="football-fixtures-heading">
           <h3 id="football-fixtures-title">Rodada <span id="football-round-label">—</span></h3>

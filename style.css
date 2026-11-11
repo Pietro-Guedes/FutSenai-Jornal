@@ -134,6 +134,18 @@
     .football-fixture-team .football-team-logo { width: 1.2rem; height: 1.2rem; flex-basis: 1.2rem; }
     .football-fixture-score { margin-left: auto; color: #172033; font-size: .75rem; font-weight: 950; }
     .football-fixture-round { margin: .45rem 0 0; color: #98a2b3; font-size: .57rem; }
+    .football-standings-section { margin-top: .75rem; border-top: 1px solid #e7eaf0; padding-top: .65rem; }
+    .football-standings-status { margin: 0; color: #667085; font-size: .58rem; text-align: right; }
+    .football-standings-status.is-error { color: #991b1b; }
+    .football-standings-scroll { margin-top: .45rem; overflow-x: auto; overscroll-behavior-x: contain; }
+    .football-standings-table { width: 100%; min-width: 34rem; border-collapse: collapse; color: #344054; font-size: .65rem; text-align: center; }
+    .football-standings-table th, .football-standings-table td { border-bottom: 1px solid #f1f3f5; padding: .42rem .5rem; }
+    .football-standings-table thead { background: #f8fafc; color: #667085; font-size: .58rem; text-transform: uppercase; }
+    .football-standings-table tbody tr:nth-child(even) { background: #fcfcfd; }
+    .football-standings-table .football-standing-team { display: flex; align-items: center; gap: .45rem; min-width: 10rem; color: #172033; font-weight: 800; text-align: left; }
+    .football-standing-club-heading { min-width: 10rem; text-align: left; }
+    .football-standing-logo { width: 1.15rem; height: 1.15rem; flex: 0 0 1.15rem; object-fit: contain; }
+    .football-standings-table .football-standing-points { color: #172033; font-weight: 950; }
     .news-card {
       animation: card-in .35s ease both;
       box-shadow: 0 5px 18px rgba(20, 32, 55, .045);

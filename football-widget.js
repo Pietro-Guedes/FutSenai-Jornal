@@ -13,6 +13,8 @@
   const loginButton = document.querySelector("#football-login-button");
   const favoritesContainer = document.querySelector("#football-favorites");
   const fixturesContainer = document.querySelector("#football-fixtures");
+  const standingsContainer = document.querySelector("#football-standings");
+  const standingsStatus = document.querySelector("#football-standings-status");
   const roundLabel = document.querySelector("#football-round-label");
   const teamsById = new Map();
   const standingsByTeamId = new Map();
@@ -183,6 +185,35 @@
     }
     image.addEventListener("error", () => image.remove(), { once: true });
     return image;
+  }
+
+  function renderStandings(rows) {
+    const fragment = document.createDocumentFragment();
+    rows.forEach(row => {
+      const tr = createElement("tr", "football-standing-row");
+      const team = createElement("th", "football-standing-team", "");
+      team.scope = "row";
+      const logo = createTeamLogo(row.team, "football-standing-logo");
+      if (logo) team.append(logo);
+      team.append(createElement("span", "", row.team.name));
+      tr.append(
+        createElement("td", "", String(row.position)),
+        team,
+        createElement("td", "football-standing-points", String(row.points)),
+        createElement("td", "", String(row.playedGames)),
+        createElement("td", "", String(row.won)),
+        createElement("td", "", String(row.draw)),
+        createElement("td", "", String(row.lost)),
+        createElement("td", "", String(row.goalDifference))
+      );
+      fragment.append(tr);
+    });
+    standingsContainer.replaceChildren(fragment);
+    standingsStatus.textContent = "Atualizada às " + new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(new Date()) + " · atualização a cada 15 min";
+    standingsStatus.classList.remove("is-error");
   }
 
   function renderFixtures() {
@@ -466,6 +497,9 @@
       if (results[2].status === "rejected") {
         fixtures = [];
         renderFixtures();
+        standingsStatus.textContent = "Não foi possível carregar a classificação: " +
+          results[2].reason.message;
+        standingsStatus.classList.add("is-error");
         setStatus("Os times foram carregados, mas não foi possível consultar a classificação para destacar os jogos importantes: " +
           results[2].reason.message, true);
         return;
@@ -473,13 +507,21 @@
       if (!Array.isArray(results[2].value.standings) ||
         results[2].value.standings.some(row =>
           !row || !Number.isInteger(row.position) || !row.team ||
-          !Number.isInteger(row.team.id) || typeof row.team.name !== "string")) {
+          !Number.isInteger(row.team.id) || typeof row.team.name !== "string" ||
+          !Number.isInteger(row.playedGames) || !Number.isInteger(row.won) ||
+          !Number.isInteger(row.draw) || !Number.isInteger(row.lost) ||
+          !Number.isInteger(row.points) || !Number.isInteger(row.goalDifference))) {
+        standingsStatus.textContent = "O serviço retornou uma classificação inválida.";
+        standingsStatus.classList.add("is-error");
         setStatus("O serviço retornou uma classificação inválida.", true);
         return;
       }
+      renderStandings(results[2].value.standings);
       const botafogo = results[2].value.standings.find(row =>
         /botafogo/i.test(row.team.name));
       if (!botafogo) {
+        standingsStatus.textContent = "Não foi possível localizar o Botafogo na classificação.";
+        standingsStatus.classList.add("is-error");
         setStatus("Não foi possível localizar o Botafogo na classificação para definir o início da zona de destaque.", true);
         return;
       }

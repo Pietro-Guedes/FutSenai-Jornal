@@ -31,9 +31,26 @@ function mapStanding(value) {
   if (!isObject(value) || !Number.isInteger(value.position)) {
     throw new Error("O football-data.org retornou uma classificação inválida.");
   }
+  const statistics = [
+    "playedGames",
+    "won",
+    "draw",
+    "lost",
+    "points",
+    "goalDifference"
+  ];
+  if (statistics.some(field => !Number.isInteger(value[field]))) {
+    throw new Error("O football-data.org retornou estatísticas inválidas de classificação.");
+  }
   return {
     position: value.position,
-    team: mapTeam(value.team)
+    team: mapTeam(value.team),
+    playedGames: value.playedGames,
+    won: value.won,
+    draw: value.draw,
+    lost: value.lost,
+    points: value.points,
+    goalDifference: value.goalDifference
   };
 }
 
@@ -122,7 +139,7 @@ module.exports = async function handler(req, res) {
     cacheSeconds = 86400;
   } else if (type === "standings") {
     path = "/competitions/" + BRAZIL_SERIE_A_CODE + "/standings?season=" + season;
-    cacheSeconds = 3600;
+    cacheSeconds = 900;
   } else if (type === "fixtures") {
     path = "/competitions/" + BRAZIL_SERIE_A_CODE + "/matches?season=" + season;
     cacheSeconds = 900;
