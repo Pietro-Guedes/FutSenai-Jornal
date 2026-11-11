@@ -240,8 +240,8 @@
     const homePosition = standingsByTeamId.get(fixture.teams.home.id);
     const awayPosition = standingsByTeamId.get(fixture.teams.away.id);
     return {
-      title: homePosition === 1 || homePosition === 2 ||
-        awayPosition === 1 || awayPosition === 2,
+      title: /palmeiras|flamengo/i.test(fixture.teams.home.name) ||
+        /palmeiras|flamengo/i.test(fixture.teams.away.name),
       relegation: homePosition >= botafogoPosition ||
         awayPosition >= botafogoPosition
     };
@@ -478,7 +478,7 @@
         isImportantFixture(fixture)).length;
       setStatus((currentRound === null ? "Nenhuma rodada futura." : "Rodada " + currentRound) +
         ": " + importantCount +
-        " jogos dos 2 primeiros e do Botafogo para baixo carregados.");
+        " jogos do Palmeiras, do Flamengo e do Botafogo para baixo carregados.");
     } finally {
       loadingLeagueData = false;
     }
