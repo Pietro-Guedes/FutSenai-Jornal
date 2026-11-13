@@ -3,6 +3,7 @@
 
   const config = window.FUTSENAI_SUPABASE;
   const SESSION_KEY = "jornal-futsenai-auth-session";
+  const NEWS_CATEGORIES_KEY = "jornal-futsenai-news-categories";
   const NEWS_ENDPOINT = "/rest/v1/news";
   const INTERACTION_RESOURCES = {
     polls: { endpoint: "/rest/v1/polls", form: "#poll-admin-form", list: "#poll-admin-list" },
@@ -14,6 +15,9 @@
   const editorPanel = document.querySelector("#editor-panel");
   const signinForm = document.querySelector("#signin-form");
   const form = document.querySelector("#admin-form");
+  const categorySelect = document.querySelector("#news-category");
+  const newCategoryInput = document.querySelector("#new-category");
+  const addCategoryButton = document.querySelector("#add-category");
   const list = document.querySelector("#admin-news-list");
   const message = document.querySelector("#admin-message");
   const formTitle = document.querySelector("#form-title");
@@ -38,6 +42,44 @@
   function ensureConfigured() {
     if (config && config.url && config.anonKey) return;
     throw new Error("O Supabase não está configurado. Confira supabase-config.js.");
+  }
+
+  function getSavedCategories() {
+    const stored = localStorage.getItem(NEWS_CATEGORIES_KEY);
+    if (!stored) return [];
+    const categories = JSON.parse(stored);
+    if (!Array.isArray(categories) || categories.some(category =>
+      typeof category !== "string" || !category.trim() || category.trim().length > 30)) {
+      throw new Error("A lista de categorias salvas neste navegador está inválida.");
+    }
+    return categories.map(category => category.trim());
+  }
+
+  function renderCategoryOptions(selectedCategory) {
+    let savedCategories = [];
+    try {
+      savedCategories = getSavedCategories();
+    } catch (error) {
+      showMessage("Não foi possível carregar as categorias personalizadas: " + error.message, true);
+    }
+
+    const existingCategories = news.map(item => item.category);
+    const categories = [
+      ...Array.from(categorySelect.options, option => option.value || option.textContent),
+      ...savedCategories,
+      ...existingCategories
+    ];
+    const uniqueCategories = categories.filter((category, index) =>
+      category && categories.findIndex(item =>
+        item.toLocaleLowerCase() === category.toLocaleLowerCase()) === index);
+    const currentValue = selectedCategory || categorySelect.value;
+    categorySelect.replaceChildren(...uniqueCategories.map(category => {
+      const option = document.createElement("option");
+      option.value = category;
+      option.textContent = category;
+      return option;
+    }));
+    if (uniqueCategories.includes(currentValue)) categorySelect.value = currentValue;
   }
 
   function saveSession(nextSession) {
@@ -166,6 +208,7 @@
       createdAt: item.created_at,
       published: item.published
     }));
+    renderCategoryOptions();
     renderNews();
   }
 
@@ -733,6 +776,42 @@
     selectedImageBlob = null;
     imageFile.value = "";
     imageStatus.textContent = "Será usada a URL informada.";
+  });
+
+  function addCategory() {
+    const category = newCategoryInput.value.trim().toLocaleUpperCase("pt-BR");
+    if (!category || category.length > 30) {
+      showMessage("Informe uma categoria com até 30 caracteres.", true);
+      return;
+    }
+
+    const existing = Array.from(categorySelect.options).find(option =>
+      option.value.toLocaleLowerCase() === category.toLocaleLowerCase());
+    if (existing) {
+      categorySelect.value = existing.value;
+      newCategoryInput.value = "";
+      showMessage("Essa categoria já está disponível no seletor.", false);
+      return;
+    }
+
+    try {
+      const categories = getSavedCategories();
+      categories.push(category);
+      localStorage.setItem(NEWS_CATEGORIES_KEY, JSON.stringify(categories));
+      renderCategoryOptions(category);
+      newCategoryInput.value = "";
+      showMessage("Categoria adicionada ao seletor.", false);
+    } catch (error) {
+      showMessage("Não foi possível salvar a nova categoria: " + error.message, true);
+    }
+  }
+
+  addCategoryButton.addEventListener("click", addCategory);
+  newCategoryInput.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addCategory();
+    }
   });
 
   form.addEventListener("submit", async event => {

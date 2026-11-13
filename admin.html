@@ -73,6 +73,12 @@
                 <select id="news-category" required class="field w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm">
                   <option>BOMBA</option><option>URGENTE</option><option>VAR</option><option>PIPOCADA</option><option>TRANSFERÊNCIA</option><option>CHORO</option><option>CANELADA</option><option>NOVIDADE</option>
                 </select>
+                <div class="mt-2 flex gap-2">
+                  <label class="sr-only" for="new-category">Nova categoria</label>
+                  <input id="new-category" maxlength="30" placeholder="Adicionar categoria" class="field min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                  <button id="add-category" type="button" class="shrink-0 rounded-lg border border-red-200 px-3 py-2 text-xs font-extrabold text-red-700 transition hover:bg-red-50">Adicionar</button>
+                </div>
+                <p class="mt-1 text-[11px] leading-4 text-slate-500">A lista fica salva neste navegador; a categoria escolhida será publicada com a matéria.</p>
               </div>
               <div>
                 <label for="news-player" class="mb-1.5 block text-xs font-bold text-slate-700">Aluno / turma <span class="text-red-600">*</span></label>
