@@ -13,6 +13,7 @@
   let authSession = null;
   let currentArticleId = null;
   let commentsRefreshTimer = null;
+  let recentNewsAutoplayTimer = null;
   let news = [];
 
   function readAuthSession() {
@@ -106,6 +107,7 @@
   function badgeClass(category) {
     const styles = {
       BOMBA: "bg-red-100 text-red-800",
+      URGENTE: "bg-orange-100 text-orange-800",
       VAR: "bg-rose-100 text-rose-800",
       PIPOCADA: "bg-red-50 text-red-700",
       TRANSFERÊNCIA: "bg-rose-200 text-rose-900",
@@ -218,6 +220,152 @@
     return article;
   }
 
+  function renderRecentNews() {
+    const widget = document.querySelector("#recent-news-widget");
+    if (!widget) return;
+
+    const recent = [...news]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 6);
+
+    widget.replaceChildren();
+    if (!recent.length) {
+      const empty = document.createElement("p");
+      empty.className = "rounded-2xl border border-dashed border-red-200 bg-white px-6 py-10 text-center text-sm text-slate-500";
+      empty.textContent = "Ainda não há notícias recentes para mostrar.";
+      widget.append(empty);
+      return;
+    }
+
+    const carousel = document.createElement("div");
+    carousel.className = "recent-news-carousel";
+
+    const track = document.createElement("div");
+    track.className = "recent-news-track";
+
+    recent.forEach(item => {
+      const card = document.createElement("article");
+      card.className = "recent-news-item";
+
+      const imageWrap = document.createElement("div");
+      imageWrap.className = "recent-news-image-wrap";
+      const image = document.createElement("img");
+      image.className = "recent-news-image";
+      image.src = safeImageUrl(item.image);
+      image.alt = item.title;
+      image.loading = "lazy";
+      image.addEventListener("error", () => { image.src = FALLBACK_IMAGE; }, { once: true });
+      imageWrap.append(image);
+
+      const content = document.createElement("div");
+      content.className = "recent-news-content";
+
+      const badge = document.createElement("span");
+      badge.className = "recent-news-badge " + badgeClass(item.category);
+      badge.textContent = item.category;
+
+      const title = document.createElement("button");
+      title.type = "button";
+      title.className = "recent-news-title";
+      title.textContent = item.title;
+      title.addEventListener("click", () => openArticle(item.id));
+
+      const meta = document.createElement("div");
+      meta.className = "recent-news-meta";
+      meta.innerHTML = "<span>⚽ " + item.player + "</span><time>" + formatDate(item.createdAt) + "</time>";
+
+      const summary = document.createElement("p");
+      summary.className = "recent-news-summary";
+      const plainText = item.content.trim().replace(/\s+/g, " ");
+      summary.textContent = plainText.length > 140 ? plainText.slice(0, 140) + "…" : plainText;
+
+      const readMore = document.createElement("button");
+      readMore.type = "button";
+      readMore.className = "recent-news-link";
+      readMore.textContent = "Ler matéria →";
+      readMore.addEventListener("click", () => openArticle(item.id));
+
+      content.append(badge, title, meta, summary, readMore);
+      card.append(imageWrap, content);
+      track.append(card);
+    });
+
+    const controls = document.createElement("div");
+    controls.className = "recent-news-controls";
+
+    const prevButton = document.createElement("button");
+    prevButton.type = "button";
+    prevButton.className = "recent-news-arrow";
+    prevButton.setAttribute("aria-label", "Notícia anterior");
+    prevButton.textContent = "‹";
+
+    const nextButton = document.createElement("button");
+    nextButton.type = "button";
+    nextButton.className = "recent-news-arrow";
+    nextButton.setAttribute("aria-label", "Próxima notícia");
+    nextButton.textContent = "›";
+
+    const stepScroll = () => {
+      const firstCard = track.querySelector(".recent-news-item");
+      const gap = 16;
+      return firstCard ? firstCard.getBoundingClientRect().width + gap : 300;
+    };
+
+    const updateControls = () => {
+      const maxScroll = track.scrollWidth - track.clientWidth - 4;
+      prevButton.disabled = track.scrollLeft <= 4;
+      nextButton.disabled = track.scrollLeft >= maxScroll;
+    };
+
+    prevButton.addEventListener("click", () => {
+      track.scrollBy({ left: -stepScroll(), behavior: "smooth" });
+      if (recentNewsAutoplayTimer !== null) {
+        window.clearInterval(recentNewsAutoplayTimer);
+        recentNewsAutoplayTimer = window.setInterval(() => {
+          const maxScroll = track.scrollWidth - track.clientWidth - 4;
+          if (track.scrollLeft >= maxScroll) {
+            track.scrollTo({ left: 0, behavior: "smooth" });
+          } else {
+            track.scrollBy({ left: stepScroll(), behavior: "smooth" });
+          }
+        }, 4200);
+      }
+    });
+
+    nextButton.addEventListener("click", () => {
+      track.scrollBy({ left: stepScroll(), behavior: "smooth" });
+      if (recentNewsAutoplayTimer !== null) {
+        window.clearInterval(recentNewsAutoplayTimer);
+        recentNewsAutoplayTimer = window.setInterval(() => {
+          const maxScroll = track.scrollWidth - track.clientWidth - 4;
+          if (track.scrollLeft >= maxScroll) {
+            track.scrollTo({ left: 0, behavior: "smooth" });
+          } else {
+            track.scrollBy({ left: stepScroll(), behavior: "smooth" });
+          }
+        }, 4200);
+      }
+    });
+
+    track.addEventListener("scroll", updateControls, { passive: true });
+    window.addEventListener("resize", updateControls);
+
+    if (recentNewsAutoplayTimer !== null) window.clearInterval(recentNewsAutoplayTimer);
+    recentNewsAutoplayTimer = window.setInterval(() => {
+      const maxScroll = track.scrollWidth - track.clientWidth - 4;
+      if (track.scrollLeft >= maxScroll) {
+        track.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        track.scrollBy({ left: stepScroll(), behavior: "smooth" });
+      }
+    }, 4200);
+
+    controls.append(prevButton, nextButton);
+    carousel.append(track);
+    widget.append(carousel, controls);
+    requestAnimationFrame(updateControls);
+  }
+
   function renderNews() {
     const sortedNews = [...news].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     feed.replaceChildren();
@@ -229,6 +377,7 @@
       empty.textContent = "Ainda não há notícias publicadas. Volte em breve para conferir as novidades do intervalo!";
       feed.append(empty);
     }
+    renderRecentNews();
   }
 
   function openArticle(id) {
