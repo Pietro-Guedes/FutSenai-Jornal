@@ -27,6 +27,8 @@
   const imageStatus = document.querySelector("#news-image-status");
   const commentsList = document.querySelector("#admin-comments-list");
   const commentsCount = document.querySelector("#admin-comments-count");
+  const reportsList = document.querySelector("#admin-reports-list");
+  const reportsCount = document.querySelector("#admin-reports-count");
   let session = null;
   let news = [];
   let interactionRecords = { polls: [], awards: [], matches: [] };
@@ -174,6 +176,7 @@
     await loadNews();
     await loadInteractionRecords();
     await loadComments();
+    await loadReports();
   }
 
   function validateNews(value) {
@@ -316,6 +319,62 @@
       actions.append(approval, remove);
       card.append(header, content, actions);
       commentsList.append(card);
+    });
+  }
+
+  async function loadReports() {
+    if (!reportsList || !reportsCount) return;
+    const reports = await request("/rest/v1/news_reports?select=id,news_id,comment_id,reason,created_at,status&status=eq.pending&order=created_at.desc");
+    if (!Array.isArray(reports)) throw new Error("A lista de denúncias retornou um formato inválido.");
+    reportsCount.textContent = reports.length + (reports.length === 1 ? " denúncia pendente" : " denúncias pendentes");
+    reportsList.replaceChildren();
+    if (!reports.length) {
+      const empty = document.createElement("p");
+      empty.className = "rounded-xl border border-dashed border-slate-300 bg-white p-5 text-center text-sm text-slate-500";
+      empty.textContent = "Nenhuma denúncia pendente.";
+      reportsList.append(empty);
+      return;
+    }
+    reports.forEach(report => {
+      const card = document.createElement("article");
+      card.className = "rounded-xl border border-amber-200 bg-white p-4";
+      const target = report.news_id ? "Notícia: " + report.news_id : "Comentário #" + report.comment_id;
+      const heading = document.createElement("p");
+      heading.className = "font-extrabold text-slate-900";
+      heading.textContent = target;
+      const reason = document.createElement("p");
+      reason.className = "mt-2 text-sm leading-6 text-slate-700";
+      reason.textContent = report.reason;
+      const date = document.createElement("time");
+      date.className = "mt-2 block text-xs text-slate-500";
+      date.dateTime = report.created_at;
+      date.textContent = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(report.created_at));
+      const actions = document.createElement("div");
+      actions.className = "mt-3 flex gap-4 border-t border-slate-100 pt-3";
+      actions.append(createAction("Marcar como revisada", async () => {
+        try {
+          await request("/rest/v1/news_reports?id=eq." + encodeURIComponent(report.id), {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+            body: JSON.stringify({ status: "reviewed" })
+          });
+          await loadReports();
+          showMessage("Denúncia marcada como revisada.", false);
+        } catch (error) { showMessage("Não foi possível atualizar a denúncia.", true); }
+      }, "text-green-700"));
+      actions.append(createAction("Descartar", async () => {
+        try {
+          await request("/rest/v1/news_reports?id=eq." + encodeURIComponent(report.id), {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+            body: JSON.stringify({ status: "dismissed" })
+          });
+          await loadReports();
+          showMessage("Denúncia descartada.", false);
+        } catch (error) { showMessage("Não foi possível atualizar a denúncia.", true); }
+      }, "text-slate-500"));
+      card.append(heading, reason, date, actions);
+      reportsList.append(card);
     });
   }
 
