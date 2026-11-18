@@ -989,15 +989,7 @@
   searchInput.addEventListener("input", () => { searchTerm = searchInput.value.trim(); renderNews(); });
   categoryFilter.addEventListener("change", () => { selectedCategory = categoryFilter.value; renderNews(); });
 
-  window.addEventListener("popstate", () => {
-    const id = new URLSearchParams(window.location.search).get("noticia");
-    if (id && news.some(item => item.id === id)) openArticle(id);
-    else if (!articleLayer.classList.contains("hidden")) {
-      if (commentsRefreshTimer !== null) window.clearInterval(commentsRefreshTimer);
-      commentsRefreshTimer = null; articleLayer.classList.add("hidden"); articleLayer.classList.remove("flex");
-      articleLayer.setAttribute("aria-hidden", "true"); document.body.classList.remove("overflow-hidden");
-    }
-  });
+
 
   window.addEventListener("popstate", () => {
     const queryId = new URLSearchParams(window.location.search).get("noticia");
@@ -1040,11 +1032,5 @@
   loadPublishedNews().then(() => {
     const id = new URLSearchParams(window.location.search).get("noticia");
     if (id && news.some(item => item.id === id)) openArticle(id);
-  });
-  window.addEventListener("popstate", () => {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("noticia");
-    if (id && news.some(item => item.id === id)) openArticle(id);
-    else if (!id && !articleLayer.classList.contains("hidden")) closeArticle();
   });
 })();
