@@ -105,7 +105,7 @@
   function formatDate(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "Data não disponível";
-    return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+    return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" }).format(date);
   }
 
   function badgeClass(category) {
@@ -388,6 +388,8 @@
     const item = news.find(entry => entry.id === id);
     if (!item) return;
     currentArticleId = item.id;
+    const articleUrl = "/noticia/" + encodeURIComponent(item.id);
+    if (window.location.pathname !== articleUrl) window.history.pushState({ articleId: item.id }, "", articleUrl);
 
     const image = document.querySelector("#article-image");
     image.src = safeImageUrl(item.image);
@@ -687,6 +689,17 @@
   }
 
   const articleReportButton = document.querySelector("#article-report");
+  const articleShareButton = document.querySelector("#article-share");
+  if (articleShareButton) articleShareButton.addEventListener("click", async () => {
+    const url = window.location.origin + "/noticia/" + encodeURIComponent(currentArticleId || "");
+    const title = document.querySelector("#article-title").textContent;
+    try {
+      if (navigator.share) await navigator.share({ title, url });
+      else { await navigator.clipboard.writeText(url); showMessage("Link da notícia copiado!", false); }
+    } catch (error) {
+      if (error.name !== "AbortError") showMessage("Não foi possível compartilhar. Copie o endereço da página.", true);
+    }
+  });
   if (articleReportButton) articleReportButton.addEventListener("click", () => {
     if (currentArticleId) submitReport({ news_id: currentArticleId });
   });
@@ -960,7 +973,10 @@
     if (button) toggleLike(button.dataset.likeId);
   });
 
-  loadPublishedNews();
+  loadPublishedNews().then(() => {
+    const id = new URLSearchParams(window.location.search).get("noticia");
+    if (id && news.some(item => item.id === id)) openArticle(id);
+  });
   window.addEventListener("popstate", () => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("noticia");
