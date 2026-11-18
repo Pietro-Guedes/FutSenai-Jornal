@@ -143,7 +143,7 @@ module.exports = async function handler(req, res) {
     cacheSeconds = 86400;
   } else if (type === "standings") {
     path = "/competitions/" + BRAZIL_SERIE_A_CODE + "/standings?season=" + season;
-    cacheSeconds = 900;
+    cacheSeconds = 300;
   } else if (type === "fixtures") {
     path = "/competitions/" + BRAZIL_SERIE_A_CODE + "/matches?season=" + season;
     cacheSeconds = 900;
