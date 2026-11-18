@@ -11,8 +11,16 @@ O site usa o Supabase para publicar notícias e compartilhar votos e palpites. A
 5. Em **Authentication → URL Configuration**, configure `https://futsenaijornal.vercel.app` como **Site URL** e adicione `https://futsenaijornal.vercel.app/**` em **Redirect URLs**. Inclua também `http://localhost:*/**` se usar um servidor local. Sem o endereço da Vercel na lista permitida, o Supabase pode redirecionar o login para o Site URL antigo.
 6. Para oferecer login Google, em **Authentication → Sign In / Providers → Google**, ative o provedor e informe o OAuth Client ID e Client Secret criados no Google Cloud. No cliente OAuth do Google, cadastre como URI de redirecionamento autorizado o callback exibido pelo Supabase (normalmente `https://<project-ref>.supabase.co/auth/v1/callback`). Mantenha a URL do site em **Redirect URLs** no Supabase.
 7. Cadastre uma conta de editor em `news_admins` conforme as instruções abaixo; ela também poderá gerenciar enquetes, prêmios e jogos pelo painel.
-8. Publique os arquivos do site, incluindo `index.html`, `style.css`, `script.js`, `interactions.js`, `weather.js`, `clock.js`, `football-widget.js`, `api/football.js`, `supabase-config.js` e `noticias.json`, junto às imagens.
+8. Publique os arquivos do site, incluindo `index.html`, `style.css`, `script.js`, `interactions.js`, `weather.js`, `clock.js`, `football-widget.js`, os arquivos de `api/`, `vercel.json`, `supabase-config.js` e `noticias.json`, junto às imagens.
 9. Abra o site em `https://` ou em `http://localhost`; `file://` não funciona para as chamadas ao Supabase.
+
+## Publicação, páginas individuais e feeds
+
+- Na Vercel, configure `SUPABASE_URL` com a URL do projeto e `SUPABASE_ANON_KEY` com a chave pública anon/publishable. Essas variáveis são usadas pelas funções serverless para gerar páginas individuais, sitemap e RSS; não use `service_role`.
+- As páginas individuais usam `/noticia/ID_DA_NOTICIA`. O sitemap fica em `/sitemap.xml` e o feed RSS em `/rss.xml`.
+- `og-image.svg` é a imagem genérica de compartilhamento com proporção 1200×630. Para máxima compatibilidade com redes sociais, substitua-a por PNG ou JPG 1200×630 e atualize as referências no `index.html` e `api/noticia.js`.
+- Execute `supabase-moderation-migration.sql` uma única vez no SQL Editor depois do esquema principal. Ela adiciona autoria, aprovação de comentários e denúncias. Os comentários existentes são mantidos como aprovados; os novos ficam pendentes.
+- No painel `admin.html`, editores podem aprovar ou retirar comentários e revisar denúncias. A permissão continua sendo verificada pela função `is_news_admin()` no Supabase e pelas políticas RLS.
 
 ## Widget do Brasileirão
 
