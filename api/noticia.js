@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
     const response = await fetch(base.replace(/\/$/, "") +
-      "/rest/v1/news?select=id,title,category,player,image,content,created_at&published=eq.true&id=eq." +
+      "/rest/v1/news?select=id,title,category,player,author,image,content,created_at&published=eq.true&id=eq." +
       encodeURIComponent(id), {
       headers: { apikey: key, Authorization: "Bearer " + key },
       signal: controller.signal
@@ -60,7 +60,7 @@ module.exports = async function handler(req, res) {
 <a href="/" style="color:#b42318;font-weight:800">← Jornal FutSenai</a>
 <p style="margin-top:2rem;color:#b42318;font-weight:900;text-transform:uppercase">${escapeHtml(item.category)}</p>
 <h1 style="font-size:2rem;font-weight:900;line-height:1.15">${title}</h1>
-<p style="color:#667085">Por ${escapeHtml(item.player)} · <time datetime="${escapeHtml(date)}">${date ? new Intl.DateTimeFormat("pt-BR",{dateStyle:"long",timeStyle:"short"}).format(new Date(date)) : "Data não disponível"}</time></p>
+<p style="color:#667085">Por ${escapeHtml(item.author || 'Redação FutSenai')} · <time datetime="${escapeHtml(date)}">${date ? new Intl.DateTimeFormat("pt-BR",{dateStyle:"long",timeStyle:"short"}).format(new Date(date)) : "Data não disponível"}</time></p>
 ${item.image ? '<img src="' + escapeHtml(image) + '" alt="" style="width:100%;max-height:480px;object-fit:contain;margin:1.5rem 0">' : ""}
 <p style="white-space:pre-wrap;line-height:1.8">${body}</p>
 <p style="margin-top:2rem"><a href="/?noticia=${encodeURIComponent(item.id)}" style="color:#b42318;font-weight:800">Abrir no portal para curtir e comentar</a></p>
