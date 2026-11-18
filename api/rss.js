@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
     const response = await fetch(base.replace(/\/$/, "") +
-      "/rest/v1/news?select=id,title,category,player,content,created_at&published=eq.true&order=created_at.desc&limit=50", {
+      "/rest/v1/news?select=id,title,category,player,author,content,created_at&published=eq.true&order=created_at.desc&limit=50", {
       headers: { apikey: key, Authorization: "Bearer " + key }, signal: controller.signal
     });
     if (!response.ok) throw new Error("Falha ao consultar notícias.");
