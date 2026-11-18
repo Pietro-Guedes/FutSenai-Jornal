@@ -43,6 +43,14 @@
   function setStatus(message, isError) {
     status.textContent = message;
     status.classList.toggle("is-error", Boolean(isError));
+    const oldRetry = status.querySelector("button[data-retry]");
+    if (oldRetry) oldRetry.remove();
+    if (isError) {
+      const retry = createElement("button", "ml-2 rounded-lg border border-red-200 px-3 py-1 font-bold text-red-700", "Tentar novamente");
+      retry.type = "button"; retry.dataset.retry = "true";
+      retry.addEventListener("click", () => loadLeagueData().catch(error => setStatus("Não foi possível carregar os dados da Série A: " + error.message, true)));
+      status.append(retry);
+    }
   }
 
   function createElement(tag, className, text) {
