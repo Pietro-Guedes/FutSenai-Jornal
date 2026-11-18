@@ -582,7 +582,7 @@
         (comment.user_id !== null && typeof comment.user_id !== "string") ||
         typeof comment.nickname !== "string" || typeof comment.content !== "string" ||
         !Number.isInteger(comment.like_count) || comment.like_count < 0 ||
-        typeof comment.liked_by_me !== "boolean" ||
+        typeof comment.liked_by_me !== "boolean" || typeof comment.approved !== "boolean" ||
         typeof comment.created_at !== "string" || Number.isNaN(new Date(comment.created_at).getTime()) ||
         (comment.updated_at !== null &&
           (typeof comment.updated_at !== "string" || Number.isNaN(new Date(comment.updated_at).getTime()))))) {
