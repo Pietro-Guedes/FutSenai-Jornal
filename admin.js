@@ -194,7 +194,7 @@
   }
 
   async function loadNews() {
-    count.textContent = "Carregando…";
+    count.innerHTML = '<span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span>';
     const result = await request(NEWS_ENDPOINT +
       "?select=id,title,category,player,author,image,content,created_at,published&order=created_at.desc");
     if (!Array.isArray(result)) throw new Error("O Supabase retornou uma lista de notícias inválida.");
@@ -233,7 +233,7 @@
   }
 
   async function loadComments() {
-    commentsCount.textContent = "Carregando…";
+    commentsCount.innerHTML = '<span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span>';
     const result = await request("/rest/v1/rpc/get_news_comments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
