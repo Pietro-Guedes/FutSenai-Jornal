@@ -159,9 +159,12 @@
     const params = new URLSearchParams({ type, season: String(season), ...(extra || {}) });
     let response;
     try {
-      response = await fetch(apiEndpoint + "?" + params.toString());
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 12000);
+      try { response = await fetch(apiEndpoint + "?" + params.toString(), { signal: controller.signal }); }
+      finally { window.clearTimeout(timeout); }
     } catch (error) {
-      throw new Error("Não foi possível acessar a função de jogos. Confira a publicação da pasta api/.");
+      throw new Error(error.name === "AbortError" ? "A consulta demorou para responder." : "Não foi possível acessar os dados de futebol. Verifique sua conexão.");
     }
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.error || "A consulta de jogos respondeu com erro " + response.status + ".");
