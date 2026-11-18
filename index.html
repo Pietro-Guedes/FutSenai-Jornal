@@ -323,11 +323,17 @@
         <span id="news-count">0 publicações</span>
       </div>
     </div>
-    <div class="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_14rem]">
-      <label class="sr-only" for="news-search">Buscar notícias</label>
-      <input id="news-search" type="search" placeholder="Buscar notícia por título ou texto…" class="field w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm" autocomplete="off">
-      <label class="sr-only" for="news-category-filter">Filtrar por categoria</label>
-      <select id="news-category-filter" class="field w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm"><option value="">Todas as categorias</option></select>
+    <div class="news-tools mb-5">
+      <div class="news-search-wrap">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <label class="sr-only" for="news-search">Buscar notícias</label>
+        <input id="news-search" type="search" placeholder="Buscar por título, conteúdo, aluno ou categoria..." autocomplete="off">
+      </div>
+      <div class="news-filter-wrap">
+        <label class="sr-only" for="news-category-filter">Filtrar por categoria</label>
+        <select id="news-category-filter"><option value="">Todas as categorias</option></select>
+        <button id="clear-news-filters" type="button">Limpar filtros</button>
+      </div>
     </div>
     <div id="feed-message" class="mb-5 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" role="status"></div>
     <section id="news-feed" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Feed de notícias"><div class="loading-skeleton loading-skeleton-card" aria-hidden="true"></div><div class="loading-skeleton loading-skeleton-card" aria-hidden="true"></div><div class="loading-skeleton loading-skeleton-card" aria-hidden="true"></div></section>
