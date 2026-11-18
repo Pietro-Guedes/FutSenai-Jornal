@@ -76,6 +76,13 @@
   }
 
   function updateAccountControls() {
+    const configured = Boolean(config && config.url && config.anonKey);
+    if (!configured) {
+      accountStatus.textContent = "Times favoritos em breve.";
+      teamPicker.hidden = true; followButton.hidden = true; loginButton.hidden = true; favoritesContainer.hidden = true;
+      return;
+    }
+    teamPicker.hidden = false; followButton.hidden = false; loginButton.hidden = false; favoritesContainer.hidden = false;
     const signedIn = Boolean(session);
     accountStatus.textContent = signedIn
       ? "Seus favoritos ficam salvos na conta."
