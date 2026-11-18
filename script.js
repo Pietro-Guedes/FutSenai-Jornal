@@ -1016,7 +1016,7 @@
     if (articleLayer.classList.contains("hidden")) return;
     if (event.key === "Escape") { closeArticle(); return; }
     if (event.key === "Tab") {
-      const focusable = Array.from(articleLayer.querySelectorAll("button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex]:not([tabindex=\\"-1\\"])")).filter(element => !element.hidden);
+      const focusable = Array.from(articleLayer.querySelectorAll("button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled)")).filter(element => !element.hidden);
       if (!focusable.length) return;
       const first = focusable[0], last = focusable[focusable.length - 1];
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
