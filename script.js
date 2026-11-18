@@ -389,7 +389,8 @@
     if (!item) return;
     currentArticleId = item.id;
     const articleUrl = "/noticia/" + encodeURIComponent(item.id);
-    if (window.location.pathname !== articleUrl) window.history.pushState({ articleId: item.id }, "", articleUrl);
+    const queryArticleId = new URLSearchParams(window.location.search).get("noticia");
+    if (queryArticleId !== item.id && window.location.pathname !== articleUrl) window.history.pushState({ articleId: item.id }, "", articleUrl);
 
     const image = document.querySelector("#article-image");
     image.src = safeImageUrl(item.image);
@@ -440,6 +441,9 @@
     articleLayer.classList.remove("flex");
     articleLayer.setAttribute("aria-hidden", "true");
     document.body.classList.remove("overflow-hidden");
+    if (window.location.pathname.startsWith("/noticia/") || new URLSearchParams(window.location.search).has("noticia")) {
+      window.history.pushState({}, "", "/");
+    }
   }
 
   function updateCommentFormState() {
@@ -447,8 +451,9 @@
     const note = document.querySelector("#article-comment-auth-note");
     const submit = document.querySelector("#article-comment-form button[type='submit']");
     const input = document.querySelector("#article-comment-input");
-    const signedIn = Boolean(authSession);
-    note.textContent = signedIn
+    const configured = Boolean(window.FUTSENAI_SUPABASE && window.FUTSENAI_SUPABASE.url && window.FUTSENAI_SUPABASE.anonKey);
+    const signedIn = Boolean(authSession && configured);
+    note.textContent = !configured ? "Comentários em breve." : signedIn
       ? "Seu apelido público aparecerá ao lado do comentário."
       : "Entre com Google e escolha um apelido para comentar.";
     input.disabled = !signedIn;
@@ -566,6 +571,9 @@
   async function loadArticleComments(newsId) {
     const list = document.querySelector("#article-comments-list");
     list.replaceChildren();
+    if (!window.FUTSENAI_SUPABASE || !window.FUTSENAI_SUPABASE.url || !window.FUTSENAI_SUPABASE.anonKey) {
+      const soon = document.createElement("p"); soon.className = "text-sm text-slate-500"; soon.textContent = "Comentários em breve."; list.append(soon); return;
+    }
     const loading = document.createElement("p");
     loading.className = "text-sm text-slate-500";
     loading.textContent = "Carregando comentários…";
@@ -831,6 +839,7 @@
   }
 
   async function refreshLikeRecords() {
+    if (!window.FUTSENAI_SUPABASE || !window.FUTSENAI_SUPABASE.url || !window.FUTSENAI_SUPABASE.anonKey) return;
     try {
       await loadLikeRecords();
       renderNews();
@@ -960,6 +969,16 @@
 
   searchInput.addEventListener("input", () => { searchTerm = searchInput.value.trim(); renderNews(); });
   categoryFilter.addEventListener("change", () => { selectedCategory = categoryFilter.value; renderNews(); });
+
+  window.addEventListener("popstate", () => {
+    const id = new URLSearchParams(window.location.search).get("noticia");
+    if (id && news.some(item => item.id === id)) openArticle(id);
+    else if (!articleLayer.classList.contains("hidden")) {
+      if (commentsRefreshTimer !== null) window.clearInterval(commentsRefreshTimer);
+      commentsRefreshTimer = null; articleLayer.classList.add("hidden"); articleLayer.classList.remove("flex");
+      articleLayer.setAttribute("aria-hidden", "true"); document.body.classList.remove("overflow-hidden");
+    }
+  });
 
   document.querySelector("#close-article").addEventListener("click", closeArticle);
   document.querySelector("#back-to-news").addEventListener("click", closeArticle);
