@@ -99,7 +99,7 @@
     try {
       response = await fetchWithTimeout(url);
     } catch (error) {
-      throw new Error("Não foi possível consultar o serviço de clima. Verifique sua conexão e tente novamente.");
+      throw error;
     }
     if (!response.ok) {
       throw new Error("O serviço de clima respondeu com erro " + response.status + ".");
