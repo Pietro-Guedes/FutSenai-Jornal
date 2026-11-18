@@ -46,9 +46,10 @@
   function requireConfigured() {
     if (headers) return true;
     setupNote.classList.remove("hidden");
-    setLoading(pollContent, "Configure o Supabase para carregar a enquete.");
-    setLoading(awardsContent, "Configure o Supabase para carregar os prêmios.");
-    setLoading(predictionContent, "Configure o Supabase para carregar os jogos.");
+    setLoading(pollContent, "Enquetes em breve.");
+    setLoading(awardsContent, "Prêmios semanais em breve.");
+    setLoading(predictionContent, "Palpites e ranking em breve.");
+    authForms.classList.add("hidden");
     return false;
   }
 
