@@ -196,7 +196,7 @@
   async function loadNews() {
     count.textContent = "Carregando…";
     const result = await request(NEWS_ENDPOINT +
-      "?select=id,title,category,player,image,content,created_at,published&order=created_at.desc");
+      "?select=id,title,category,player,author,image,content,created_at,published&order=created_at.desc");
     if (!Array.isArray(result)) throw new Error("O Supabase retornou uma lista de notícias inválida.");
     if (result.some(item => typeof item.published !== "boolean")) {
       throw new Error("O Supabase retornou notícias sem o estado de publicação esperado. Execute supabase-setup.sql atualizado.");
@@ -206,6 +206,7 @@
       title: item.title,
       category: item.category,
       player: item.player,
+      author: item.author || "Redação FutSenai",
       image: item.image || "",
       content: item.content,
       createdAt: item.created_at,
@@ -661,6 +662,7 @@
     document.querySelector("#news-title").value = item.title;
     document.querySelector("#news-category").value = item.category;
     document.querySelector("#news-player").value = item.player;
+    document.querySelector("#news-author").value = item.author || "Redação FutSenai";
     document.querySelector("#news-image").value = item.image;
     document.querySelector("#news-content").value = item.content;
     selectedImageBlob = null;
@@ -923,6 +925,7 @@
         title,
         category: document.querySelector("#news-category").value,
         player,
+        author: document.querySelector("#news-author").value.trim() || "Redação FutSenai",
         image,
         content,
         created_at: existing ? existing.createdAt : new Date().toISOString(),
