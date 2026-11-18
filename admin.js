@@ -238,7 +238,7 @@
     if (!Array.isArray(result) || result.some(comment =>
       !comment || typeof comment.comment_id !== "number" ||
       typeof comment.news_id !== "string" || typeof comment.nickname !== "string" ||
-      typeof comment.content !== "string" || typeof comment.created_at !== "string" ||
+      typeof comment.content !== "string" || typeof comment.approved !== "boolean" || typeof comment.created_at !== "string" ||
       (comment.updated_at !== null &&
         (typeof comment.updated_at !== "string" || Number.isNaN(new Date(comment.updated_at).getTime()))))) {
       throw new Error("O Supabase retornou comentários inválidos.");
@@ -269,7 +269,7 @@
         dateStyle: "medium",
         timeStyle: "short"
       }).format(new Date(comment.created_at));
-      header.append(author, date);
+      const state = document.createElement("span");\n      state.className = "rounded-full px-2 py-0.5 text-[10px] font-bold " + (comment.approved ? "bg-green-50 text-green-800" : "bg-amber-50 text-amber-800");\n      state.textContent = comment.approved ? "APROVADO" : "AGUARDANDO";\n      header.append(author, state, date);
       if (comment.updated_at) {
         const edited = document.createElement("span");
         edited.className = "rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500";
@@ -279,7 +279,7 @@
       const content = document.createElement("p");
       content.className = "mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700";
       content.textContent = comment.content;
-      const remove = createAction("Remover comentário", async () => {
+      const approval = createAction(comment.approved ? "Retirar aprovação" : "Aprovar comentário", async () => {\n        try {\n          const updated = await request("/rest/v1/rpc/moderate_news_comment", {\n            method: "POST",\n            headers: { "Content-Type": "application/json" },\n            body: JSON.stringify({ p_comment_id: comment.comment_id, p_approved: !comment.approved })\n          });\n          if (updated !== true) throw new Error("A moderação não foi confirmada.");\n          await loadComments();\n          showMessage(comment.approved ? "Comentário retirado do ar." : "Comentário aprovado e publicado.", false);\n        } catch (error) {\n          showMessage("Não foi possível moderar o comentário: " + error.message, true);\n        }\n      }, comment.approved ? "text-amber-700" : "text-green-700");\n      const remove = createAction("Remover comentário", async () => {
         if (!window.confirm("Remover permanentemente este comentário?")) return;
         try {
           const removed = await request("/rest/v1/rpc/delete_news_comment", {
@@ -296,7 +296,7 @@
       }, "text-red-700");
       const actions = document.createElement("div");
       actions.className = "mt-3 border-t border-slate-100 pt-3";
-      actions.append(remove);
+      actions.append(approval, remove);
       card.append(header, content, actions);
       commentsList.append(card);
     });
