@@ -6,7 +6,11 @@
   const feed = document.querySelector("#news-feed");
   const count = document.querySelector("#news-count");
   const message = document.querySelector("#feed-message");
-  const articleLayer = document.querySelector("#article-layer");\n  const searchInput = document.querySelector("#news-search");\n  const categoryFilter = document.querySelector("#news-category-filter");\n  let searchTerm = "";\n  let selectedCategory = "";
+  const articleLayer = document.querySelector("#article-layer");
+  const searchInput = document.querySelector("#news-search");
+  const categoryFilter = document.querySelector("#news-category-filter");
+  let searchTerm = "";
+  let selectedCategory = "";
   const likeRecords = new Map();
   const COMMENTS_REFRESH_INTERVAL_MS = 15000;
   let likedNewsIds = new Set();
@@ -911,7 +915,10 @@
     }
   }
 
-  searchInput.addEventListener("input", () => { searchTerm = searchInput.value.trim(); renderNews(); });\n  categoryFilter.addEventListener("change", () => { selectedCategory = categoryFilter.value; renderNews(); });\n\n  document.querySelector("#close-article").addEventListener("click", closeArticle);
+  searchInput.addEventListener("input", () => { searchTerm = searchInput.value.trim(); renderNews(); });
+  categoryFilter.addEventListener("change", () => { selectedCategory = categoryFilter.value; renderNews(); });
+
+  document.querySelector("#close-article").addEventListener("click", closeArticle);
   document.querySelector("#back-to-news").addEventListener("click", closeArticle);
   articleLayer.addEventListener("click", event => {
     if (event.target === articleLayer) closeArticle();
@@ -924,5 +931,11 @@
     if (button) toggleLike(button.dataset.likeId);
   });
 
-  loadPublishedNews();\n  window.addEventListener("popstate", () => {\n    const params = new URLSearchParams(window.location.search);\n    const id = params.get("noticia");\n    if (id && news.some(item => item.id === id)) openArticle(id);\n    else if (!id && !articleLayer.classList.contains("hidden")) closeArticle();\n  });
+  loadPublishedNews();
+  window.addEventListener("popstate", () => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("noticia");
+    if (id && news.some(item => item.id === id)) openArticle(id);
+    else if (!id && !articleLayer.classList.contains("hidden")) closeArticle();
+  });
 })();
