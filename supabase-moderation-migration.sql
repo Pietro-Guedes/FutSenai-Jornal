@@ -27,6 +27,7 @@ create table if not exists public.news_reports (
 alter table public.news_reports enable row level security;
 revoke all on public.news_reports from anon, authenticated;
 grant insert on public.news_reports to anon, authenticated;
+grant usage, select on sequence public.news_reports_id_seq to anon, authenticated;
 grant select, update on public.news_reports to authenticated;
 drop policy if exists "Anyone can submit a report" on public.news_reports;
 create policy "Anyone can submit a report" on public.news_reports
