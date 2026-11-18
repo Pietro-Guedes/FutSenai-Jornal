@@ -1,3 +1,5 @@
+alter table public.news add column if not exists author text not null default 'Redação FutSenai';
+
 -- Migração de moderação do Jornal FutSenai
 -- Execute este arquivo uma única vez no SQL Editor do Supabase.
 
