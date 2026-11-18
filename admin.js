@@ -528,10 +528,8 @@
     const formElement = document.querySelector(INTERACTION_RESOURCES[type].form);
     const values = {
       ...item,
-      options: item.options ? item.options.join("
-") : undefined,
-      nominees: item.nominees ? item.nominees.join("
-") : undefined
+      options: item.options ? item.options.join("\n") : undefined,
+      nominees: item.nominees ? item.nominees.join("\n") : undefined
     };
     Object.entries(values).forEach(([name, value]) => {
       const field = formElement.elements.namedItem(name);
@@ -560,8 +558,7 @@
   }
 
   function parseLineItems(value, label, min, max) {
-    const items = value.split(/\r?
-/).map(item => item.trim()).filter(Boolean);
+    const items = value.split(/\r?\n/).map(item => item.trim()).filter(Boolean);
     if (items.length < min || items.length > max) {
       throw new Error(label + (max === min ? " precisa ter " + min : " precisa ter entre " + min + " e " + max) +
         (min === 1 && max === 1 ? " item." : " itens, um por linha."));
