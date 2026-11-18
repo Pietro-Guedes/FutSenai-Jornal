@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#b91f2e">
+  <meta name="description" content="Consulte as condições do tempo na sua cidade.">
+  <title>Clima | Jornal FutSenai</title>
+  <link rel="icon" type="image/png" href="favicon.png?v=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="clima">
+  <div class="subpage-top">
+    <span class="subpage-kicker">JORNAL FUTSENAI</span>
+    <span class="subpage-top-note">A resenha começa aqui</span>
+  </div>
+  <main class="subpage-main">
+    <header class="subpage-heading">
+      <p>JORNAL FUTSENAI <span>/</span> CLIMA</p>
+      <h1>Clima</h1>
+      <span>Consulte as condições do tempo na sua cidade.</span>
+    </header>
+    <section class="weather-page-card"><section class="weather-widget" aria-labelledby="weather-title">
+          <div class="weather-widget-heading">
+            <span class="weather-widget-icon" aria-hidden="true">🌤️</span>
+            <div>
+              <h2 id="weather-title">Clima onde você está</h2>
+              <p id="weather-status" role="status" aria-live="polite">Consulte a temperatura da sua região.</p>
+            </div>
+          </div>
+          <div id="weather-result" class="weather-result" hidden>
+            <span id="weather-condition-icon" class="weather-condition-icon" aria-hidden="true"></span>
+            <div>
+              <p id="weather-temperature" class="weather-temperature"></p>
+              <p id="weather-condition" class="weather-condition"></p>
+              <p id="weather-details" class="weather-details"></p>
+            </div>
+          </div>
+          <form id="weather-city-form" class="weather-city-form">
+            <label class="sr-only" for="weather-city-input">Buscar clima por cidade</label>
+            <input id="weather-city-input" class="weather-city-input" type="search" maxlength="100" placeholder="Digite sua cidade" autocomplete="address-level2">
+            <button id="weather-city-button" class="weather-button" type="submit">Buscar cidade</button>
+          </form>
+          <div id="weather-city-choice" class="weather-city-choice" hidden>
+            <label class="sr-only" for="weather-city-results">Escolha a cidade</label>
+            <select id="weather-city-results" class="weather-city-results">
+              <option value="">Escolha uma cidade</option>
+            </select>
+            <button id="weather-city-confirm" class="weather-button weather-city-confirm" type="button" disabled>Confirmar cidade</button>
+          </div>
+          <button id="weather-button" class="weather-location-button" type="button">Ou usar minha localização</button>
+          <p class="weather-privacy">A busca por cidade não usa a localização do computador. A opção de localização precisa de permissão do navegador.</p></section>
+  </main>
+  <footer class="subpage-footer">Jornal FutSenai · Feito na arquibancada, com fair play e bom humor.</footer>
+  <script src="layout.js"></script>
+  <script src="weather.js" defer></script>
+</body>
+</html>
