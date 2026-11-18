@@ -19,6 +19,7 @@
   let commentsRefreshTimer = null;
   let recentNewsAutoplayTimer = null;
   let news = [];
+  let articleOpener = null;
 
   function readAuthSession() {
     try {
@@ -389,6 +390,7 @@
   function openArticle(id) {
     const item = news.find(entry => entry.id === id);
     if (!item) return;
+    if (articleLayer.classList.contains("hidden")) articleOpener = document.activeElement;
     currentArticleId = item.id;
     const articleUrl = "/noticia/" + encodeURIComponent(item.id);
     const queryArticleId = new URLSearchParams(window.location.search).get("noticia");
@@ -444,6 +446,8 @@
     articleLayer.classList.remove("flex");
     articleLayer.setAttribute("aria-hidden", "true");
     document.body.classList.remove("overflow-hidden");
+    if (articleOpener && typeof articleOpener.focus === "function") articleOpener.focus();
+    articleOpener = null;
     if (window.location.pathname.startsWith("/noticia/") || new URLSearchParams(window.location.search).has("noticia")) {
       window.history.pushState({}, "", "/");
     }
@@ -1009,7 +1013,15 @@
     if (event.target === articleLayer) closeArticle();
   });
   document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && !articleLayer.classList.contains("hidden")) closeArticle();
+    if (articleLayer.classList.contains("hidden")) return;
+    if (event.key === "Escape") { closeArticle(); return; }
+    if (event.key === "Tab") {
+      const focusable = Array.from(articleLayer.querySelectorAll("button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex]:not([tabindex=\\"-1\\"])")).filter(element => !element.hidden);
+      if (!focusable.length) return;
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
   });
   document.addEventListener("click", event => {
     const button = event.target.closest("[data-like-id]");
