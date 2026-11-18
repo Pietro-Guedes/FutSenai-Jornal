@@ -706,3 +706,135 @@ footer { border-color: #ececef !important; }
   .news-tools { gap: .55rem !important; }
   .news-filter-wrap { gap: .5rem !important; }
 }
+
+
+/* Layout editorial: notícias primeiro, extras depois */
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-top: 2rem !important;
+  padding-bottom: 3rem !important;
+}
+main > .mb-7 { order: 1; margin: 0 0 .8rem !important; }
+main > .news-tools { order: 2; margin: 0 0 1rem !important; }
+main > #feed-message { order: 3; margin: 0 0 1rem !important; }
+main > #news-feed { order: 4; }
+main > p.mt-5.text-center { order: 5; margin: .8rem 0 3rem !important; }
+main > .recent-news-widget-section { order: 6; margin: 0 0 2.5rem !important; }
+main > .football-featured-section { order: 7; margin: 0 0 2.5rem !important; }
+main > section[aria-labelledby="round-title"] { order: 8; margin: 0 0 2.5rem !important; }
+main > .score-promo-section { order: 9; margin: 0 0 2.5rem !important; }
+main > .promos-section { order: 10; margin: 0 0 2.5rem !important; }
+main > .football-favorites-section { order: 11; margin: 0 0 2.5rem !important; }
+main > section[aria-label="Configuração de interações"] { order: 12; }
+
+.masthead .relative.flex.flex-col {
+  gap: 1.5rem !important;
+  padding-top: 2.6rem !important;
+  padding-bottom: 2.8rem !important;
+}
+.masthead h1 {
+  max-width: 38rem !important;
+  font-size: clamp(2.2rem, 5vw, 3.6rem) !important;
+  line-height: 1.08 !important;
+}
+.masthead h1 span { color: #f8dfe2 !important; }
+.masthead .max-w-2xl > p { max-width: 34rem !important; color: #f9e9eb !important; }
+.masthead .max-w-2xl > div:last-child { display: none !important; }
+.masthead .max-w-2xl > div:first-child {
+  margin-bottom: .8rem !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  opacity: .85;
+}
+.weather-widget {
+  max-width: 19rem !important;
+  padding: .85rem !important;
+  border: 1px solid rgba(255,255,255,.16) !important;
+  background: rgba(73, 12, 20, .2) !important;
+}
+.weather-privacy { display: none !important; }
+.weather-widget-heading { margin-bottom: .55rem !important; }
+.weather-city-form { gap: .4rem !important; }
+.weather-city-input, .weather-button, .weather-location-button {
+  min-height: 2.25rem !important;
+  box-shadow: none !important;
+}
+main > .mb-7 h2,
+main > section h2 {
+  letter-spacing: -.035em !important;
+}
+main > .mb-7 > div > p {
+  margin-bottom: .35rem !important;
+  letter-spacing: .12em !important;
+}
+main > .mb-7 > div:last-child {
+  border: 0 !important;
+  background: #f6f6f7 !important;
+  box-shadow: none !important;
+}
+.news-tools {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(13rem, .55fr) auto !important;
+  align-items: center !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.news-filter-wrap { display: contents !important; }
+.news-filter-wrap select { width: 100% !important; }
+.news-filter-wrap button { white-space: nowrap !important; }
+#news-feed { gap: 1rem !important; }
+.news-card {
+  overflow: hidden !important;
+  border: 1px solid #ededf0 !important;
+  border-radius: .65rem !important;
+  background: white !important;
+  box-shadow: none !important;
+}
+.news-card:hover { border-color: #d9b5b9 !important; }
+.news-card .cover-wrap { height: 11.5rem !important; }
+.news-card .category-badge { border-radius: .25rem !important; }
+.recent-news-widget-section,
+.football-featured-section,
+main > section[aria-labelledby="round-title"],
+.score-promo-section,
+.promos-section,
+.football-favorites-section {
+  box-shadow: none !important;
+}
+.recent-news-widget-section { border-top: 1px solid #eeeef0; padding-top: 2rem; }
+.recent-news-widget-section h2 { font-size: 1.5rem !important; }
+.football-featured-section,
+main > section[aria-labelledby="round-title"],
+.football-favorites-section {
+  border: 0 !important;
+  border-top: 1px solid #eeeef0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 2rem 0 0 !important;
+}
+.interaction-card {
+  border: 1px solid #ededf0 !important;
+  border-radius: .65rem !important;
+  box-shadow: none !important;
+}
+.score-promo { border-radius: .65rem !important; box-shadow: none !important; }
+.promo-card { border-radius: .65rem !important; box-shadow: none !important; }
+@media (max-width: 700px) {
+  main { padding-top: 1.4rem !important; }
+  .masthead .relative.flex.flex-col {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+  .masthead .relative.flex.flex-col > div { min-width: 0; }
+  .weather-widget { max-width: none !important; }
+  .news-tools { grid-template-columns: 1fr !important; }
+  .news-filter-wrap { display: grid !important; grid-template-columns: 1fr auto !important; }
+  .news-filter-wrap select { grid-column: 1 / -1; }
+  .news-filter-wrap button { grid-column: 1 / -1; }
+  #news-feed { gap: .85rem !important; }
+}
