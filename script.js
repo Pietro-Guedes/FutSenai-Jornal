@@ -6,7 +6,7 @@
   const feed = document.querySelector("#news-feed");
   const count = document.querySelector("#news-count");
   const message = document.querySelector("#feed-message");
-  const articleLayer = document.querySelector("#article-layer");
+  const articleLayer = document.querySelector("#article-layer");\n  const searchInput = document.querySelector("#news-search");\n  const categoryFilter = document.querySelector("#news-category-filter");\n  let searchTerm = "";\n  let selectedCategory = "";
   const likeRecords = new Map();
   const COMMENTS_REFRESH_INTERVAL_MS = 15000;
   let likedNewsIds = new Set();
@@ -374,7 +374,7 @@
     if (!news.length) {
       const empty = document.createElement("p");
       empty.className = "col-span-full rounded-2xl border border-dashed border-red-200 bg-white px-6 py-12 text-center text-sm text-slate-500";
-      empty.textContent = "Ainda não há notícias publicadas. Volte em breve para conferir as novidades do intervalo!";
+      empty.textContent = news.length ? "Nenhuma notícia corresponde à sua busca." : "Ainda não há notícias publicadas. Volte em breve para conferir as novidades do intervalo!";
       feed.append(empty);
     }
     renderRecentNews();
@@ -693,7 +693,7 @@
       });
       input.value = "";
       await loadArticleComments(currentArticleId);
-      showMessage("Comentário publicado.", false);
+      showMessage("Comentário enviado para aprovação da equipe. Ele aparecerá após a revisão.", false);
     } catch (error) {
       showMessage("Não foi possível publicar o comentário: " + error.message, true);
     } finally {
@@ -876,7 +876,7 @@
       showMessage(
         "Não foi possível confirmar quais notícias estão publicadas. " +
         "Para evitar exibir matérias arquivadas, a lista ficará oculta até o Supabase responder. " +
-        "Detalhe: " + remoteError.message,
+        "Tente novamente em instantes.",
         true
       );
       return;
@@ -911,7 +911,7 @@
     }
   }
 
-  document.querySelector("#close-article").addEventListener("click", closeArticle);
+  searchInput.addEventListener("input", () => { searchTerm = searchInput.value.trim(); renderNews(); });\n  categoryFilter.addEventListener("change", () => { selectedCategory = categoryFilter.value; renderNews(); });\n\n  document.querySelector("#close-article").addEventListener("click", closeArticle);
   document.querySelector("#back-to-news").addEventListener("click", closeArticle);
   articleLayer.addEventListener("click", event => {
     if (event.target === articleLayer) closeArticle();
@@ -924,5 +924,5 @@
     if (button) toggleLike(button.dataset.likeId);
   });
 
-  loadPublishedNews();
+  loadPublishedNews();\n  window.addEventListener("popstate", () => {\n    const params = new URLSearchParams(window.location.search);\n    const id = params.get("noticia");\n    if (id && news.some(item => item.id === id)) openArticle(id);\n    else if (!id && !articleLayer.classList.contains("hidden")) closeArticle();\n  });
 })();
