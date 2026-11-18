@@ -7,13 +7,17 @@
     { href: "projetos.html", label: "Projetos", icon: "▣", key: "projetos" },
     { href: "clima.html", label: "Clima", icon: "☼", key: "clima" }
   ];
-  const page = location.pathname.endsWith("futebol.html") ? "futebol" :
-    location.pathname.endsWith("comunidade.html") ? "comunidade" :
-    location.pathname.endsWith("projetos.html") ? "projetos" :
-    location.pathname.endsWith("clima.html") ? "clima" : "noticias";
+  const path = location.pathname;
+  const page = items.find(item => item.href === path || (item.href === "/" && (path.endsWith("/") || path.endsWith("index.html"))))?.key || "noticias";
   const aside = document.createElement("aside");
   aside.className = "site-sidebar";
-  aside.innerHTML = '<a class="sidebar-brand" href="/" aria-label="Jornal FutSenai"><span class="sidebar-brand-icon">⚽</span><span>Fut<span>Senai</span><small>JORNAL DIGITAL</small></span></a><div class="sidebar-label">MENU PRINCIPAL</div>';
+  aside.setAttribute("aria-label", "Menu principal");
+  const brand = document.createElement("a");
+  brand.className = "sidebar-brand";
+  brand.href = "/";
+  brand.title = "Jornal FutSenai";
+  brand.setAttribute("aria-label", "Jornal FutSenai — início");
+  brand.innerHTML = '<span class="sidebar-brand-icon">F</span>';
   const nav = document.createElement("nav");
   nav.className = "sidebar-nav";
   nav.setAttribute("aria-label", "Navegação principal");
@@ -21,20 +25,22 @@
     const link = document.createElement("a");
     link.href = item.href;
     link.className = "sidebar-link" + (item.key === page ? " is-active" : "");
+    link.title = item.label;
+    link.setAttribute("aria-label", item.label);
     if (item.key === page) link.setAttribute("aria-current", "page");
     const icon = document.createElement("span");
     icon.className = "sidebar-icon";
     icon.textContent = item.icon;
-    const label = document.createElement("span");
-    label.textContent = item.label;
-    link.append(icon, label);
+    link.append(icon);
     nav.append(link);
   });
-  aside.append(nav);
-  const bottom = document.createElement("div");
-  bottom.className = "sidebar-bottom";
-  bottom.innerHTML = '<a href="admin.html">⚙ <span>Área administrativa</span></a><span>Jornal FutSenai · 2026</span>';
-  aside.append(bottom);
+  const admin = document.createElement("a");
+  admin.href = "admin.html";
+  admin.className = "sidebar-admin";
+  admin.title = "Área administrativa";
+  admin.setAttribute("aria-label", "Área administrativa");
+  admin.textContent = "⚙";
+  aside.append(brand, nav, admin);
   const toggle = document.createElement("button");
   toggle.type = "button";
   toggle.className = "sidebar-toggle";
