@@ -609,8 +609,13 @@
       list.replaceChildren();
       const failure = document.createElement("p");
       failure.className = "text-sm text-red-700";
-      failure.textContent = "Não foi possível carregar os comentários: " + error.message;
-      list.append(failure);
+      failure.textContent = "Não foi possível carregar os comentários. Verifique sua conexão e tente novamente.";
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "mt-2 rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-700";
+      retry.textContent = "Tentar novamente";
+      retry.addEventListener("click", () => loadArticleComments(newsId));
+      list.append(failure, retry);
     }
   }
 
@@ -971,9 +976,13 @@
     } catch (error) {
       news = [];
       renderNews();
-      showMessage("Não foi possível carregar as notícias publicadas. " +
-        (remoteError ? "Banco: " + remoteError.message + ". " : "") +
-        "Confira se o Supabase e noticias.json estão configurados. Detalhe: " + error.message, true);
+      showMessage("Não foi possível carregar as notícias agora. Tente novamente em instantes.", true);
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "ml-2 font-extrabold underline";
+      retry.textContent = "Tentar novamente";
+      retry.addEventListener("click", loadPublishedNews);
+      message.append(retry);
     }
   }
 
