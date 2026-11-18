@@ -502,7 +502,12 @@
       like.textContent = (comment.liked_by_me ? "♥" : "♡") + " " +
         comment.like_count + (comment.like_count === 1 ? " curtida" : " curtidas");
       like.addEventListener("click", () => toggleCommentLike(comment, like));
-      const report = document.createElement("button");\n      report.type = "button";\n      report.className = "text-xs font-bold text-slate-500 underline hover:text-red-700";\n      report.textContent = "Denunciar";\n      report.addEventListener("click", () => submitReport({ comment_id: comment.comment_id }));\n      actions.append(like, report);
+      const report = document.createElement("button");
+      report.type = "button";
+      report.className = "text-xs font-bold text-slate-500 underline hover:text-red-700";
+      report.textContent = "Denunciar";
+      report.addEventListener("click", () => submitReport({ comment_id: comment.comment_id }));
+      actions.append(like, report);
       if (authSession && authSession.user.id === comment.user_id) {
         const edit = document.createElement("button");
         edit.type = "button";
@@ -592,7 +597,26 @@
     }
   }
 
-  async function submitReport(target) {\n    const reason = window.prompt("Conte brevemente o motivo da denúncia (3 a 500 caracteres):");\n    if (reason === null) return;\n    if (reason.trim().length < 3 || reason.trim().length > 500) {\n      showMessage("A justificativa precisa ter entre 3 e 500 caracteres.", true);\n      return;\n    }\n    try {\n      await likeRequest("/rest/v1/news_reports", {\n        method: "POST",\n        headers: { "Content-Type": "application/json", Prefer: "return=minimal" },\n        body: JSON.stringify({ ...target, reason: reason.trim() })\n      });\n      showMessage("Denúncia enviada para análise da equipe editorial.", false);\n    } catch (error) {\n      showMessage("Não foi possível enviar a denúncia. Tente novamente mais tarde.", true);\n    }\n  }\n\n  async function saveOwnComment(comment, input, saveButton, cancelButton) {
+  async function submitReport(target) {
+    const reason = window.prompt("Conte brevemente o motivo da denúncia (3 a 500 caracteres):");
+    if (reason === null) return;
+    if (reason.trim().length < 3 || reason.trim().length > 500) {
+      showMessage("A justificativa precisa ter entre 3 e 500 caracteres.", true);
+      return;
+    }
+    try {
+      await likeRequest("/rest/v1/news_reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ ...target, reason: reason.trim() })
+      });
+      showMessage("Denúncia enviada para análise da equipe editorial.", false);
+    } catch (error) {
+      showMessage("Não foi possível enviar a denúncia. Tente novamente mais tarde.", true);
+    }
+  }
+
+  async function saveOwnComment(comment, input, saveButton, cancelButton) {
     const content = input.value.trim();
     if (!content) {
       showMessage("Escreva um comentário antes de salvar.", true);
@@ -662,7 +686,12 @@
     }
   }
 
-  const articleReportButton = document.querySelector("#article-report");\n  if (articleReportButton) articleReportButton.addEventListener("click", () => {\n    if (currentArticleId) submitReport({ news_id: currentArticleId });\n  });\n\n  document.querySelector("#article-comment-form").addEventListener("submit", async event => {
+  const articleReportButton = document.querySelector("#article-report");
+  if (articleReportButton) articleReportButton.addEventListener("click", () => {
+    if (currentArticleId) submitReport({ news_id: currentArticleId });
+  });
+
+  document.querySelector("#article-comment-form").addEventListener("submit", async event => {
     event.preventDefault();
     authSession = readAuthSession();
     const input = document.querySelector("#article-comment-input");
