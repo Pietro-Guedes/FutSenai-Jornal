@@ -482,3 +482,27 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
+
+
+/* Estados de carregamento acessíveis */
+.loading-skeleton {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: .65rem;
+  background: #e9edf3;
+}
+.loading-skeleton::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
+  animation: skeleton-shimmer 1.35s infinite;
+}
+.loading-skeleton-text { width: min(100%, 15rem); height: .8rem; }
+.loading-skeleton-card { min-height: 22rem; border: 1px solid #f1d9de; background: linear-gradient(#e9edf3 0 9rem, #fff 9rem); }
+@keyframes skeleton-shimmer { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .loading-skeleton::after { animation: none; }
+}

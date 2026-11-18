@@ -43,6 +43,14 @@
   function setStatus(message, isError) {
     status.textContent = message;
     status.classList.toggle("is-error", Boolean(isError));
+    const oldRetry = status.querySelector("button[data-retry]");
+    if (oldRetry) oldRetry.remove();
+    if (isError) {
+      const retry = createElement("button", "ml-2 rounded-lg border border-red-200 px-3 py-1 font-bold text-red-700", "Tentar novamente");
+      retry.type = "button"; retry.dataset.retry = "true";
+      retry.addEventListener("click", () => loadLeagueData().catch(error => setStatus("Não foi possível carregar os dados da Série A: " + error.message, true)));
+      status.append(retry);
+    }
   }
 
   function createElement(tag, className, text) {
@@ -68,6 +76,13 @@
   }
 
   function updateAccountControls() {
+    const configured = Boolean(config && config.url && config.anonKey);
+    if (!configured) {
+      accountStatus.textContent = "Times favoritos em breve.";
+      teamPicker.hidden = true; followButton.hidden = true; loginButton.hidden = true; favoritesContainer.hidden = true;
+      return;
+    }
+    teamPicker.hidden = false; followButton.hidden = false; loginButton.hidden = false; favoritesContainer.hidden = false;
     const signedIn = Boolean(session);
     accountStatus.textContent = signedIn
       ? "Seus favoritos ficam salvos na conta."
@@ -159,9 +174,12 @@
     const params = new URLSearchParams({ type, season: String(season), ...(extra || {}) });
     let response;
     try {
-      response = await fetch(apiEndpoint + "?" + params.toString());
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 12000);
+      try { response = await fetch(apiEndpoint + "?" + params.toString(), { signal: controller.signal }); }
+      finally { window.clearTimeout(timeout); }
     } catch (error) {
-      throw new Error("Não foi possível acessar a função de jogos. Confira a publicação da pasta api/.");
+      throw new Error(error.name === "AbortError" ? "A consulta demorou para responder." : "Não foi possível acessar os dados de futebol. Verifique sua conexão.");
     }
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.error || "A consulta de jogos respondeu com erro " + response.status + ".");

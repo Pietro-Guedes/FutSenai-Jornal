@@ -7,6 +7,10 @@
   const count = document.querySelector("#news-count");
   const message = document.querySelector("#feed-message");
   const articleLayer = document.querySelector("#article-layer");
+  const searchInput = document.querySelector("#news-search");
+  const categoryFilter = document.querySelector("#news-category-filter");
+  let searchTerm = "";
+  let selectedCategory = "";
   const likeRecords = new Map();
   const COMMENTS_REFRESH_INTERVAL_MS = 15000;
   let likedNewsIds = new Set();
@@ -15,6 +19,7 @@
   let commentsRefreshTimer = null;
   let recentNewsAutoplayTimer = null;
   let news = [];
+  let articleOpener = null;
 
   function readAuthSession() {
     try {
@@ -101,7 +106,7 @@
   function formatDate(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "Data não disponível";
-    return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+    return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" }).format(date);
   }
 
   function badgeClass(category) {
@@ -136,14 +141,16 @@
 
   function makeLikeButton(id, className) {
     const liked = likedNewsIds.has(id);
+    const configured = Boolean(window.FUTSENAI_SUPABASE && window.FUTSENAI_SUPABASE.url && window.FUTSENAI_SUPABASE.anonKey);
     const names = getLikeRecord(id);
     const button = document.createElement("button");
     button.type = "button";
     button.dataset.likeId = id;
     button.className = className + (liked ? " is-liked" : "");
+    button.disabled = !configured;
     button.setAttribute("aria-pressed", String(liked));
     button.setAttribute("aria-label", liked ? "Remover sua curtida" : "Curtir esta notícia");
-    button.textContent = (liked ? "♥ Curtido" : authSession ? "♡ Curtir" : "♡ Entrar para curtir") +
+    button.textContent = (!configured ? "Curtidas em breve" : liked ? "♥ Curtido" : authSession ? "♡ Curtir" : "♡ Entrar para curtir") +
       " · " + names.length;
     return button;
   }
@@ -195,7 +202,7 @@
     const player = document.createElement("p");
     player.className = "mb-3 flex items-center gap-2 text-xs font-bold text-red-700";
     player.append(createIcon("M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"));
-    player.append(document.createTextNode(item.player));
+    player.append(document.createTextNode("Por " + (item.author || "Redação FutSenai") + " · " + item.player));
 
     const summary = document.createElement("p");
     summary.className = "mb-5 line-clamp-3 text-sm leading-6 text-slate-600";
@@ -374,7 +381,7 @@
     if (!news.length) {
       const empty = document.createElement("p");
       empty.className = "col-span-full rounded-2xl border border-dashed border-red-200 bg-white px-6 py-12 text-center text-sm text-slate-500";
-      empty.textContent = "Ainda não há notícias publicadas. Volte em breve para conferir as novidades do intervalo!";
+      empty.textContent = news.length ? "Nenhuma notícia corresponde à sua busca." : "Ainda não há notícias publicadas. Volte em breve para conferir as novidades do intervalo!";
       feed.append(empty);
     }
     renderRecentNews();
@@ -383,7 +390,11 @@
   function openArticle(id) {
     const item = news.find(entry => entry.id === id);
     if (!item) return;
+    if (articleLayer.classList.contains("hidden")) articleOpener = document.activeElement;
     currentArticleId = item.id;
+    const articleUrl = "/noticia/" + encodeURIComponent(item.id);
+    const queryArticleId = new URLSearchParams(window.location.search).get("noticia");
+    if (queryArticleId !== item.id && window.location.pathname !== articleUrl) window.history.pushState({ articleId: item.id }, "", articleUrl);
 
     const image = document.querySelector("#article-image");
     image.src = safeImageUrl(item.image);
@@ -394,7 +405,7 @@
     category.className = "category-badge inline-block rounded-md px-2.5 py-1.5 text-[10px] font-black " + badgeClass(item.category);
     category.textContent = item.category;
     document.querySelector("#article-title").textContent = item.title;
-    document.querySelector("#article-player").textContent = "⚽ " + item.player;
+    document.querySelector("#article-player").textContent = "⚽ " + item.player + " · Por " + (item.author || "Redação FutSenai");
     const date = document.querySelector("#article-date");
     date.dateTime = item.createdAt;
     date.textContent = "Publicado em " + formatDate(item.createdAt);
@@ -407,6 +418,7 @@
     likeButton.setAttribute("aria-pressed", currentLikeButton.getAttribute("aria-pressed"));
     likeButton.setAttribute("aria-label", currentLikeButton.getAttribute("aria-label"));
     likeButton.textContent = currentLikeButton.textContent;
+    likeButton.disabled = currentLikeButton.disabled;
     const likeNames = document.querySelector("#article-like-names");
     if (likeNames) updateLikeNamesElement(likeNames, item.id);
     updateCommentFormState();
@@ -434,6 +446,11 @@
     articleLayer.classList.remove("flex");
     articleLayer.setAttribute("aria-hidden", "true");
     document.body.classList.remove("overflow-hidden");
+    if (articleOpener && typeof articleOpener.focus === "function") articleOpener.focus();
+    articleOpener = null;
+    if (window.location.pathname.startsWith("/noticia/") || new URLSearchParams(window.location.search).has("noticia")) {
+      window.history.pushState({}, "", "/");
+    }
   }
 
   function updateCommentFormState() {
@@ -441,8 +458,9 @@
     const note = document.querySelector("#article-comment-auth-note");
     const submit = document.querySelector("#article-comment-form button[type='submit']");
     const input = document.querySelector("#article-comment-input");
-    const signedIn = Boolean(authSession);
-    note.textContent = signedIn
+    const configured = Boolean(window.FUTSENAI_SUPABASE && window.FUTSENAI_SUPABASE.url && window.FUTSENAI_SUPABASE.anonKey);
+    const signedIn = Boolean(authSession && configured);
+    note.textContent = !configured ? "Comentários em breve." : signedIn
       ? "Seu apelido público aparecerá ao lado do comentário."
       : "Entre com Google e escolha um apelido para comentar.";
     input.disabled = !signedIn;
@@ -498,7 +516,12 @@
       like.textContent = (comment.liked_by_me ? "♥" : "♡") + " " +
         comment.like_count + (comment.like_count === 1 ? " curtida" : " curtidas");
       like.addEventListener("click", () => toggleCommentLike(comment, like));
-      actions.append(like);
+      const report = document.createElement("button");
+      report.type = "button";
+      report.className = "text-xs font-bold text-slate-500 underline hover:text-red-700";
+      report.textContent = "Denunciar";
+      report.addEventListener("click", () => submitReport({ comment_id: comment.comment_id }));
+      actions.append(like, report);
       if (authSession && authSession.user.id === comment.user_id) {
         const edit = document.createElement("button");
         edit.type = "button";
@@ -555,9 +578,12 @@
   async function loadArticleComments(newsId) {
     const list = document.querySelector("#article-comments-list");
     list.replaceChildren();
+    if (!window.FUTSENAI_SUPABASE || !window.FUTSENAI_SUPABASE.url || !window.FUTSENAI_SUPABASE.anonKey) {
+      const soon = document.createElement("p"); soon.className = "text-sm text-slate-500"; soon.textContent = "Comentários em breve."; list.append(soon); return;
+    }
     const loading = document.createElement("p");
-    loading.className = "text-sm text-slate-500";
-    loading.textContent = "Carregando comentários…";
+    loading.className = "loading-skeleton loading-skeleton-text";
+    loading.setAttribute("aria-hidden", "true");
     list.append(loading);
     try {
       const comments = await likeRequest("/rest/v1/rpc/get_news_comments", {
@@ -571,7 +597,7 @@
         (comment.user_id !== null && typeof comment.user_id !== "string") ||
         typeof comment.nickname !== "string" || typeof comment.content !== "string" ||
         !Number.isInteger(comment.like_count) || comment.like_count < 0 ||
-        typeof comment.liked_by_me !== "boolean" ||
+        typeof comment.liked_by_me !== "boolean" || typeof comment.approved !== "boolean" ||
         typeof comment.created_at !== "string" || Number.isNaN(new Date(comment.created_at).getTime()) ||
         (comment.updated_at !== null &&
           (typeof comment.updated_at !== "string" || Number.isNaN(new Date(comment.updated_at).getTime()))))) {
@@ -583,8 +609,35 @@
       list.replaceChildren();
       const failure = document.createElement("p");
       failure.className = "text-sm text-red-700";
-      failure.textContent = "Não foi possível carregar os comentários: " + error.message;
-      list.append(failure);
+      failure.textContent = "Não foi possível carregar os comentários. Verifique sua conexão e tente novamente.";
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "mt-2 rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-700";
+      retry.textContent = "Tentar novamente";
+      retry.addEventListener("click", () => loadArticleComments(newsId));
+      list.append(failure, retry);
+    }
+  }
+
+  async function submitReport(target) {
+    if (!window.FUTSENAI_SUPABASE || !window.FUTSENAI_SUPABASE.url || !window.FUTSENAI_SUPABASE.anonKey) {
+      showMessage("Denúncias em breve.", false); return;
+    }
+    const reason = window.prompt("Conte brevemente o motivo da denúncia (3 a 500 caracteres):");
+    if (reason === null) return;
+    if (reason.trim().length < 3 || reason.trim().length > 500) {
+      showMessage("A justificativa precisa ter entre 3 e 500 caracteres.", true);
+      return;
+    }
+    try {
+      await likeRequest("/rest/v1/news_reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ ...target, reason: reason.trim() })
+      });
+      showMessage("Denúncia enviada para análise da equipe editorial.", false);
+    } catch (error) {
+      showMessage("Não foi possível enviar a denúncia. Tente novamente mais tarde.", true);
     }
   }
 
@@ -658,6 +711,22 @@
     }
   }
 
+  const articleReportButton = document.querySelector("#article-report");
+  const articleShareButton = document.querySelector("#article-share");
+  if (articleShareButton) articleShareButton.addEventListener("click", async () => {
+    const url = window.location.origin + "/noticia/" + encodeURIComponent(currentArticleId || "");
+    const title = document.querySelector("#article-title").textContent;
+    try {
+      if (navigator.share) await navigator.share({ title, url });
+      else { await navigator.clipboard.writeText(url); showMessage("Link da notícia copiado!", false); }
+    } catch (error) {
+      if (error.name !== "AbortError") showMessage("Não foi possível compartilhar. Copie o endereço da página.", true);
+    }
+  });
+  if (articleReportButton) articleReportButton.addEventListener("click", () => {
+    if (currentArticleId) submitReport({ news_id: currentArticleId });
+  });
+
   document.querySelector("#article-comment-form").addEventListener("submit", async event => {
     event.preventDefault();
     authSession = readAuthSession();
@@ -693,7 +762,7 @@
       });
       input.value = "";
       await loadArticleComments(currentArticleId);
-      showMessage("Comentário publicado.", false);
+      showMessage("Comentário enviado para aprovação da equipe. Ele aparecerá após a revisão.", false);
     } catch (error) {
       showMessage("Não foi possível publicar o comentário: " + error.message, true);
     } finally {
@@ -785,6 +854,7 @@
   }
 
   async function refreshLikeRecords() {
+    if (!window.FUTSENAI_SUPABASE || !window.FUTSENAI_SUPABASE.url || !window.FUTSENAI_SUPABASE.anonKey) return;
     try {
       await loadLikeRecords();
       renderNews();
@@ -830,7 +900,7 @@
     if (config && config.url && config.anonKey) {
       try {
         const response = await fetch(config.url.replace(/\/$/, "") +
-          "/rest/v1/news?select=id,title,category,player,image,content,created_at,published&published=eq.true&order=created_at.desc", {
+          "/rest/v1/news?select=id,title,category,player,author,image,content,created_at,published&published=eq.true&order=created_at.desc", {
           headers: { apikey: config.anonKey, Authorization: "Bearer " + config.anonKey },
           cache: "no-store"
         });
@@ -854,6 +924,7 @@
           title: item.title,
           category: item.category,
           player: item.player,
+          author: item.author || "Redação FutSenai",
           image: item.image || "",
           content: item.content,
           createdAt: item.created_at
@@ -873,12 +944,12 @@
     if (config && config.url && config.anonKey) {
       news = [];
       renderNews();
-      showMessage(
-        "Não foi possível confirmar quais notícias estão publicadas. " +
-        "Para evitar exibir matérias arquivadas, a lista ficará oculta até o Supabase responder. " +
-        "Detalhe: " + remoteError.message,
-        true
-      );
+      showMessage("Não foi possível carregar as notícias agora. Tente novamente em instantes.", true);
+      const retry = document.createElement("button");
+      retry.type = "button"; retry.className = "ml-2 font-extrabold underline";
+      retry.textContent = "Tentar novamente";
+      retry.addEventListener("click", loadPublishedNews);
+      message.append(retry);
       return;
     }
 
@@ -905,11 +976,37 @@
     } catch (error) {
       news = [];
       renderNews();
-      showMessage("Não foi possível carregar as notícias publicadas. " +
-        (remoteError ? "Banco: " + remoteError.message + ". " : "") +
-        "Confira se o Supabase e noticias.json estão configurados. Detalhe: " + error.message, true);
+      showMessage("Não foi possível carregar as notícias agora. Tente novamente em instantes.", true);
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "ml-2 font-extrabold underline";
+      retry.textContent = "Tentar novamente";
+      retry.addEventListener("click", loadPublishedNews);
+      message.append(retry);
     }
   }
+
+  searchInput.addEventListener("input", () => { searchTerm = searchInput.value.trim(); renderNews(); });
+  categoryFilter.addEventListener("change", () => { selectedCategory = categoryFilter.value; renderNews(); });
+
+
+
+  window.addEventListener("popstate", () => {
+    const queryId = new URLSearchParams(window.location.search).get("noticia");
+    const pathMatch = window.location.pathname.match(/^\/noticia\/([^/]+)$/);
+    const id = queryId || (pathMatch ? decodeURIComponent(pathMatch[1]) : null);
+    const item = id && news.find(entry => entry.id === id);
+    if (item) {
+      if (articleLayer.classList.contains("hidden")) openArticle(item.id);
+    } else if (!articleLayer.classList.contains("hidden")) {
+      if (commentsRefreshTimer !== null) window.clearInterval(commentsRefreshTimer);
+      commentsRefreshTimer = null;
+      articleLayer.classList.add("hidden");
+      articleLayer.classList.remove("flex");
+      articleLayer.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("overflow-hidden");
+    }
+  });
 
   document.querySelector("#close-article").addEventListener("click", closeArticle);
   document.querySelector("#back-to-news").addEventListener("click", closeArticle);
@@ -917,12 +1014,23 @@
     if (event.target === articleLayer) closeArticle();
   });
   document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && !articleLayer.classList.contains("hidden")) closeArticle();
+    if (articleLayer.classList.contains("hidden")) return;
+    if (event.key === "Escape") { closeArticle(); return; }
+    if (event.key === "Tab") {
+      const focusable = Array.from(articleLayer.querySelectorAll("button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled)")).filter(element => !element.hidden);
+      if (!focusable.length) return;
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
   });
   document.addEventListener("click", event => {
     const button = event.target.closest("[data-like-id]");
     if (button) toggleLike(button.dataset.likeId);
   });
 
-  loadPublishedNews();
+  loadPublishedNews().then(() => {
+    const id = new URLSearchParams(window.location.search).get("noticia");
+    if (id && news.some(item => item.id === id)) openArticle(id);
+  });
 })();

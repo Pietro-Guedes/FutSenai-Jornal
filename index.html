@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#c92332">
   <meta name="description" content="As notícias mais quentes do futebol de intervalo do Senai.">
+  <meta property="og:title" content="Jornal FutSenai — O futebol acontece aqui">
+  <meta property="og:description" content="Notícias, futebol e resenha direto do intervalo.">
+  <meta property="og:image" content="https://futsenaijornal.vercel.app/og-image.svg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="https://futsenaijornal.vercel.app/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Jornal FutSenai — O futebol acontece aqui">
+  <meta name="twitter:description" content="Notícias, futebol e resenha direto do intervalo.">
+  <meta name="twitter:image" content="https://futsenaijornal.vercel.app/og-image.svg">
+  <link rel="canonical" href="https://futsenaijornal.vercel.app/">
   <title>Jornal FutSenai — O futebol acontece aqui</title>
   <link rel="icon" type="image/png" href="favicon.png?v=1">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -16,7 +28,7 @@
     <div class="hero-panel absolute inset-x-0 bottom-0 top-[94px]" aria-hidden="true"></div>
     <div class="relative z-10 mx-auto max-w-[1180px] px-5 sm:px-8">
       <div class="flex min-h-[94px] items-center justify-between gap-4 border-b border-slate-100">
-        <a href="#" class="flex items-center gap-3 no-underline" aria-label="Jornal FutSenai, página inicial">
+        <a href="/" class="flex items-center gap-3 no-underline" aria-label="Jornal FutSenai, página inicial">
           <span class="brand-mark grid h-12 w-12 place-items-center rounded-2xl text-white">
             <svg aria-hidden="true" class="h-7 w-7 drop-shadow" viewBox="0 0 24 24" fill="none">
               <path d="m12 2 2.7 5.1 5.7.8-4.1 4 .97 5.7L12 14.9l-5.1 2.7.97-5.7-4.1-4 5.7-.8L12 2Z" fill="currentColor"/>
@@ -106,10 +118,10 @@
           <p class="mb-1 text-[9px] font-black uppercase tracking-[.18em] text-red-600">Campeonato Brasileiro</p>
           <h2 id="football-title" class="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">Jogos decisivos da rodada</h2>
         </div>
-        <a class="football-provider" href="https://www.football-data.org/coverage" target="_blank" rel="noopener noreferrer">Dados: football-data.org ↗</a>
+        <a class="football-provider" href="https://www.football-data.org/coverage" target="_blank" rel="noopener noreferrer" aria-label="Ver cobertura do football-data.org, abre em nova aba">Dados: football-data.org ↗</a>
       </div>
 
-      <div id="football-status" class="football-status" role="status" aria-live="polite">Carregando os jogos em destaque…</div>
+      <div id="football-status" class="football-status" role="status" aria-live="polite"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span><span class="sr-only">Carregando os jogos em destaque…</span></div>
 
       <section class="football-standings-section" aria-labelledby="football-standings-title">
         <div class="football-standings-heading">
@@ -118,7 +130,7 @@
               Classificação do Brasileirão <span class="football-standings-chevron" aria-hidden="true">⌄</span>
             </button>
           </h3>
-          <p id="football-standings-status" class="football-standings-status" role="status" aria-live="polite">Carregando classificação…</p>
+          <p id="football-standings-status" class="football-standings-status" role="status" aria-live="polite"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span><span class="sr-only">Carregando classificação…</span></p>
         </div>
         <div id="football-standings-content" hidden>
           <div class="football-standings-scroll" tabindex="0" aria-label="Tabela de classificação. Deslize horizontalmente para ver todas as colunas.">
@@ -157,7 +169,7 @@
           </div>
           <button id="football-simulator-clear" class="football-simulator-clear" type="button" disabled>Limpar placares</button>
         </div>
-        <p id="football-simulator-status" class="football-simulator-status" role="status" aria-live="polite">Carregando jogos para simular…</p>
+        <p id="football-simulator-status" class="football-simulator-status" role="status" aria-live="polite"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span><span class="sr-only">Carregando jogos para simular…</span></p>
         <p class="football-simulator-note">Desempates simulados por pontos, vitórias, saldo e gols marcados; os demais critérios mantêm a ordem atual.</p>
         <div id="football-simulator-round-navigation" class="football-simulator-round-navigation" hidden>
           <button id="football-simulator-previous" class="football-simulator-round-button" type="button" aria-label="Rodada anterior" disabled>‹</button>
@@ -179,17 +191,17 @@
         <section class="interaction-card rounded-2xl border border-red-100 bg-white p-5 shadow-sm" aria-labelledby="poll-heading">
           <p class="mb-2 text-[10px] font-black uppercase tracking-[.18em] text-red-600">📣 Enquete</p>
           <h3 id="poll-heading" class="text-lg font-black text-slate-900">Voto da torcida</h3>
-          <div id="poll-content" class="mt-4 space-y-3 text-sm text-slate-500">Carregando enquete…</div>
+          <div id="poll-content" class="mt-4 space-y-3 text-sm text-slate-500"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span></div>
         </section>
         <section class="interaction-card rounded-2xl border border-red-100 bg-white p-5 shadow-sm" aria-labelledby="awards-heading">
           <p class="mb-2 text-[10px] font-black uppercase tracking-[.18em] text-red-600">🏆 Prêmios semanais</p>
           <h3 id="awards-heading" class="text-lg font-black text-slate-900">Quem merece o troféu?</h3>
-          <div id="awards-content" class="mt-4 space-y-5 text-sm text-slate-500">Carregando indicações…</div>
+          <div id="awards-content" class="mt-4 space-y-5 text-sm text-slate-500"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span></div>
         </section>
         <section class="interaction-card rounded-2xl border border-red-100 bg-white p-5 shadow-sm" aria-labelledby="prediction-heading">
           <p class="mb-2 text-[10px] font-black uppercase tracking-[.18em] text-red-600">🔮 Previsões</p>
           <h3 id="prediction-heading" class="text-lg font-black text-slate-900">Adivinhe o placar</h3>
-          <div id="prediction-content" class="mt-4 space-y-3 text-sm text-slate-500">Carregando próximo jogo…</div>
+          <div id="prediction-content" class="mt-4 space-y-3 text-sm text-slate-500"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span></div>
           <section class="mt-5 border-t border-red-50 pt-4" aria-labelledby="account-heading">
             <div class="mb-3">
               <p class="mb-1 text-[10px] font-black uppercase tracking-[.18em] text-red-600">Conta da liga</p>
@@ -230,7 +242,7 @@
       <div class="score-promo">
         <div class="score-promo-top">
           <span class="score-promo-brand"><span aria-hidden="true">⚽</span> FUTSENAI SCORE</span>
-          <span id="score-promo-status" class="score-promo-status" aria-live="polite">Carregando estatísticas…</span>
+          <span id="score-promo-status" class="score-promo-status" aria-live="polite"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span><span class="sr-only">Carregando estatísticas…</span></span>
         </div>
         <div class="score-promo-carousel" aria-label="Estatísticas em destaque">
           <a
@@ -256,6 +268,7 @@
     </section>
 
     <section class="promos-section mb-12" aria-label="Publicidade dos projetos da turma">
+      <p class="col-span-full text-center text-xs font-black uppercase tracking-widest text-slate-500">Publicidade</p>
       <article class="promo-card promo-card-cards" data-promo-gallery="cards">
         <div class="promo-card-media">
           <img
@@ -274,9 +287,9 @@
         </div>
         <div class="promo-card-copy">
           <span class="promo-card-kicker">Publicidade · FutSENAI Cards</span>
-          <h2><a href="https://fut-senai-cards.vercel.app/shop" target="_blank" rel="noopener noreferrer" data-promo-title>Craques da turma em cartas!</a></h2>
+          <h2><a href="https://fut-senai-cards.vercel.app/shop" target="_blank" rel="noopener noreferrer" aria-label="Conhecer FutSENAI Cards, abre em nova aba" data-promo-title>Craques da turma em cartas!</a></h2>
           <p data-promo-description>Abra pacotes, colecione e monte seu time.</p>
-          <a class="promo-card-cta" href="https://fut-senai-cards.vercel.app/shop" target="_blank" rel="noopener noreferrer">Conhecer o jogo <span aria-hidden="true">↗</span></a>
+          <a class="promo-card-cta" href="https://fut-senai-cards.vercel.app/shop" target="_blank" rel="noopener noreferrer" aria-label="Conhecer o jogo FutSENAI Cards, abre em nova aba">Conhecer o jogo <span aria-hidden="true">↗</span></a>
         </div>
       </article>
 
@@ -310,18 +323,24 @@
         <span id="news-count">0 publicações</span>
       </div>
     </div>
+    <div class="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_14rem]">
+      <label class="sr-only" for="news-search">Buscar notícias</label>
+      <input id="news-search" type="search" placeholder="Buscar notícia por título ou texto…" class="field w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm" autocomplete="off">
+      <label class="sr-only" for="news-category-filter">Filtrar por categoria</label>
+      <select id="news-category-filter" class="field w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm"><option value="">Todas as categorias</option></select>
+    </div>
     <div id="feed-message" class="mb-5 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" role="status"></div>
-    <section id="news-feed" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Feed de notícias"></section>
+    <section id="news-feed" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Feed de notícias"><div class="loading-skeleton loading-skeleton-card" aria-hidden="true"></div><div class="loading-skeleton loading-skeleton-card" aria-hidden="true"></div><div class="loading-skeleton loading-skeleton-card" aria-hidden="true"></div></section>
     <p class="mt-5 text-center text-xs text-slate-500">Entre com sua conta e escolha um apelido para curtir notícias. Os apelidos de quem curtiu ficam visíveis publicamente.</p>
     <section class="hidden mt-10 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900" aria-label="Configuração de interações">
-      <p id="interaction-setup-note">As interações compartilhadas aguardam a configuração do Supabase pelo responsável pelo site.</p>
+      <p id="interaction-setup-note">Interações da comunidade em breve.</p>
     </section>
   </main>
 
   <footer class="border-t border-slate-200 bg-white">
     <div class="mx-auto flex max-w-[1180px] flex-col items-center justify-between gap-2 px-5 py-6 text-center text-xs text-slate-500 sm:flex-row sm:px-8 sm:text-left">
       <p><span class="font-black text-slate-800">Jornal FutSenai</span> <span class="mx-1 text-slate-300">·</span> A resenha oficial do intervalo.</p>
-      <p>Feito na arquibancada, com fair play e bom humor ⚽ <span class="mx-1 text-slate-300">·</span> <a href="admin.html" class="font-bold text-red-700 hover:text-red-900">Área administrativa</a></p>
+      <p>Feito na arquibancada, com fair play e bom humor ⚽ <span class="mx-1 text-slate-300">·</span> <a href="admin.html" class="font-bold text-red-700 hover:text-red-900">Área administrativa</a> <span class="mx-1 text-slate-300">·</span> <a href="regras.html" class="font-bold text-red-700 hover:text-red-900">Regras de convivência</a></p>
     </div>
   </footer>
 
@@ -342,7 +361,11 @@
         <p id="article-content" class="article-body mt-6 text-base leading-8 text-slate-700"></p>
         <div class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5">
           <button id="back-to-news" type="button" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700">← Voltar às notícias</button>
-          <button id="article-like" type="button" class="like-button rounded-lg border border-red-200 px-4 py-2.5 text-sm font-extrabold text-red-700 transition hover:bg-red-50" aria-pressed="false">♡ Curtir</button>
+          <div class="flex flex-wrap gap-2">
+            <button id="article-share" type="button" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Compartilhar</button>
+            <button id="article-report" type="button" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-600 hover:border-red-200 hover:text-red-700">Denunciar</button>
+            <button id="article-like" type="button" class="like-button rounded-lg border border-red-200 px-4 py-2.5 text-sm font-extrabold text-red-700 transition hover:bg-red-50" aria-pressed="false">♡ Curtir</button>
+          </div>
         </div>
         <p id="article-like-names" class="mt-3 text-xs leading-5 text-slate-500"></p>
         <section class="mt-8 border-t border-slate-100 pt-6" aria-labelledby="article-comments-title">

@@ -27,6 +27,8 @@
   const imageStatus = document.querySelector("#news-image-status");
   const commentsList = document.querySelector("#admin-comments-list");
   const commentsCount = document.querySelector("#admin-comments-count");
+  const reportsList = document.querySelector("#admin-reports-list");
+  const reportsCount = document.querySelector("#admin-reports-count");
   let session = null;
   let news = [];
   let interactionRecords = { polls: [], awards: [], matches: [] };
@@ -174,6 +176,7 @@
     await loadNews();
     await loadInteractionRecords();
     await loadComments();
+    await loadReports();
   }
 
   function validateNews(value) {
@@ -191,9 +194,9 @@
   }
 
   async function loadNews() {
-    count.textContent = "Carregando…";
+    count.innerHTML = '<span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span>';
     const result = await request(NEWS_ENDPOINT +
-      "?select=id,title,category,player,image,content,created_at,published&order=created_at.desc");
+      "?select=id,title,category,player,author,image,content,created_at,published&order=created_at.desc");
     if (!Array.isArray(result)) throw new Error("O Supabase retornou uma lista de notícias inválida.");
     if (result.some(item => typeof item.published !== "boolean")) {
       throw new Error("O Supabase retornou notícias sem o estado de publicação esperado. Execute supabase-setup.sql atualizado.");
@@ -203,6 +206,7 @@
       title: item.title,
       category: item.category,
       player: item.player,
+      author: item.author || "Redação FutSenai",
       image: item.image || "",
       content: item.content,
       createdAt: item.created_at,
@@ -229,7 +233,7 @@
   }
 
   async function loadComments() {
-    commentsCount.textContent = "Carregando…";
+    commentsCount.innerHTML = '<span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span>';
     const result = await request("/rest/v1/rpc/get_news_comments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -238,7 +242,7 @@
     if (!Array.isArray(result) || result.some(comment =>
       !comment || typeof comment.comment_id !== "number" ||
       typeof comment.news_id !== "string" || typeof comment.nickname !== "string" ||
-      typeof comment.content !== "string" || typeof comment.created_at !== "string" ||
+      typeof comment.content !== "string" || typeof comment.approved !== "boolean" || typeof comment.created_at !== "string" ||
       (comment.updated_at !== null &&
         (typeof comment.updated_at !== "string" || Number.isNaN(new Date(comment.updated_at).getTime()))))) {
       throw new Error("O Supabase retornou comentários inválidos.");
@@ -269,7 +273,10 @@
         dateStyle: "medium",
         timeStyle: "short"
       }).format(new Date(comment.created_at));
-      header.append(author, date);
+      const state = document.createElement("span");
+      state.className = "rounded-full px-2 py-0.5 text-[10px] font-bold " + (comment.approved ? "bg-green-50 text-green-800" : "bg-amber-50 text-amber-800");
+      state.textContent = comment.approved ? "APROVADO" : "AGUARDANDO";
+      header.append(author, state, date);
       if (comment.updated_at) {
         const edited = document.createElement("span");
         edited.className = "rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500";
@@ -279,6 +286,20 @@
       const content = document.createElement("p");
       content.className = "mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700";
       content.textContent = comment.content;
+      const approval = createAction(comment.approved ? "Retirar aprovação" : "Aprovar comentário", async () => {
+        try {
+          const updated = await request("/rest/v1/rpc/moderate_news_comment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ p_comment_id: comment.comment_id, p_approved: !comment.approved })
+          });
+          if (updated !== true) throw new Error("A moderação não foi confirmada.");
+          await loadComments();
+          showMessage(comment.approved ? "Comentário retirado do ar." : "Comentário aprovado e publicado.", false);
+        } catch (error) {
+          showMessage("Não foi possível moderar o comentário: " + error.message, true);
+        }
+      }, comment.approved ? "text-amber-700" : "text-green-700");
       const remove = createAction("Remover comentário", async () => {
         if (!window.confirm("Remover permanentemente este comentário?")) return;
         try {
@@ -296,9 +317,65 @@
       }, "text-red-700");
       const actions = document.createElement("div");
       actions.className = "mt-3 border-t border-slate-100 pt-3";
-      actions.append(remove);
+      actions.append(approval, remove);
       card.append(header, content, actions);
       commentsList.append(card);
+    });
+  }
+
+  async function loadReports() {
+    if (!reportsList || !reportsCount) return;
+    const reports = await request("/rest/v1/news_reports?select=id,news_id,comment_id,reason,created_at,status&status=eq.pending&order=created_at.desc");
+    if (!Array.isArray(reports)) throw new Error("A lista de denúncias retornou um formato inválido.");
+    reportsCount.textContent = reports.length + (reports.length === 1 ? " denúncia pendente" : " denúncias pendentes");
+    reportsList.replaceChildren();
+    if (!reports.length) {
+      const empty = document.createElement("p");
+      empty.className = "rounded-xl border border-dashed border-slate-300 bg-white p-5 text-center text-sm text-slate-500";
+      empty.textContent = "Nenhuma denúncia pendente.";
+      reportsList.append(empty);
+      return;
+    }
+    reports.forEach(report => {
+      const card = document.createElement("article");
+      card.className = "rounded-xl border border-amber-200 bg-white p-4";
+      const target = report.news_id ? "Notícia: " + report.news_id : "Comentário #" + report.comment_id;
+      const heading = document.createElement("p");
+      heading.className = "font-extrabold text-slate-900";
+      heading.textContent = target;
+      const reason = document.createElement("p");
+      reason.className = "mt-2 text-sm leading-6 text-slate-700";
+      reason.textContent = report.reason;
+      const date = document.createElement("time");
+      date.className = "mt-2 block text-xs text-slate-500";
+      date.dateTime = report.created_at;
+      date.textContent = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(report.created_at));
+      const actions = document.createElement("div");
+      actions.className = "mt-3 flex gap-4 border-t border-slate-100 pt-3";
+      actions.append(createAction("Marcar como revisada", async () => {
+        try {
+          await request("/rest/v1/news_reports?id=eq." + encodeURIComponent(report.id), {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+            body: JSON.stringify({ status: "reviewed" })
+          });
+          await loadReports();
+          showMessage("Denúncia marcada como revisada.", false);
+        } catch (error) { showMessage("Não foi possível atualizar a denúncia.", true); }
+      }, "text-green-700"));
+      actions.append(createAction("Descartar", async () => {
+        try {
+          await request("/rest/v1/news_reports?id=eq." + encodeURIComponent(report.id), {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+            body: JSON.stringify({ status: "dismissed" })
+          });
+          await loadReports();
+          showMessage("Denúncia descartada.", false);
+        } catch (error) { showMessage("Não foi possível atualizar a denúncia.", true); }
+      }, "text-slate-500"));
+      card.append(heading, reason, date, actions);
+      reportsList.append(card);
     });
   }
 
@@ -451,8 +528,10 @@
     const formElement = document.querySelector(INTERACTION_RESOURCES[type].form);
     const values = {
       ...item,
-      options: item.options ? item.options.join("\n") : undefined,
-      nominees: item.nominees ? item.nominees.join("\n") : undefined
+      options: item.options ? item.options.join("
+") : undefined,
+      nominees: item.nominees ? item.nominees.join("
+") : undefined
     };
     Object.entries(values).forEach(([name, value]) => {
       const field = formElement.elements.namedItem(name);
@@ -481,7 +560,8 @@
   }
 
   function parseLineItems(value, label, min, max) {
-    const items = value.split(/\r?\n/).map(item => item.trim()).filter(Boolean);
+    const items = value.split(/\r?
+/).map(item => item.trim()).filter(Boolean);
     if (items.length < min || items.length > max) {
       throw new Error(label + (max === min ? " precisa ter " + min : " precisa ter entre " + min + " e " + max) +
         (min === 1 && max === 1 ? " item." : " itens, um por linha."));
@@ -582,6 +662,7 @@
     document.querySelector("#news-title").value = item.title;
     document.querySelector("#news-category").value = item.category;
     document.querySelector("#news-player").value = item.player;
+    document.querySelector("#news-author").value = item.author || "Redação FutSenai";
     document.querySelector("#news-image").value = item.image;
     document.querySelector("#news-content").value = item.content;
     selectedImageBlob = null;
@@ -844,6 +925,7 @@
         title,
         category: document.querySelector("#news-category").value,
         player,
+        author: document.querySelector("#news-author").value.trim() || "Redação FutSenai",
         image,
         content,
         created_at: existing ? existing.createdAt : new Date().toISOString(),

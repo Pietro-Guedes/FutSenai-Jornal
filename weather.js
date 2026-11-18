@@ -76,6 +76,16 @@
     return error.message || "Não foi possível acessar a localização.";
   }
 
+  async function fetchWithTimeout(url) {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
+    try { return await fetch(url, { signal: controller.signal }); }
+    catch (error) {
+      if (error.name === "AbortError") throw new Error("O serviço de clima demorou para responder. Tente novamente.");
+      throw new Error("Não foi possível acessar o serviço de clima. Verifique sua conexão e tente novamente.");
+    } finally { window.clearTimeout(timeout); }
+  }
+
   async function loadWeather(latitude, longitude) {
     const url = new URL(WEATHER_URL);
     url.search = new URLSearchParams({
@@ -87,9 +97,9 @@
 
     let response;
     try {
-      response = await fetch(url);
+      response = await fetchWithTimeout(url);
     } catch (error) {
-      throw new Error("Não foi possível consultar o serviço de clima. Verifique sua conexão e tente novamente.");
+      throw error;
     }
     if (!response.ok) {
       throw new Error("O serviço de clima respondeu com erro " + response.status + ".");
@@ -129,7 +139,7 @@
       format: "json"
     }).toString();
 
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(url);
     if (!response.ok) {
       throw new Error("A busca de cidades respondeu com erro " + response.status + ".");
     }

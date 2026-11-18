@@ -163,13 +163,23 @@
 
   async function loadStats() {
     try {
-      const response = await fetch(DATA_URL, { cache: "no-store" });
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 10000);
+      let response;
+      try { response = await fetch(DATA_URL, { cache: "no-store", signal: controller.signal }); }
+      finally { window.clearTimeout(timeout); }
       if (!response.ok) throw new Error("O FutSENAI Score respondeu com erro " + response.status + ".");
       const data = await response.json();
       if (!validateData(data)) throw new Error("Os dados públicos do FutSENAI Score estão em formato inesperado.");
       render(data);
     } catch (error) {
-      status.textContent = "Não foi possível carregar as estatísticas agora.";
+      status.textContent = "Não foi possível carregar as estatísticas agora. ";
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "font-extrabold underline";
+      retry.textContent = "Tentar novamente";
+      retry.addEventListener("click", loadStats);
+      status.append(retry);
       slides = [{
         label: "Estatísticas do FutSENAI Score",
         value: "Ver no site",

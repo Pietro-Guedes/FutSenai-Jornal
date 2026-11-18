@@ -83,6 +83,8 @@
               <div>
                 <label for="news-player" class="mb-1.5 block text-xs font-bold text-slate-700">Aluno / turma <span class="text-red-600">*</span></label>
                 <input id="news-player" maxlength="80" required placeholder="Nome e turma" class="field w-full rounded-lg border border-slate-200 px-3.5 py-3 text-sm">
+        <label for="news-author" class="mb-1.5 block text-xs font-bold text-slate-700">Autor da notícia</label>
+        <input id="news-author" maxlength="80" placeholder="Redação FutSenai" class="field w-full rounded-lg border border-slate-200 px-3.5 py-3 text-sm">
               </div>
             </div>
             <div>
@@ -220,6 +222,11 @@
         </div>
       </section>
 
+      <section class="mt-12 border-t border-slate-200 pt-10" aria-labelledby="report-moderation-title">
+        <div class="mb-5"><h2 id="report-moderation-title" class="text-2xl font-black tracking-tight text-slate-900">Denúncias recebidas</h2><p class="mt-2 text-sm leading-6 text-slate-600">Revise denúncias de notícias e comentários enviados pela comunidade.</p></div>
+        <p id="admin-reports-count" class="mb-3 text-xs text-slate-500">Carregando…</p>
+        <div id="admin-reports-list" class="space-y-3"></div>
+      </section>
       <section class="mt-12 border-t border-slate-200 pt-10" aria-labelledby="comment-moderation-title">
         <div class="mb-5">
           <p class="mb-2 text-[10px] font-black uppercase tracking-[.2em] text-red-600">Moderação</p>
