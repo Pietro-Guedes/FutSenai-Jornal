@@ -269,7 +269,10 @@
         dateStyle: "medium",
         timeStyle: "short"
       }).format(new Date(comment.created_at));
-      const state = document.createElement("span");\n      state.className = "rounded-full px-2 py-0.5 text-[10px] font-bold " + (comment.approved ? "bg-green-50 text-green-800" : "bg-amber-50 text-amber-800");\n      state.textContent = comment.approved ? "APROVADO" : "AGUARDANDO";\n      header.append(author, state, date);
+      const state = document.createElement("span");
+      state.className = "rounded-full px-2 py-0.5 text-[10px] font-bold " + (comment.approved ? "bg-green-50 text-green-800" : "bg-amber-50 text-amber-800");
+      state.textContent = comment.approved ? "APROVADO" : "AGUARDANDO";
+      header.append(author, state, date);
       if (comment.updated_at) {
         const edited = document.createElement("span");
         edited.className = "rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500";
@@ -279,7 +282,21 @@
       const content = document.createElement("p");
       content.className = "mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700";
       content.textContent = comment.content;
-      const approval = createAction(comment.approved ? "Retirar aprovação" : "Aprovar comentário", async () => {\n        try {\n          const updated = await request("/rest/v1/rpc/moderate_news_comment", {\n            method: "POST",\n            headers: { "Content-Type": "application/json" },\n            body: JSON.stringify({ p_comment_id: comment.comment_id, p_approved: !comment.approved })\n          });\n          if (updated !== true) throw new Error("A moderação não foi confirmada.");\n          await loadComments();\n          showMessage(comment.approved ? "Comentário retirado do ar." : "Comentário aprovado e publicado.", false);\n        } catch (error) {\n          showMessage("Não foi possível moderar o comentário: " + error.message, true);\n        }\n      }, comment.approved ? "text-amber-700" : "text-green-700");\n      const remove = createAction("Remover comentário", async () => {
+      const approval = createAction(comment.approved ? "Retirar aprovação" : "Aprovar comentário", async () => {
+        try {
+          const updated = await request("/rest/v1/rpc/moderate_news_comment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ p_comment_id: comment.comment_id, p_approved: !comment.approved })
+          });
+          if (updated !== true) throw new Error("A moderação não foi confirmada.");
+          await loadComments();
+          showMessage(comment.approved ? "Comentário retirado do ar." : "Comentário aprovado e publicado.", false);
+        } catch (error) {
+          showMessage("Não foi possível moderar o comentário: " + error.message, true);
+        }
+      }, comment.approved ? "text-amber-700" : "text-green-700");
+      const remove = createAction("Remover comentário", async () => {
         if (!window.confirm("Remover permanentemente este comentário?")) return;
         try {
           const removed = await request("/rest/v1/rpc/delete_news_comment", {
@@ -451,8 +468,10 @@
     const formElement = document.querySelector(INTERACTION_RESOURCES[type].form);
     const values = {
       ...item,
-      options: item.options ? item.options.join("\n") : undefined,
-      nominees: item.nominees ? item.nominees.join("\n") : undefined
+      options: item.options ? item.options.join("
+") : undefined,
+      nominees: item.nominees ? item.nominees.join("
+") : undefined
     };
     Object.entries(values).forEach(([name, value]) => {
       const field = formElement.elements.namedItem(name);
@@ -481,7 +500,8 @@
   }
 
   function parseLineItems(value, label, min, max) {
-    const items = value.split(/\r?\n/).map(item => item.trim()).filter(Boolean);
+    const items = value.split(/\r?
+/).map(item => item.trim()).filter(Boolean);
     if (items.length < min || items.length > max) {
       throw new Error(label + (max === min ? " precisa ter " + min : " precisa ter entre " + min + " e " + max) +
         (min === 1 && max === 1 ? " item." : " itens, um por linha."));
