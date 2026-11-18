@@ -140,14 +140,16 @@
 
   function makeLikeButton(id, className) {
     const liked = likedNewsIds.has(id);
+    const configured = Boolean(window.FUTSENAI_SUPABASE && window.FUTSENAI_SUPABASE.url && window.FUTSENAI_SUPABASE.anonKey);
     const names = getLikeRecord(id);
     const button = document.createElement("button");
     button.type = "button";
     button.dataset.likeId = id;
     button.className = className + (liked ? " is-liked" : "");
+    button.disabled = !configured;
     button.setAttribute("aria-pressed", String(liked));
     button.setAttribute("aria-label", liked ? "Remover sua curtida" : "Curtir esta notícia");
-    button.textContent = (liked ? "♥ Curtido" : authSession ? "♡ Curtir" : "♡ Entrar para curtir") +
+    button.textContent = (!configured ? "Curtidas em breve" : liked ? "♥ Curtido" : authSession ? "♡ Curtir" : "♡ Entrar para curtir") +
       " · " + names.length;
     return button;
   }
@@ -414,6 +416,7 @@
     likeButton.setAttribute("aria-pressed", currentLikeButton.getAttribute("aria-pressed"));
     likeButton.setAttribute("aria-label", currentLikeButton.getAttribute("aria-label"));
     likeButton.textContent = currentLikeButton.textContent;
+    likeButton.disabled = currentLikeButton.disabled;
     const likeNames = document.querySelector("#article-like-names");
     if (likeNames) updateLikeNamesElement(likeNames, item.id);
     updateCommentFormState();
@@ -608,6 +611,9 @@
   }
 
   async function submitReport(target) {
+    if (!window.FUTSENAI_SUPABASE || !window.FUTSENAI_SUPABASE.url || !window.FUTSENAI_SUPABASE.anonKey) {
+      showMessage("Denúncias em breve.", false); return;
+    }
     const reason = window.prompt("Conte brevemente o motivo da denúncia (3 a 500 caracteres):");
     if (reason === null) return;
     if (reason.trim().length < 3 || reason.trim().length > 500) {
