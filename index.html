@@ -121,7 +121,7 @@
         <a class="football-provider" href="https://www.football-data.org/coverage" target="_blank" rel="noopener noreferrer">Dados: football-data.org ↗</a>
       </div>
 
-      <div id="football-status" class="football-status" role="status" aria-live="polite">Carregando os jogos em destaque…</div>
+      <div id="football-status" class="football-status" role="status" aria-live="polite"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span><span class="sr-only">Carregando os jogos em destaque…</span></div>
 
       <section class="football-standings-section" aria-labelledby="football-standings-title">
         <div class="football-standings-heading">
@@ -130,7 +130,7 @@
               Classificação do Brasileirão <span class="football-standings-chevron" aria-hidden="true">⌄</span>
             </button>
           </h3>
-          <p id="football-standings-status" class="football-standings-status" role="status" aria-live="polite">Carregando classificação…</p>
+          <p id="football-standings-status" class="football-standings-status" role="status" aria-live="polite"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span><span class="sr-only">Carregando classificação…</span></p>
         </div>
         <div id="football-standings-content" hidden>
           <div class="football-standings-scroll" tabindex="0" aria-label="Tabela de classificação. Deslize horizontalmente para ver todas as colunas.">
@@ -169,7 +169,7 @@
           </div>
           <button id="football-simulator-clear" class="football-simulator-clear" type="button" disabled>Limpar placares</button>
         </div>
-        <p id="football-simulator-status" class="football-simulator-status" role="status" aria-live="polite">Carregando jogos para simular…</p>
+        <p id="football-simulator-status" class="football-simulator-status" role="status" aria-live="polite"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span><span class="sr-only">Carregando jogos para simular…</span></p>
         <p class="football-simulator-note">Desempates simulados por pontos, vitórias, saldo e gols marcados; os demais critérios mantêm a ordem atual.</p>
         <div id="football-simulator-round-navigation" class="football-simulator-round-navigation" hidden>
           <button id="football-simulator-previous" class="football-simulator-round-button" type="button" aria-label="Rodada anterior" disabled>‹</button>
@@ -191,17 +191,17 @@
         <section class="interaction-card rounded-2xl border border-red-100 bg-white p-5 shadow-sm" aria-labelledby="poll-heading">
           <p class="mb-2 text-[10px] font-black uppercase tracking-[.18em] text-red-600">📣 Enquete</p>
           <h3 id="poll-heading" class="text-lg font-black text-slate-900">Voto da torcida</h3>
-          <div id="poll-content" class="mt-4 space-y-3 text-sm text-slate-500">Carregando enquete…</div>
+          <div id="poll-content" class="mt-4 space-y-3 text-sm text-slate-500"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span></div>
         </section>
         <section class="interaction-card rounded-2xl border border-red-100 bg-white p-5 shadow-sm" aria-labelledby="awards-heading">
           <p class="mb-2 text-[10px] font-black uppercase tracking-[.18em] text-red-600">🏆 Prêmios semanais</p>
           <h3 id="awards-heading" class="text-lg font-black text-slate-900">Quem merece o troféu?</h3>
-          <div id="awards-content" class="mt-4 space-y-5 text-sm text-slate-500">Carregando indicações…</div>
+          <div id="awards-content" class="mt-4 space-y-5 text-sm text-slate-500"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span></div>
         </section>
         <section class="interaction-card rounded-2xl border border-red-100 bg-white p-5 shadow-sm" aria-labelledby="prediction-heading">
           <p class="mb-2 text-[10px] font-black uppercase tracking-[.18em] text-red-600">🔮 Previsões</p>
           <h3 id="prediction-heading" class="text-lg font-black text-slate-900">Adivinhe o placar</h3>
-          <div id="prediction-content" class="mt-4 space-y-3 text-sm text-slate-500">Carregando próximo jogo…</div>
+          <div id="prediction-content" class="mt-4 space-y-3 text-sm text-slate-500"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span></div>
           <section class="mt-5 border-t border-red-50 pt-4" aria-labelledby="account-heading">
             <div class="mb-3">
               <p class="mb-1 text-[10px] font-black uppercase tracking-[.18em] text-red-600">Conta da liga</p>
@@ -242,7 +242,7 @@
       <div class="score-promo">
         <div class="score-promo-top">
           <span class="score-promo-brand"><span aria-hidden="true">⚽</span> FUTSENAI SCORE</span>
-          <span id="score-promo-status" class="score-promo-status" aria-live="polite">Carregando estatísticas…</span>
+          <span id="score-promo-status" class="score-promo-status" aria-live="polite"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span><span class="sr-only">Carregando estatísticas…</span></span>
         </div>
         <div class="score-promo-carousel" aria-label="Estatísticas em destaque">
           <a
@@ -330,7 +330,7 @@
       <select id="news-category-filter" class="field w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm"><option value="">Todas as categorias</option></select>
     </div>
     <div id="feed-message" class="mb-5 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" role="status"></div>
-    <section id="news-feed" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Feed de notícias"></section>
+    <section id="news-feed" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Feed de notícias"><div class="loading-skeleton loading-skeleton-card" aria-hidden="true"></div><div class="loading-skeleton loading-skeleton-card" aria-hidden="true"></div><div class="loading-skeleton loading-skeleton-card" aria-hidden="true"></div></section>
     <p class="mt-5 text-center text-xs text-slate-500">Entre com sua conta e escolha um apelido para curtir notícias. Os apelidos de quem curtiu ficam visíveis publicamente.</p>
     <section class="hidden mt-10 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900" aria-label="Configuração de interações">
       <p id="interaction-setup-note">Interações da comunidade em breve.</p>
