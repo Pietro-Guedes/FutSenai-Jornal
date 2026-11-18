@@ -199,7 +199,7 @@
     const player = document.createElement("p");
     player.className = "mb-3 flex items-center gap-2 text-xs font-bold text-red-700";
     player.append(createIcon("M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"));
-    player.append(document.createTextNode(item.player));
+    player.append(document.createTextNode("Por " + (item.author || "Redação FutSenai") + " · " + item.player));
 
     const summary = document.createElement("p");
     summary.className = "mb-5 line-clamp-3 text-sm leading-6 text-slate-600";
@@ -400,7 +400,7 @@
     category.className = "category-badge inline-block rounded-md px-2.5 py-1.5 text-[10px] font-black " + badgeClass(item.category);
     category.textContent = item.category;
     document.querySelector("#article-title").textContent = item.title;
-    document.querySelector("#article-player").textContent = "⚽ " + item.player;
+    document.querySelector("#article-player").textContent = "⚽ " + item.player + " · Por " + (item.author || "Redação FutSenai");
     const date = document.querySelector("#article-date");
     date.dateTime = item.createdAt;
     date.textContent = "Publicado em " + formatDate(item.createdAt);
@@ -876,7 +876,7 @@
     if (config && config.url && config.anonKey) {
       try {
         const response = await fetch(config.url.replace(/\/$/, "") +
-          "/rest/v1/news?select=id,title,category,player,image,content,created_at,published&published=eq.true&order=created_at.desc", {
+          "/rest/v1/news?select=id,title,category,player,author,image,content,created_at,published&published=eq.true&order=created_at.desc", {
           headers: { apikey: config.anonKey, Authorization: "Bearer " + config.anonKey },
           cache: "no-store"
         });
@@ -900,6 +900,7 @@
           title: item.title,
           category: item.category,
           player: item.player,
+          author: item.author || "Redação FutSenai",
           image: item.image || "",
           content: item.content,
           createdAt: item.created_at
