@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#b91f2e">
+  <meta name="description" content="Jogos, classificação, simulador e seus times favoritos.">
+  <title>Futebol | Jornal FutSenai</title>
+  <link rel="icon" type="image/png" href="favicon.png?v=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="futebol">
+  <div class="subpage-top">
+    <span class="subpage-kicker">JORNAL FUTSENAI</span>
+    <span class="subpage-top-note">A resenha começa aqui</span>
+  </div>
+  <main class="subpage-main">
+    <header class="subpage-heading">
+      <p>JORNAL FUTSENAI <span>/</span> FUTEBOL</p>
+      <h1>Futebol</h1>
+      <span>Jogos, classificação, simulador e seus times favoritos.</span>
+    </header>
+    <section class="football-section football-featured-section mb-10" aria-labelledby="football-title">
+      <div class="football-section-heading">
+        <div>
+          <p class="mb-1 text-[9px] font-black uppercase tracking-[.18em] text-red-600">Campeonato Brasileiro</p>
+          <h2 id="football-title" class="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">Jogos decisivos da rodada</h2>
+        </div>
+        <a class="football-provider" href="https://www.football-data.org/coverage" target="_blank" rel="noopener noreferrer" aria-label="Ver cobertura do football-data.org, abre em nova aba">Dados: football-data.org ↗</a>
+      </div>
+
+      <div id="football-status" class="football-status" role="status" aria-live="polite"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span><span class="sr-only">Carregando os jogos em destaque…</span></div>
+
+      <section class="football-standings-section" aria-labelledby="football-standings-title">
+        <div class="football-standings-heading">
+          <h3 id="football-standings-title">
+            <button id="football-standings-toggle" class="football-standings-toggle" type="button" aria-expanded="false" aria-controls="football-standings-content">
+              Classificação do Brasileirão <span class="football-standings-chevron" aria-hidden="true">⌄</span>
+            </button>
+          </h3>
+          <p id="football-standings-status" class="football-standings-status" role="status" aria-live="polite"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span><span class="sr-only">Carregando classificação…</span></p>
+        </div>
+        <div id="football-standings-content" hidden>
+          <div class="football-standings-scroll" tabindex="0" aria-label="Tabela de classificação. Deslize horizontalmente para ver todas as colunas.">
+            <table class="football-standings-table">
+              <caption class="sr-only">Classificação atual do Campeonato Brasileiro Série A</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Pos.</th>
+                  <th scope="col" class="football-standing-club-heading">Time</th>
+                  <th scope="col">Pts</th>
+                  <th scope="col">J</th>
+                  <th scope="col">V</th>
+                  <th scope="col">E</th>
+                  <th scope="col">D</th>
+                  <th scope="col">SG</th>
+                </tr>
+              </thead>
+              <tbody id="football-standings"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="football-fixtures-section" aria-labelledby="football-fixtures-title">
+        <div class="football-fixtures-heading">
+          <h3 id="football-fixtures-title">Rodada <span id="football-round-label">—</span></h3>
+        </div>
+        <div id="football-fixtures" class="football-fixtures" aria-live="polite"></div>
+      </section>
+
+      <section class="football-simulator-section" aria-labelledby="football-simulator-title">
+        <div class="football-fixtures-heading football-simulator-heading">
+          <div>
+            <h3 id="football-simulator-title">Simulador dos jogos restantes</h3>
+            <p>Digite os placares para ver como a classificação pode ficar.</p>
+          </div>
+          <button id="football-simulator-clear" class="football-simulator-clear" type="button" disabled>Limpar placares</button>
+        </div>
+        <p id="football-simulator-status" class="football-simulator-status" role="status" aria-live="polite"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span><span class="sr-only">Carregando jogos para simular…</span></p>
+        <p class="football-simulator-note">Desempates simulados por pontos, vitórias, saldo e gols marcados; os demais critérios mantêm a ordem atual.</p>
+        <div id="football-simulator-round-navigation" class="football-simulator-round-navigation" hidden>
+          <button id="football-simulator-previous" class="football-simulator-round-button" type="button" aria-label="Rodada anterior" disabled>‹</button>
+          <span id="football-simulator-round-label" class="football-simulator-round-label" aria-live="polite"></span>
+          <button id="football-simulator-next" class="football-simulator-round-button" type="button" aria-label="Próxima rodada" disabled>›</button>
+        </div>
+        <div id="football-simulator" class="football-simulator"></div>
+      </section>
+    </section><section class="football-section football-favorites-section mb-12" aria-labelledby="football-follow-title">
+      <div class="football-follow-panel">
+        <div class="football-follow-copy">
+          <h3 id="football-follow-title">Seus times favoritos</h3>
+          <p id="football-account-status">Entre na sua conta para salvar seus times favoritos e sincronizá-los entre dispositivos.</p>
+          <button id="football-login-button" class="football-login-button" type="button">Entrar para seguir times</button>
+        </div>
+        <div class="football-follow-controls">
+          <label class="sr-only" for="football-team-picker">Escolher time para seguir</label>
+          <select id="football-team-picker" class="field football-team-picker" disabled>
+            <option value="">Carregando times…</option>
+          </select>
+          <button id="football-follow-button" class="football-follow-button" type="button" disabled>Seguir time</button>
+        </div>
+        <div id="football-favorites" class="football-favorites" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+  <footer class="subpage-footer">Jornal FutSenai · Feito na arquibancada, com fair play e bom humor.</footer>
+  <script src="layout.js"></script>
+  <script src="supabase-config.js" defer></script><script src="football-widget.js" defer></script>
+</body>
+</html>
