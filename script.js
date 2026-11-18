@@ -9,6 +9,7 @@
   const articleLayer = document.querySelector("#article-layer");
   const searchInput = document.querySelector("#news-search");
   const categoryFilter = document.querySelector("#news-category-filter");
+  const clearFiltersButton = document.querySelector("#clear-news-filters");
   let searchTerm = "";
   let selectedCategory = "";
   const likeRecords = new Map();
@@ -373,15 +374,68 @@
     requestAnimationFrame(updateControls);
   }
 
+  function normalizeSearchText(value) {
+    return String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("pt-BR").trim();
+  }
+
+  function updateCategoryOptions() {
+    const current = selectedCategory;
+    const categories = [...new Set(news
+      .map(item => String(item.category || "").trim())
+      .filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
+
+    categoryFilter.replaceChildren();
+    const allOption = document.createElement("option");
+    allOption.value = "";
+    allOption.textContent = "Todas as categorias";
+    categoryFilter.append(allOption);
+
+    categories.forEach(category => {
+      const option = document.createElement("option");
+      option.value = category;
+      option.textContent = category;
+      categoryFilter.append(option);
+    });
+
+    selectedCategory = categories.includes(current) ? current : "";
+    categoryFilter.value = selectedCategory;
+  }
+
   function renderNews() {
-    const sortedNews = [...news].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    updateCategoryOptions();
+    const term = normalizeSearchText(searchTerm);
+    const filteredNews = [...news]
+      .filter(item => {
+        const matchesCategory = !selectedCategory ||
+          normalizeSearchText(item.category) === normalizeSearchText(selectedCategory);
+        const searchableText = normalizeSearchText([
+          item.title, item.content, item.player, item.author, item.category
+        ].join(" "));
+        return matchesCategory && (!term || searchableText.includes(term));
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
     feed.replaceChildren();
-    count.textContent = news.length + (news.length === 1 ? " publicação" : " publicações");
-    sortedNews.forEach(item => feed.append(createCard(item)));
-    if (!news.length) {
-      const empty = document.createElement("p");
-      empty.className = "col-span-full rounded-2xl border border-dashed border-red-200 bg-white px-6 py-12 text-center text-sm text-slate-500";
-      empty.textContent = news.length ? "Nenhuma notícia corresponde à sua busca." : "Ainda não há notícias publicadas. Volte em breve para conferir as novidades do intervalo!";
+    count.textContent = filteredNews.length === news.length
+      ? news.length + (news.length === 1 ? " publicação" : " publicações")
+      : filteredNews.length + " de " + news.length + " notícias";
+
+    filteredNews.forEach(item => feed.append(createCard(item)));
+
+    if (!filteredNews.length) {
+      const empty = document.createElement("div");
+      empty.className = "col-span-full feed-empty-state";
+      const icon = document.createElement("span");
+      icon.className = "feed-empty-icon";
+      icon.textContent = news.length ? "🔎" : "⚽";
+      const title = document.createElement("h3");
+      title.textContent = news.length ? "Nenhuma notícia encontrada" : "O plantão está quieto por enquanto";
+      const description = document.createElement("p");
+      description.textContent = news.length
+        ? "Tente outro termo ou escolha uma categoria diferente."
+        : "Ainda não há notícias publicadas. Volte em breve para conferir as novidades do intervalo!";
+      empty.append(icon, title, description);
       feed.append(empty);
     }
     renderRecentNews();
@@ -986,8 +1040,24 @@
     }
   }
 
-  searchInput.addEventListener("input", () => { searchTerm = searchInput.value.trim(); renderNews(); });
-  categoryFilter.addEventListener("change", () => { selectedCategory = categoryFilter.value; renderNews(); });
+  searchInput.addEventListener("input", () => {
+    searchTerm = searchInput.value;
+    renderNews();
+  });
+  categoryFilter.addEventListener("change", () => {
+    selectedCategory = categoryFilter.value;
+    renderNews();
+  });
+  if (clearFiltersButton) {
+    clearFiltersButton.addEventListener("click", () => {
+      searchInput.value = "";
+      categoryFilter.value = "";
+      searchTerm = "";
+      selectedCategory = "";
+      renderNews();
+      searchInput.focus();
+    });
+  }
 
 
 
