@@ -582,8 +582,8 @@
       const soon = document.createElement("p"); soon.className = "text-sm text-slate-500"; soon.textContent = "Comentários em breve."; list.append(soon); return;
     }
     const loading = document.createElement("p");
-    loading.className = "text-sm text-slate-500";
-    loading.textContent = "Carregando comentários…";
+    loading.className = "loading-skeleton loading-skeleton-text";
+    loading.setAttribute("aria-hidden", "true");
     list.append(loading);
     try {
       const comments = await likeRequest("/rest/v1/rpc/get_news_comments", {
@@ -944,12 +944,12 @@
     if (config && config.url && config.anonKey) {
       news = [];
       renderNews();
-      showMessage(
-        "Não foi possível confirmar quais notícias estão publicadas. " +
-        "Para evitar exibir matérias arquivadas, a lista ficará oculta até o Supabase responder. " +
-        "Tente novamente em instantes.",
-        true
-      );
+      showMessage("Não foi possível carregar as notícias agora. Tente novamente em instantes.", true);
+      const retry = document.createElement("button");
+      retry.type = "button"; retry.className = "ml-2 font-extrabold underline";
+      retry.textContent = "Tentar novamente";
+      retry.addEventListener("click", loadPublishedNews);
+      message.append(retry);
       return;
     }
 
