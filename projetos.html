@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#b91f2e">
+  <meta name="description" content="Estatísticas e projetos criados pela comunidade FutSenai.">
+  <title>Projetos | Jornal FutSenai</title>
+  <link rel="icon" type="image/png" href="favicon.png?v=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="projetos">
+  <div class="subpage-top">
+    <span class="subpage-kicker">JORNAL FUTSENAI</span>
+    <span class="subpage-top-note">A resenha começa aqui</span>
+  </div>
+  <main class="subpage-main">
+    <header class="subpage-heading">
+      <p>JORNAL FUTSENAI <span>/</span> PROJETOS</p>
+      <h1>Projetos</h1>
+      <span>Estatísticas e projetos criados pela comunidade FutSenai.</span>
+    </header>
+    <section class="score-promo-section mb-12" aria-label="Estatísticas do FutSENAI Score">
+      <div class="score-promo">
+        <div class="score-promo-top">
+          <span class="score-promo-brand"><span aria-hidden="true">⚽</span> FUTSENAI SCORE</span>
+          <span id="score-promo-status" class="score-promo-status" aria-live="polite"><span class="loading-skeleton loading-skeleton-text" aria-hidden="true"></span><span class="sr-only">Carregando estatísticas…</span></span>
+        </div>
+        <div class="score-promo-carousel" aria-label="Estatísticas em destaque">
+          <a
+            id="score-promo-slide"
+            class="score-promo-slide"
+            href="https://futsenai-score.vercel.app/#/partidas"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Abrir estatística no FutSENAI Score em uma nova aba"
+          >
+            <span id="score-promo-label" class="score-promo-label">Últimos resultados</span>
+            <span id="score-promo-value" class="score-promo-value">Buscando os placares…</span>
+            <span id="score-promo-detail" class="score-promo-detail">Acompanhe as partidas no FutSENAI Score.</span>
+            <span class="score-promo-cta">Ver esta estatística <span aria-hidden="true">↗</span></span>
+          </a>
+          <div class="score-promo-controls" role="group" aria-label="Navegar pelas estatísticas">
+            <button id="score-promo-prev" class="score-promo-arrow" type="button" aria-label="Estatística anterior">‹</button>
+            <span id="score-promo-counter" class="score-promo-counter" aria-live="polite">1 / 4</span>
+            <button id="score-promo-next" class="score-promo-arrow" type="button" aria-label="Próxima estatística">›</button>
+          </div>
+        </div>
+      </div>
+    </section><section class="promos-section mb-12" aria-label="Publicidade dos projetos da turma">
+      <p class="col-span-full text-center text-xs font-black uppercase tracking-widest text-slate-500">Publicidade</p>
+      <article class="promo-card promo-card-cards" data-promo-gallery="cards">
+        <div class="promo-card-media">
+          <img
+            class="promo-card-image"
+            src="https://fut-senai-cards.vercel.app/assets/heitorbarbosa-5nLGH9G_.jpg"
+            alt="Carta de Heitor Barbosa, fixo"
+            loading="lazy"
+            data-promo-image
+          >
+          <span class="promo-card-image-caption" data-promo-caption aria-hidden="true">HEITOR · FIXO</span>
+          <div class="promo-card-controls" role="group" aria-label="Imagens do FutSENAI Cards">
+            <button type="button" class="promo-card-arrow" data-promo-prev aria-label="Imagem anterior do FutSENAI Cards">‹</button>
+            <span class="promo-card-counter" data-promo-counter aria-live="off">1 / 3</span>
+            <button type="button" class="promo-card-arrow" data-promo-next aria-label="Próxima imagem do FutSENAI Cards">›</button>
+          </div>
+        </div>
+        <div class="promo-card-copy">
+          <span class="promo-card-kicker">Publicidade · FutSENAI Cards</span>
+          <h2><a href="https://fut-senai-cards.vercel.app/shop" target="_blank" rel="noopener noreferrer" aria-label="Conhecer FutSENAI Cards, abre em nova aba" data-promo-title>Craques da turma em cartas!</a></h2>
+          <p data-promo-description>Abra pacotes, colecione e monte seu time.</p>
+          <a class="promo-card-cta" href="https://fut-senai-cards.vercel.app/shop" target="_blank" rel="noopener noreferrer" aria-label="Conhecer o jogo FutSENAI Cards, abre em nova aba">Conhecer o jogo <span aria-hidden="true">↗</span></a>
+        </div>
+      </article>
+
+    </section>
+  </main>
+  <footer class="subpage-footer">Jornal FutSenai · Feito na arquibancada, com fair play e bom humor.</footer>
+  <script src="layout.js"></script>
+  <script src="score-promo.js" defer></script><script src="promo-carousels.js" defer></script>
+</body>
+</html>
